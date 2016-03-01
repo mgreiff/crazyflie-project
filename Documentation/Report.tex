@@ -1,0 +1,142 @@
+\documentclass{article}
+
+\usepackage{stmaryrd}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{relsize} 
+\usepackage{bm} 
+\usepackage{IEEEtrantools}
+\usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{hyperref}
+\usepackage{cases}
+\usepackage{xfrac}
+\usepackage{comment}
+\usepackage{framed}
+\usepackage{fancyhdr}
+\usepackage{enumitem}
+\usepackage{cite}
+\usepackage[]{algorithm2e}
+\usepackage[procnames]{listings}
+\usepackage{color}
+\usepackage[normalem]{ulem}
+
+\definecolor{keywords}{RGB}{255,0,90}
+\definecolor{comments}{RGB}{0,0,113}
+\definecolor{red}{RGB}{160,0,0}
+\definecolor{green}{RGB}{0,150,0}
+ 
+\newcommand\pythonstyle{\lstset{language=Python, 
+        basicstyle=\ttfamily\small, 
+        keywordstyle=\color{keywords},
+        commentstyle=\color{comments},
+        stringstyle=\color{red},
+        showstringspaces=false,
+        identifierstyle=\color{green},
+        procnamekeys={def,class}}}
+
+\lstnewenvironment{python}[1][]
+{
+\pythonstyle
+\lstset{#1}
+}
+{}
+
+\newcommand\pythonexternal[2][]{{
+\pythonstyle
+\lstinputlisting[#1]{#2}}}
+
+\oddsidemargin = 20pt
+\textwidth = 420pt
+
+\hypersetup{
+     colorlinks   = true,
+     linkcolor    = blue
+}
+
+\title{Project in Adaptive Control and Real Time Systems}
+
+\begin{document}
+\maketitle
+
+\section{Dynamics}
+(see \texttt{quadcopter\_model.m})
+(see \texttt{quadcopter\_init.m})
+\subsubsection*{TODO}
+\begin{enumerate}
+\item Define a complete nonlinear model in Simulink, which is currently buggy when in terms of $z$ and $\psi$. I fixed two sign errors, and there is bound to be a couple more... ~\cite{luukkonen2011modelling}.
+\item Derive linearised state-space model.
+\end{enumerate}
+\section{MPC control}
+The dynamics of the quadcopter defined in~\cite{Bouffard:EECS-2012-241} defines the pitch as $\theta_1$ and yaw as $\theta_2$. The quadcopter is then linearised round $(\theta_1,\theta_2)=\mathbf{0}$ with the control signals $u_1 = \Delta\theta_1$, $u_2 = \Delta\theta_2$ and $u_3$ as the commanded thrust (see \texttt{quadcopter\_MPC\_init.m}). Discretisation is here done through ZOH but other methods could be used as well. The model was replicated in Simulink, and the system responses look reasonable (see \texttt{quadcopter\_MPC\_simulate.m})
+\subsubsection*{TODO}
+\begin{enumerate}
+\item \sout{Create simplified linearised system ss-model for use in MPC} (see eg.~\cite{Bouffard:EECS-2012-241}).
+\item \sout{Validate by comparison to the results in}~\cite{Bouffard:EECS-2012-241}.
+\item Set up QP-MPC controller with Simulink MPC-library (see eg.~\cite{Bouffard:EECS-2012-241}).
+\item Validate by comparison to the results in~\cite{Bouffard:EECS-2012-241}.
+\item Set up QP-MPC controller with CVXGEN m-code (see eg.~\cite{Bouffard:EECS-2012-241}~\cite{mattingley2012cvxgen}).
+\item Validate by comparison to the results in Simulink.
+\item System identification.
+\item Simulate system with proper parameters.
+\end{enumerate}
+\section{$\mathcal{L}_1$-control}
+The $\mathbf{\Gamma}$-projection operator for two vectors $\theta,y\in\mathbb{R}^k$ is defined as
+\begin{equation}
+\text{Proj}_{\mathbf{\Gamma}}(\theta,y,f) =
+\begin{cases}
+\mathbf{\Gamma} y - \mathbf{\Gamma}\dfrac{\nabla f(\theta)(\nabla f(\theta))^T}{||\nabla f(\theta)||_2}\mathbf{\Gamma} yf(\theta)\qquad
+\text{if}\;\;f(\theta)>0\;\;\text{and}\;\;y^T\nabla f(\theta)>0\\
+\mathbf{\Gamma} y\qquad\qquad\qquad\qquad\qquad\qquad\quad\quad\text{otherwise}.
+\end{cases}
+\end{equation}
+where $\mathbf{\Gamma} = \mathbb{I}_{k\times k}\Gamma$ for some scalar $\Gamma > 0$ (typically $\Gamma\approx 10^5$) and $f(\theta)$ is a convex function~\cite{lavretsky2011projection}. By solving the Lyapunov equation
+\begin{equation}
+\mathbf{A}_m\mathbf{X}+ \mathbf{X}\mathbf{A}_m^T+ \mathbf{Q} = 0,
+\end{equation}
+for $\mathbf{P}=\mathbf{P}^T$, with some arbitrary $\mathbf{Q}>0$, the feedback controller
+\begin{equation}
+\begin{cases}
+u(t)=\hat{\theta}^Tx(t)+k_gr(t)\\
+\dot{\hat{\theta}}(t) = \text{Proj}_{\mathbf{\Gamma}}(\hat{\theta}^T(t),x(t)\tilde{x}^T(t)\mathbf{X}b)
+\end{cases}
+\end{equation}
+can be constructed, where $\tilde{x} = \hat{x} - x$ is the state estimation error, $k_g$ is a gain and $r(t)$ is the reference signal. By designing the companion system
+\begin{equation}
+\begin{cases}
+\dot{x}(t) = \mathbf{A}_m\hat{x}(t) + b(u(t)-\hat{\theta}^T(t)x(t))\\
+y(t) = c^T\hat{x}(t)
+\end{cases}
+\end{equation}
+it can be shown (by Theorem 2~\cite{cao2006design}) that the state estimation error,
+\begin{equation}
+\lim_{t\rightarrow\infty}\tilde{x} = 0.
+\end{equation}
+By a corollary of the theorem, choosing
+\begin{equation}
+k_g =-\frac{1}{c^T\mathbf{A}_m^{-1}b} \Rightarrow \lim_{t\rightarrow\infty}y(t) = r
+\end{equation}
+if $r \equiv$ constant.
+\begin{enumerate}
+\subsubsection*{TODO}
+\item \sout{Define general control structure.}
+\item Create Simulink projection operator (see eg.~\cite{L1control})
+\item Validate projection operator against benchmark Simulink models (eg. ~\cite{cao2006design}).
+\item Define robustness metrics (see eg.~\cite{L1control}~\cite{huynh20141})
+\item Create script for computing the $\mathcal{L}_1$-gain (see eg.~\cite{L1control}).
+\item Validate script against benchmark Simulink models (eg. ~\cite{cao2006design}).
+\item Simulate control.
+\end{enumerate}
+
+\section{General TODOs}
+\begin{enumerate}
+\item Found that one of the copters were broken - sent to Bitcraze for repairs, expected to be done in early march.
+\item Tried installing IRIS in Ubuntu but ran into issues using the PODS "make" command required to get everything up and running. TODO: contact Claes or Anders to get help in finding someone experienced with PODS.
+\end{enumerate}
+
+\newpage\bibliography{bibliography}{}
+\bibliographystyle{IEEEtran}
+
+\end{document}
