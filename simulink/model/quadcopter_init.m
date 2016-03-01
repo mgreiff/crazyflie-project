@@ -13,5 +13,3 @@ A = [0.25;      % kg/s
  
 % Thrust per rotor required to hover steadily
 hover_omega = sqrt(g*m/(4*k));
-
-generate_example_omega
