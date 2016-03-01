@@ -26,8 +26,7 @@ Contains the files used in modelling of the quadcopter.
 
 /trajectory_planning/*
 Contains the scripts trajectory planning, possibly suing IRIS and CVXGEN -
-currently empty. To use the academic license the username is my student 
-mail tfy12mgr@... with the password ruw789.
+currently empty.
 
 ~~~~ Documents ~~~~
 
