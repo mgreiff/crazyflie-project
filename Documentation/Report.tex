@@ -61,7 +61,78 @@
 \begin{document}
 \maketitle
 
-\section{Dynamics}
+Todo: Much remains to be defined, but in general, I have used the same definitions as Lukkonen~\cite{luukkonen2011modelling}. Let
+\begin{equation}
+\boldsymbol{\xi} = \begin{bmatrix}x\\y\\z\end{bmatrix},\quad
+\boldsymbol{\eta}= \begin{bmatrix}\phi\\\theta\\\psi\end{bmatrix},\quad
+\boldsymbol{\omega}=\begin{bmatrix}\omega_1\\\omega_2\\\omega_3\\\omega_4\end{bmatrix}
+\end{equation}
+Where $\boldsymbol{\xi}$ denotes the position of the center of mass in the global frame, $\boldsymbol{\eta}$ is the euler anfles in the body frame and $\omega_i$ is the angular speed of the rotor $i$. The non-linear dynamics of the quadcopter are then goverened by
+\begin{equation}
+\ddot{\boldsymbol{\xi}} = \mathbf{G} + \frac{1}{m}\mathbf{R}\mathbf{T}-\frac{1}{m}\mathbf{D}\dot{\boldsymbol{\xi}}
+\end{equation}
+\begin{equation}
+\mathbf{R} = 
+\begin{bmatrix}
+\cos(\psi)\cos(\phi) & \cos(\psi)\sin(\theta)\sin(\phi)- \sin(\psi)\cos(\phi) & \cos(\psi)\sin(\theta)\cos(\phi)+ \sin(\psi)\sin(\phi)\\
+\sin(\psi)\cos(\phi) & \sin(\psi)\sin(\theta)\sin(\phi) + \cos(\psi)\cos(\phi) & \sin(\psi)\sin(\theta)\cos(\phi) - \cos(\psi)\sin(\phi)\\
+ - \sin(\theta) & \cos(\theta)\sin(\phi) &  \cos(\theta)\cos(\phi)
+\end{bmatrix}
+\end{equation}
+\begin{equation}
+\ddot{\boldsymbol{\eta}}=\mathbf{J}^{-1}(\boldsymbol{\tau}_B-\mathbf{C}\dot{\boldsymbol{\eta}})
+\end{equation}
+By defining the states and control signals as
+\begin{equation}
+\mathbf{x} = 
+\begin{bmatrix}
+\boldsymbol{\xi} \\ 
+\dot{\boldsymbol{\xi}} \\ 
+\boldsymbol{\eta} \\ 
+\dot{\boldsymbol{\eta}}
+\end{bmatrix}
+\in\mathbb{R}^{12\times 1}, \quad\text{and}\quad
+\mathbf{u} = 
+\begin{bmatrix}
+T\\
+\tau_{\phi}\\
+\tau_{\theta}\\
+\tau_{\psi}
+\end{bmatrix}\in\mathbb{R}^{4\times 1}
+\end{equation}
+respectively, the non-linear system can be written
+\begin{flalign}
+\dot{\mathbf{x}} =&
+\begin{bmatrix}
+\mathbb{I}_{3\times 3} &  \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} \\
+\mathbf{0}_{3\times 3} & -\frac{1}{m}\mathbf{D} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} \\
+\mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} &\mathbb{I}_{3\times 3} & \mathbf{0}_{3\times 3} \\
+\mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} & \mathbf{0}_{3\times 3} &-\mathbf{J}^{-1}\mathbf{C} \\
+\end{bmatrix}
+\mathbf{x}
+ +
+\begin{bmatrix}
+\mathbf{0}_{1\times 3}&\mathbf{0}_{3\times 3}\\
+\frac{1}{m}\mathbf{R}\hat{\mathbf{z}} & \mathbf{0}_{3\times 3}\\
+\mathbf{0}_{1\times 3}&\mathbf{0}_{3\times 3}\\
+\mathbf{0}_{1\times 3} & \mathbf{J}^{-1}\\
+\end{bmatrix}
+\mathbf{u}
++
+\begin{bmatrix}
+\mathbf{0}_{1\times 3}\\
+\mathbf{G}\\
+\mathbf{0}_{1\times 3}\\
+\mathbf{0}_{1\times 3}\\
+\end{bmatrix}=\mathbf{A}^c\mathbf{x}+\mathbf{B}^c\mathbf{u}+\mathbf{G}^c
+\\
+\mathbf{y} =&
+\begin{bmatrix}
+z&\phi&\theta&\psi
+\end{bmatrix} = \mathbf{C}^c\mathbf{x}
+\end{flalign}
+We note that the only non-linear block in the system matrix is the $(-\mathbf{J}^{-1}\mathbf{C})$-block which is only dependent on $\boldsymbol{\eta}$ and $\dot{\boldsymbol{\eta}}$, which means that we only need to linearise this block with regards to the angular states. Furthermore, the $\mathbf{G}^c$-matrix vanishes in the linearised system, which can be written
+\subsection{Full model}
 (see \texttt{quadcopter\_model.m})
 (see \texttt{quadcopter\_init.m})
 \subsubsection*{TODO}
