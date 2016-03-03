@@ -10,7 +10,6 @@ function [sys,x0,str,ts] = MPCController(t,x,u,flag,md)
 % outputs. The output of the S-function block is a vector signal
 % consisting of the control variables and the estimated state vector,
 % potentially including estimated disturbance states.
-
 switch flag,
  case 0
   [sys,x0,str,ts] = mdlInitializeSizes(md); % Initialization
@@ -140,6 +139,13 @@ end
 % Optimize
 %[duOpt,zOpt] = MPCOptimizeSolSC(x_hat,u_old,duOpt,refval,md);
 [duOpt,zOpt] = MPCOptimizeSol(x_hat,u_old,duOpt,refval,md);
+
+
+% traj = zOpt(2:5:end);
+% ud = duOpt(2:3:end);
+% disp([traj ud]);
+% plot(traj);
+% disp(x_hat');
 
 % Calculate control signal to store
 u_old = u_old + duOpt(1:md.me);

@@ -30,6 +30,8 @@ Ts = 0.2; % sample time
 Czd = Cyd;
 Ccd = Cyd;
 Dcd = Dzd;
+Cyd = [Cyd; zeros(2, 10)]
+Cyd(6:7, 4:5
 
 % % % Controller Design % % %
 
@@ -38,29 +40,29 @@ Dcd = Dzd;
 du_max = [inf inf inf]';
 du_min = [-inf -inf -inf]';
 % limit absolute value of u
-angle_max = 15 * pi/180;
+angle_max = 5 * pi/180;
 u_max = [angle_max angle_max inf]';
 u_min = [-angle_max -angle_max -inf]';
 % limit constrained outputs
-z_max = 5*[inf inf inf angle_max angle_max]';
-z_min = 5*[-inf -inf -inf -angle_max -angle_max]';
+z_max = 2*[inf inf inf angle_max angle_max]';
+z_min = 2*[-inf -inf -inf -angle_max -angle_max]';
 
 % Prediction parameters
 Hp = 30;  % Prediction horizon
 Hu = 30;  % Horizon for varying input signal
-Hw = 1;  % First penalty sample
+Hw = 0;  % First penalty sample
 zblk= 1;  % blocking factor 
 ublk= 1;  % blocking factor
 
 
 % Weights
-Q = diag([2 2 4 0.01 0.01]);
-R = 1*diag([1 1 1]);
-W =  1*diag([1 1 1 1 1 1 1 1 1 1]);
+Q = diag([2 2 0.5 0.01 0.01]);
+R = 0.01*diag([1 1 1]);
+W =  0.5*diag([1 1 1 1 1 1 1 1 1 1]);
 V =  0.001*diag([1 1 1 1 1]);
 
 
 % Create controller
 md_quadcopter = MPCInit(Ad,Bd,Cyd,Czd,Dzd,Ccd,Dcd,Hp,Hw,zblk,Hu,ublk, ...
 	    du_max,du_min,u_max,u_min,z_max, ...
-	    z_min,Q,R,W,V,Ts,2,'qp_ip');
+	    z_min,Q,R,W,V,Ts,2,'qp_as');
