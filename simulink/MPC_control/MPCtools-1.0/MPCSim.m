@@ -36,6 +36,7 @@ if qwem~=md.m,
 end
 
 global x_est;
+global trajectory;
 % Initialize
 %md = MPCInit(Ad,Bd,Cyd,Czd,Dzd,Ccd,Dcd,Hp,Hw,zblk,Hu,ublk, ...
 %	    du_max,du_min,u_max,u_min,z_max, ...
@@ -140,6 +141,8 @@ while cont == 1
   uPT(1,:) = u_old' + duOpt(1:md.me)';
   uPT = cumsum(uPT);
   uPredTraj = [uPredTraj uPT];
+  
+  trajectory = zPredTraj;
   
   % Calculate control signal to store
 

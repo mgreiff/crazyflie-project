@@ -27,7 +27,7 @@ Model {
       BusOutputAsStruct	      "off"
     }
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.106"
+    ComputedModelVersion    "1.113"
     NumModelReferences	    0
     NumTestPointedSignals   0
   }
@@ -85,9 +85,9 @@ Model {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "Daniel"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Wed Mar 02 00:12:12 2016"
-  RTWModifiedTimeStamp	  378778331
-  ModelVersionFormat	  "1.%<AutoIncrement:106>"
+  LastModifiedDate	  "Thu Mar 03 15:42:30 2016"
+  RTWModifiedTimeStamp	  378920543
+  ModelVersionFormat	  "1.%<AutoIncrement:113>"
   ConfigurationManager	  "none"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -1545,7 +1545,10 @@ Stateflow {
     firstTransition	    19
     firstJunction	    18
     viewObj		    2
+    visible		    1
     machine		    1
+    subviewS {
+    }
     ssIdHighWaterMark	    18
     decomposition	    CLUSTER_CHART
     type		    EML_CHART
@@ -1574,29 +1577,29 @@ Stateflow {
       "   % Equations from Teppo Luukkonen, Modelling and control of quadcopter\n    phi = eta(1); theta = eta(2); psi "
       "= eta(3); % Roll, pitch, yaw\n    phidot = etadot(1); thetadot = etadot(2); psidot = etadot(3); % Roll, pitch, y"
       "aw\n    \n    T = k * sum(omega.^2); % (7)\n    \n    % Gravity acceleration\n    Ga = -g * [0; 0; 1];\n    \n  "
-      "  % Thrust acceleration\n    Ta = T/m * [cos(psi)*sin(theta)*cos(phi) + sin(psi)*sin(phi);\n          sin(psi)*s"
-      "in(theta)*cos(phi) - cos(psi)*sin(phi);\n          cos(theta)*cos(phi)];\n    \n    % Drag\n    Aa = -1/m * diag"
-      "(A) * rdot;\n    \n    rddot = Ga + Ta + Aa; % (21)\n    \n    % Define the C-matrix as (19)\n    Ixx = I(1); Iy"
-      "y = I(2); Izz = I(3);\n    Sphi = sin(phi); Stheta = sin(theta); Spsi = sin(psi);\n    Cphi = cos(phi); Ctheta ="
-      " cos(theta); Cpsi = cos(psi);\n    \n    C11 = 0;\n    C12 = (Iyy - Izz) * (thetadot*Cphi*Sphi + psidot*Sphi^2*C"
-      "theta) + (Izz - Iyy)*psidot*Cphi^2*Ctheta - Ixx*psidot*Ctheta;\n    C13 = (Izz - Iyy) * psidot*Cphi*Sphi*Ctheta^"
-      "2;\n    C21 = (Izz - Iyy) * (thetadot*Cphi*Sphi + psidot*Sphi*Ctheta) + (Iyy - Izz)*psidot*Cphi^2*Ctheta - Ixx*p"
-      "sidot*Ctheta;\n    C22 = (Izz - Iyy) * phidot*Cphi*Sphi;\n    C23 = -Ixx * psidot * Stheta * Ctheta + Iyy * psid"
-      "ot * Sphi^2 * Stheta * Ctheta + Izz * psidot * Cphi^2 * Stheta * Ctheta;\n    C31 = (Iyy - Izz) * psidot * Cthet"
-      "a^2 * Sphi * Cphi - Ixx * thetadot * Ctheta;\n    C32 = (Izz - Iyy) * (thetadot * Cphi * Sphi * Stheta + phidot "
-      "* Sphi^2 * Ctheta) + (Iyy - Izz) * phidot * Cphi^2 * Ctheta...\n            + Ixx * psidot * Stheta * Ctheta - I"
-      "yy * psidot * Sphi^2 * Stheta * Ctheta - Izz * psi * Cphi^2 * Stheta * Ctheta;\n    C33 = (Iyy - Izz) * phidot *"
-      " Cphi * Sphi * Ctheta^2 - Iyy * thetadot * Sphi^2 * Ctheta * Stheta ...\n            - Izz * thetadot * Cphi^2 *"
-      " Ctheta * Stheta + Ixx * thetadot * Ctheta * Stheta;\n    \n    C = [C11 C12 C13; C21 C22 C23; C31 C32 C33];   \n"
-      "    \n    % (8)\n    tau_phi =  l * k * (-omega(2)^2 + omega(4)^2);\n    tau_theta =  l * k * (-omega(1)^2 + ome"
-      "ga(3)^2);\n    tau_psi =  -b * sum(omega(1)^2 - omega(2)^2 + omega(3)^2 - omega(4)^2); % Modified from the text,"
-      " rotor 2 and 4 spin in oposite direction\n    tau_b = [tau_phi; tau_theta; tau_psi];\n    \n    % (16)\n    J11 "
-      "= Ixx; J12 = 0; J13 = -Ixx*Stheta;\n    J21 = 0;\n    J22 = Iyy * Cphi^2 + Izz * Sphi^2;\n    J23 = (Iyy - Izz) "
-      "* Cphi * Sphi * Ctheta;\n    J31 = -Ixx * Stheta;\n    J32 = (Iyy - Izz)*Cphi*Sphi*Ctheta;\n    J33 = Ixx * Sthe"
-      "ta^2 + Iyy * Sphi^2 * Ctheta^2 + Izz * Cphi^2*Ctheta^2;\n    J = [J11 J12 J13; J21 J22 J23; J31 J32 J33];  \n   "
-      "         \n    etaddot = J\\(tau_b - C*etadot); % (20)\n    \n    R = [Cpsi*Ctheta, Cpsi*Stheta*Sphi-Spsi*Cphi, "
-      "Cpsi*Stheta*Cphi + Spsi*Sphi;\n        Spsi*Ctheta, Spsi*Stheta*Sphi+Cpsi*Cphi, Spsi*Stheta*Cphi - Cpsi*Sphi;\n "
-      "       -Stheta, Ctheta*Sphi, Ctheta*Cphi];\nend"
+      "  % Thrust acceleration\n    angM = [cos(psi)*sin(theta)*cos(phi) + sin(psi)*sin(phi);\n          sin(psi)*sin(t"
+      "heta)*cos(phi) - cos(psi)*sin(phi);\n          cos(theta)*cos(phi)];\n    Ta = T/m * angM;\n    \n    % Drag\n  "
+      "  Aa = -1/m * diag(A) * rdot;\n    \n    rddot = Ga + Ta + Aa; % (21)\n    disp([Ta rddot]);\n    \n    % Define"
+      " the C-matrix as (19)\n    Ixx = I(1); Iyy = I(2); Izz = I(3);\n    Sphi = sin(phi); Stheta = sin(theta); Spsi ="
+      " sin(psi);\n    Cphi = cos(phi); Ctheta = cos(theta); Cpsi = cos(psi);\n    \n    C11 = 0;\n    C12 = (Iyy - Izz"
+      ") * (thetadot*Cphi*Sphi + psidot*Sphi^2*Ctheta) + (Izz - Iyy)*psidot*Cphi^2*Ctheta - Ixx*psidot*Ctheta;\n    C13"
+      " = (Izz - Iyy) * psidot*Cphi*Sphi*Ctheta^2;\n    C21 = (Izz - Iyy) * (thetadot*Cphi*Sphi + psidot*Sphi*Ctheta) +"
+      " (Iyy - Izz)*psidot*Cphi^2*Ctheta - Ixx*psidot*Ctheta;\n    C22 = (Izz - Iyy) * phidot*Cphi*Sphi;\n    C23 = -Ix"
+      "x * psidot * Stheta * Ctheta + Iyy * psidot * Sphi^2 * Stheta * Ctheta + Izz * psidot * Cphi^2 * Stheta * Ctheta"
+      ";\n    C31 = (Iyy - Izz) * psidot * Ctheta^2 * Sphi * Cphi - Ixx * thetadot * Ctheta;\n    C32 = (Izz - Iyy) * ("
+      "thetadot * Cphi * Sphi * Stheta + phidot * Sphi^2 * Ctheta) + (Iyy - Izz) * phidot * Cphi^2 * Ctheta...\n       "
+      "     + Ixx * psidot * Stheta * Ctheta - Iyy * psidot * Sphi^2 * Stheta * Ctheta - Izz * psi * Cphi^2 * Stheta * "
+      "Ctheta;\n    C33 = (Iyy - Izz) * phidot * Cphi * Sphi * Ctheta^2 - Iyy * thetadot * Sphi^2 * Ctheta * Stheta ..."
+      "\n            - Izz * thetadot * Cphi^2 * Ctheta * Stheta + Ixx * thetadot * Ctheta * Stheta;\n    \n    C = [C1"
+      "1 C12 C13; C21 C22 C23; C31 C32 C33];   \n    \n    % (8)\n    tau_phi =  l * k * (-omega(2)^2 + omega(4)^2);\n "
+      "   tau_theta =  l * k * (-omega(1)^2 + omega(3)^2);\n    tau_psi =  -b * sum(omega(1)^2 - omega(2)^2 + omega(3)^"
+      "2 - omega(4)^2); % Modified from the text, rotor 2 and 4 spin in oposite direction\n    tau_b = [tau_phi; tau_th"
+      "eta; tau_psi];\n    \n    % (16)\n    J11 = Ixx; J12 = 0; J13 = -Ixx*Stheta;\n    J21 = 0;\n    J22 = Iyy * Cphi"
+      "^2 + Izz * Sphi^2;\n    J23 = (Iyy - Izz) * Cphi * Sphi * Ctheta;\n    J31 = -Ixx * Stheta;\n    J32 = (Iyy - Iz"
+      "z)*Cphi*Sphi*Ctheta;\n    J33 = Ixx * Stheta^2 + Iyy * Sphi^2 * Ctheta^2 + Izz * Cphi^2*Ctheta^2;\n    J = [J11 "
+      "J12 J13; J21 J22 J23; J31 J32 J33];  \n            \n    etaddot = J\\(tau_b - C*etadot); % (20)\n    \n    R = "
+      "[Cpsi*Ctheta, Cpsi*Stheta*Sphi-Spsi*Cphi, Cpsi*Stheta*Cphi + Spsi*Sphi;\n        Spsi*Ctheta, Spsi*Stheta*Sphi+C"
+      "psi*Cphi, Spsi*Stheta*Cphi - Cpsi*Sphi;\n        -Stheta, Ctheta*Sphi, Ctheta*Cphi];\nend"
       editorLayout	      "100 M4x1[10 5 700 500]"
     }
   }

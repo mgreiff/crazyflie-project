@@ -38,12 +38,12 @@ Dcd = Dzd;
 du_max = [inf inf inf]';
 du_min = [-inf -inf -inf]';
 % limit absolute value of u
-angle_max = 5 * pi/180;
+angle_max = 15 * pi/180;
 u_max = [angle_max angle_max inf]';
 u_min = [-angle_max -angle_max -inf]';
 % limit constrained outputs
-z_max = 1*[inf inf inf angle_max angle_max]';
-z_min = 1*[-inf -inf -inf -angle_max -angle_max]';
+z_max = 5*[inf inf inf angle_max angle_max]';
+z_min = 5*[-inf -inf -inf -angle_max -angle_max]';
 
 % Prediction parameters
 Hp = 30;  % Prediction horizon
@@ -63,4 +63,4 @@ V =  0.001*diag([1 1 1 1 1]);
 % Create controller
 md_quadcopter = MPCInit(Ad,Bd,Cyd,Czd,Dzd,Ccd,Dcd,Hp,Hw,zblk,Hu,ublk, ...
 	    du_max,du_min,u_max,u_min,z_max, ...
-	    z_min,Q,R,W,V,Ts,2,'qp_as');
+	    z_min,Q,R,W,V,Ts,2,'qp_ip');
