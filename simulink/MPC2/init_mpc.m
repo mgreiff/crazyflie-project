@@ -1,6 +1,6 @@
 %% Set up basic model
 Ad = diag(A);
-a1 = 4.8; a2 = 8.32; b = 8.32;
+a1 = 4.8; a2 = 8.32; b = 8.32; % Bad estimates
 T0 = m*g;
 
 Am1 = [zeros(10,3)];
@@ -21,7 +21,7 @@ Cm(4:5, 7:8) = eye(2);
 Dm = zeros(5, 3);
 
 %% Discretize
-Ts = 0.5; % sample time
+Ts = 0.1; % sample time
 
 [Ad, Bd, Cyd, Dzd]=ssdata(c2d(ss(Am,Bm,Cm,Dm),Ts));
 Czd = Cyd;
@@ -39,25 +39,25 @@ angle_max = 30 * pi/180;
 u_max = [angle_max angle_max inf]';
 u_min = [-angle_max -angle_max -inf]';
 % limit constrained outputs
-z_max = [angle_max angle_max inf inf inf]';
-z_min = [-angle_max -angle_max -inf -inf -inf]';
+z_max = 5*[inf inf inf angle_max angle_max]';
+z_min = 5*[-inf -inf -inf -angle_max -angle_max]';
 
 % Prediction parameters
-Hp = 10;  % Prediction horizon
-Hu = 10;  % Horizon for varying input signal
+Hp = 20;  % Prediction horizon
+Hu = 20;  % Horizon for varying input signal
 Hw = 1;  % First penalty sample
-zblk= 2;  % blocking factor 
-ublk= 2;  % blocking factor
+zblk= 1;  % blocking factor 
+ublk= 1;  % blocking factor
 
 
 % Weights
-Q = diag([0 0 1 1 1]);
-R = 0.1*diag([1 1 1]);
-W =  diag([1 1 1 1 1 1 1 1 1 1]);
-V =  0.1*diag([1 1 1 1 1]);
+Q = diag([2 2 1 0.01 0.01]);
+R = 0.01*diag([1 1 1]);
+W =  0.01*diag([1 1 1 1 1 1 1 1 1 1]);
+V =  0.001*diag([1 1 1 1 1]);
 
 
 % Create controller
-md = MPCInit(Ad,Bd,Cyd,Czd,Dzd,Ccd,Dcd,Hp,Hw,zblk,Hu,ublk, ...
+md_quadcopter = MPCInit(Ad,Bd,Cyd,Czd,Dzd,Ccd,Dcd,Hp,Hw,zblk,Hu,ublk, ...
 	    du_max,du_min,u_max,u_min,z_max, ...
-	    z_min,Q,R,W,V,Ts,2,'qp_as');
+	    z_min,Q,R,W,V,Ts,2,'qp_ip');
