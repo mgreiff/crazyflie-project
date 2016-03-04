@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
-from std_msgs.msg import String, Float64
+from std_msgs.msg import String
+from crazy_ros.msg import NumpyArrayFloat64 # Can handle messages of type np.array, list and tuple
+import numpy as np
 import rospy
 import os
 import sys
@@ -15,7 +17,7 @@ class ReferenceGenerator(object):
         self.status_sub = rospy.Subscriber('RG_status', String, self.handle_status_data)
 
         # Sets up publishers
-        self.reference_pub = rospy.Publisher('reference_signal', Float64, queue_size = 10)
+        self.reference_pub = rospy.Publisher('reference_signal', NumpyArrayFloat64, queue_size = 10)
  
         # Initial attributes
         self.status = False
@@ -50,12 +52,12 @@ class ReferenceGenerator(object):
     def generate_reference(self):
         while self.status:
             if self.mode == 0:
-                self.reference_pub.publish(self.timestep)
+                self.reference_pub.publish([0,0,0,0,0])
             elif self.mode == 1:
-                self.reference_pub.publish(self.timestep)
+                self.reference_pub.publish([1,1,1,1,1])
             elif self.mode == 2:
-                self.reference_pub.publish(self.timestep)
-            time.sleep(0.1)
+                self.reference_pub.publish([2,2,2,2,2])
+            time.sleep(self.timestep)
 
     def __str__(self):
         return 'reference generator node'

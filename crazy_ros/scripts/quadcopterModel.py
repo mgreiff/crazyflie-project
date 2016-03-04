@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from std_msgs.msg import String, Float64
+from crazy_ros.msg import NumpyArrayFloat64
+import numpy as np
 import rospy
 import os
 import sys
@@ -11,10 +13,10 @@ class QuadcopterModel(object):
 
     def __init__(self):
         # Sets up subscribers
-        self.reference_sub = rospy.Subscriber('reference_signal', Float64, self.handle_reference_data)
+        self.reference_sub = rospy.Subscriber('reference_signal', NumpyArrayFloat64, self.handle_reference_data)
 
         # Sets up publishers
-        self.measured_states_pub = rospy.Publisher('measured_states', Float64, queue_size = 10)
+        self.measured_states_pub = rospy.Publisher('measured_states', NumpyArrayFloat64, queue_size = 10)
 
         params = None
         # Loads configuration parameters
@@ -31,10 +33,10 @@ class QuadcopterModel(object):
 
     def handle_reference_data(self, msg):
         # TODO include discretised quadcopter dynamics and publish measured states
-        self.measured_states_pub.publish(msg.data)
+        self.measured_states_pub.publish([1.2,2.4,2.5,7.9])
 
     def __str__(self):
-        return 'QuadcopterModel Node'
+        return 'quadcopter model node'
 
 def main():
     rospy.init_node('QuadcopterModel')

@@ -10,6 +10,7 @@ find_package(catkin REQUIRED COMPONENTS
  add_message_files(
    FILES
    Num.msg
+   NumpyArrayFloat64.msg
  )
 
 ## Generate added messages and services with any dependencies listed here
@@ -18,7 +19,9 @@ generate_messages(
   std_msgs
 )
 
-catkin_package()
+catkin_package(
+  CATKIN_DEPENDS message_runtime
+)
 
 # include_directories(include)
 include_directories(
