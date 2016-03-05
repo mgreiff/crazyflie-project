@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
-from std_msgs.msg import String
+from std_msgs.msg import String, Float64
 from crazy_ros.msg import NumpyArrayFloat64 # Can handle messages of type np.array, list and tuple
 import numpy as np
+from math import sin, pi, sqrt
 import rospy
 import os
 import sys
@@ -18,21 +19,24 @@ class ReferenceGenerator(object):
 
         # Sets up publishers
         self.reference_pub = rospy.Publisher('reference_signal', NumpyArrayFloat64, queue_size = 10)
+        self.et_pub = rospy.Publisher('reference_executiontime', Float64, queue_size = 10)
  
         # Initial attributes
         self.status = False
         self.mode = 0
+        self.totalTime = 0
 
         params = None
         # Loads configuration parameters
         for filename in rospy.myargv(argv=sys.argv):
             if os.path.basename(filename) == 'configparam.cnf':
                 with open(filename) as configfile:
-                    params = load(configfile)
+                    param = load(configfile)
                 configfile.close()
-        if params != None:
+        if param != None:
             # Sets configuration parameters
-            self.timestep = params['global']['timestep']
+            self.timestep = param['global']['timestep']
+            self.param = param
         else:
             print 'ERROR. Could not load configuration parameters in %s' % (str(self))
 
@@ -50,14 +54,60 @@ class ReferenceGenerator(object):
             print 'ERROR. The cannot set the status in the reference generator to %s' % (data)
 
     def generate_reference(self):
+        runtime = time.time()
         while self.status:
+
+            # Tries to compensate for execution time
+            startTime = time.time()
+
+            # Publish omega reference for testing the quadcompter dynamics 
             if self.mode == 0:
-                self.reference_pub.publish([0,0,0,0,0])
+                self.totalTime += self.timestep
+                t = self.totalTime
+                g = self.param['quadcopter_model']['g']
+                m = self.param['quadcopter_model']['m']
+                k = self.param['quadcopter_model']['k']
+                hover_omega = sqrt(g * m / (4 * k));
+                omegaAmp = 25.
+                omegaOscillation = np.ones([4,1])
+                if t<=0.5:
+                    omegaOscillation *= 2 * sin(t*4*pi)
+                elif 0.5<t and t<=1:
+                    omegaOscillation[0] = 0
+                    omegaOscillation[1] *= -sin(t*4*pi)
+                    omegaOscillation[2] = 0
+                    omegaOscillation[3] *= sin(t*4*pi)
+                elif 1<t and t<=1.5:
+                    omegaOscillation[0] *= -sin(t*4*pi)
+                    omegaOscillation[1] = 0
+                    omegaOscillation[2] *= sin(t*4*pi)
+                    omegaOscillation[3] = 0
+                elif 1.5<t and t<=2.:
+                    omegaOscillation[0] *= -sin(t*4*pi)
+                    omegaOscillation[1] *= sin(t*4*pi)
+                    omegaOscillation[2] *= -sin(t*4*pi)
+                    omegaOscillation[3] *= sin(t*4*pi)
+                else:
+                    self.status = False
+                    self.totalTime = 0
+                ref = hover_omega*np.ones([4,1]) + omegaAmp*omegaOscillation
+
+            # Dummy publisher
             elif self.mode == 1:
-                self.reference_pub.publish([1,1,1,1,1])
+                ref = [1,1,1,1,1]
+
+            # Dummy publisher
             elif self.mode == 2:
-                self.reference_pub.publish([2,2,2,2,2])
-            time.sleep(self.timestep)
+                ref = [2,2,2,2,2]
+
+            executionTime = time.time() - startTime
+            time.sleep(self.timestep - executionTime)
+
+            self.et_pub.publish(time.time()-runtime)
+            runtime = time.time()
+
+            # Publish reference
+            self.reference_pub.publish(ref)
 
     def __str__(self):
         return 'reference generator node'

@@ -13,10 +13,14 @@ class QuadcopterModel(object):
 
     def __init__(self):
         # Sets up subscribers
-        self.reference_sub = rospy.Subscriber('reference_signal', NumpyArrayFloat64, self.handle_reference_data)
+        self.reference_sub = rospy.Subscriber('reference_signal',
+                                              NumpyArrayFloat64,
+                                              self.handle_reference_data)
 
         # Sets up publishers
-        self.measured_states_pub = rospy.Publisher('measured_states', NumpyArrayFloat64, queue_size = 10)
+        self.measured_states_pub = rospy.Publisher('measured_states',
+                                                   NumpyArrayFloat64,
+                                                   queue_size = 10)
 
         params = None
         # Loads configuration parameters
@@ -32,7 +36,7 @@ class QuadcopterModel(object):
             print 'ERROR. Could not load configuration parameters in %s' % (str(self))
 
     def handle_reference_data(self, msg):
-        # TODO include discretised quadcopter dynamics and publish measured states
+        # TODO include discretised quadcopter dynamics and publish measurements
         self.measured_states_pub.publish([1.2,2.4,2.5,7.9])
 
     def __str__(self):
