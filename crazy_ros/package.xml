@@ -4,13 +4,14 @@
   <version>0.0.0</version>
   <description>The crazy_ros package</description>
   <maintainer email="marcusgreiff.93@hotmail.com">marcus</maintainer>
-  <maintainer email="daniel.nilsson.jj@gmail.com">marcus</maintainer>
+  <maintainer email="daniel.nilsson.jj@gmail.com">daniel</maintainer>
   <license>TODO</license>
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>rospy</build_depend>
   <build_depend>message_generation</build_depend>
   <run_depend>rospy</run_depend>
   <run_depend>message_runtime</run_depend>
+  <run_depend>scipy</run_depend>
   <export>
     <!-- You can specify that this package is a metapackage here: -->
     <!-- <metapackage/> -->
