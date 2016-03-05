@@ -1,6 +1,6 @@
 ## Directories
 
-#### /ROS_project/*
+#### /crazy_ros/*
 The project currently contains (1) the master node, enabling interation from the terminal (2) the reference generator node, which sents a signal to the \reference_signal topic. The quadcopterModel node (3) listens to this topic and computes the
 system response (in terms of the measured states) and sends the data to a \measured_states topic. The computation is done by first evaluating the nonlinear continuous time system matrices, and then computing the ZOH discrete equivalent to condut the time stepping. The purpose of this is to simulate the system with ROS to test different methods of control before connecting to the crazyflie.
 
@@ -13,9 +13,10 @@ Currently, an issue that needs to be met is the nondeterministic behavious of th
 * /example - The raw python file for the quadcopter dynamics, example of what a system response in harder realtime will look like.
 
 ###### Useful ROS commands
+* ``roslaunch crazy_ros crazy.launch`` - Launches the entire project in crazy_ros (package) using the crazy.launch XML file.
 * ``rosrun rqt_graph rqt_graph`` - Plots a graph of the ROS structure.
 * ``rosrun rqt_plot rqt_plot <topic>``  - Plots the values of the topic ``\measurements\data[0]`` displays the x-measurements in time.
-* ``rosmsg echo <topic>`` - Prints the data sent to the topic in the terminal window.
+* ``rostopic echo <topic>`` - Prints the data sent to the topic in the terminal window.
 
 #### /VM_scripts/*
 Contains the scripts that run on the Bitcraze VM. This part of the project is not necessary for running any other script, and will be removed in the future.
