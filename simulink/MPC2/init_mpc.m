@@ -1,7 +1,7 @@
 %% Set up basic model
 Ad = diag(A);
 a1 = 4.8; a2 = 8.32; b = 8.32; % Bad estimates
-a1 = KphiD; a2 = KphiP; b = KphiP;
+a1 = KetaD(1); a2 = KetaP(1); b = KetaP(1);
 
 
 T0 = m*g;
@@ -30,8 +30,10 @@ Ts = 0.2; % sample time
 Czd = Cyd;
 Ccd = Cyd;
 Dcd = Dzd;
-Cyd = [Cyd; zeros(3, 10)]
-Cyd(6:8, 4:6) = eye(3);
+Cyd = [Cyd; zeros(3, 10)];
+Cyd(6:8, 4:6) = eye(3); % Measure velocities
+Cyd = [Cyd; zeros(2, 10)];
+Cyd(9:10, 9:10) = eye(2); % Measure angular velocities
 
 % % % Controller Design % % %
 
@@ -41,25 +43,25 @@ du_max = [inf inf inf]';
 du_min = [-inf -inf -inf]';
 % limit absolute value of u
 angle_max = 35 * pi/180;
-u_max = [angle_max angle_max inf]';
-u_min = [-angle_max -angle_max -inf]';
+u_max = [angle_max angle_max 5]';
+u_min = [-angle_max -angle_max -5]';
 % limit constrained outputs
 z_max = 2*[inf inf inf angle_max angle_max]';
 z_min = 2*[-inf -inf -inf -angle_max -angle_max]';
 
 % Prediction parameters
-Hp = 30;  % Prediction horizon
-Hu = 30;  % Horizon for varying input signal
+Hp = 10;  % Prediction horizon
+Hu = 10;  % Horizon for varying input signal
 Hw = 0;  % First penalty sample
 zblk= 1;  % blocking factor 
 ublk= 1;  % blocking factor
 
 
 % Weights
-Q = diag([2 2 2 0.1 0.1]);
-R = 20*diag([1 1 1]);
+Q = diag([2 2 2 1 1]);
+R = diag([2 2 0.01]);
 W =  0.5*diag([1 1 1 1 1 1 1 1 1 1]);
-V =  0.01*diag([1 1 1 1 1 1 1 1]);
+V =  0.01*diag([1 1 1 1 1 1 1 1 1 1]);
 
 
 % Create controller
