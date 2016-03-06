@@ -2,7 +2,7 @@ Model {
   Name			  "quadcopter_pd_controller"
   Version		  8.6
   MdlSubVersion		  0
-  SavedCharacterEncoding  "windows-1252"
+  SavedCharacterEncoding  "US-ASCII"
   GraphicalInterface {
     NumRootInports	    4
     Inport {
@@ -32,7 +32,7 @@ Model {
       BusOutputAsStruct	      "off"
     }
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.59"
+    ComputedModelVersion    "1.60"
     NumModelReferences	    0
     NumTestPointedSignals   0
   }
@@ -54,7 +54,7 @@ Model {
       $ObjectID		      2
       $ClassName	      "Simulink.WindowInfo"
       IsActive		      [1]
-      Location		      [156.0, 84.0, 1358.0, 969.0]
+      Location		      [0.0, 23.0, 1280.0, 714.0]
       Object {
 	$PropName		"ModelBrowserInfo"
 	$ObjectID		3
@@ -78,9 +78,9 @@ Model {
 	IsActive		[1]
 	ViewObjType		"SimulinkTopLevel"
 	LoadSaveID		"0"
-	Extents			[1308.0, 794.0]
-	ZoomFactor		[1.0]
-	Offset			[350.66666666666663, 191.1666666666672]
+	Extents			[1246.0, 541.0]
+	ZoomFactor		[0.5]
+	Offset			[-28.33333333333394, -75.077174087364256]
       }
     }
   }
@@ -88,11 +88,11 @@ Model {
   Creator		  "Daniel"
   UpdateHistory		  "UpdateHistoryNever"
   ModifiedByFormat	  "%<Auto>"
-  LastModifiedBy	  "Daniel"
+  LastModifiedBy	  "mgreiff"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Tue Mar 01 23:59:10 2016"
-  RTWModifiedTimeStamp	  378768419
-  ModelVersionFormat	  "1.%<AutoIncrement:59>"
+  LastModifiedDate	  "Sun Mar 06 16:37:01 2016"
+  RTWModifiedTimeStamp	  379183016
+  ModelVersionFormat	  "1.%<AutoIncrement:60>"
   ConfigurationManager	  "none"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -137,7 +137,7 @@ Model {
     $ObjectID		    6
     $ClassName		    "Simulink.SimulationData.ModelLoggingInfo"
     model_		    "quadcopter_pd_controller"
-    overrideMode_	    [0U]
+    overrideMode_	    [0.0]
     Array {
       Type		      "Cell"
       Dimension		      1
@@ -912,7 +912,7 @@ Model {
   }
   System {
     Name		    "quadcopter_pd_controller"
-    Location		    [156, 84, 1514, 1053]
+    Location		    [0, 23, 1280, 737]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -924,9 +924,9 @@ Model {
     TiledPaperMargins	    [0.500000, 0.500000, 0.500000, 0.500000]
     TiledPageScale	    1
     ShowPageBoundaries	    off
-    ZoomFactor		    "100"
+    ZoomFactor		    "50"
     ReportName		    "simulink-default.rpt"
-    SIDHighWatermark	    "28"
+    SIDHighWatermark	    "31"
     Block {
       BlockType		      Inport
       Name		      "r"
@@ -1481,6 +1481,10 @@ Model {
       DstPort		      11
     }
     Line {
+      FontName		      "Helvetica"
+      FontSize		      9
+      FontWeight	      "normal"
+      FontAngle		      "normal"
       ZOrder		      103
       SrcBlock		      "Constant5"
       SrcPort		      1
