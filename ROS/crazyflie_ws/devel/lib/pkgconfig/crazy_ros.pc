@@ -1,0 +1,8 @@
+prefix=/home/daniel/Documents/Crazyflie/crazyflie_project/ROS/crazyflie_ws/devel
+
+Name: crazy_ros
+Description: Description of crazy_ros
+Version: 0.0.0
+Cflags: -I/home/daniel/Documents/Crazyflie/crazyflie_project/ROS/crazyflie_ws/devel/include
+Libs: -L/home/daniel/Documents/Crazyflie/crazyflie_project/ROS/crazyflie_ws/devel/lib 
+Requires: message_runtime

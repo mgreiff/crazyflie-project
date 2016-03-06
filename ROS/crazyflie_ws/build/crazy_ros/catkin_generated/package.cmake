@@ -1,0 +1,7 @@
+set(_CATKIN_CURRENT_PACKAGE "crazy_ros")
+set(crazy_ros_MAINTAINER "marcus <marcusgreiff.93@hotmail.com>, daniel <daniel.nilsson.jj@gmail.com>")
+set(crazy_ros_DEPRECATED "")
+set(crazy_ros_VERSION "0.0.0")
+set(crazy_ros_BUILD_DEPENDS "rospy" "message_generation")
+set(crazy_ros_RUN_DEPENDS "rospy" "message_runtime" "scipy")
+set(crazy_ros_BUILDTOOL_DEPENDS "catkin")
