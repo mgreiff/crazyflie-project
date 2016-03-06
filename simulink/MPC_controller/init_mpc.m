@@ -1,8 +1,7 @@
 %% Set up basic model
 Ad = diag(A);
-a1 = 4.8; a2 = 8.32; b = 8.32; % Bad estimates
+a1 = 4.8; a2 = 8.32; b = 8.32;
 a1 = KetaD(1); a2 = KetaP(1); b = KetaP(1);
-
 
 T0 = m*g;
 
