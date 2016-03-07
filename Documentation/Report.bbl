@@ -25,6 +25,12 @@
 T.~Luukkonen, ``Modelling and control of quadcopter,'' \emph{Independent
   research project in applied mathematics, Espoo}, 2011.
 
+\bibitem{dikmen2009attitude}
+{\.I}.~Dikmen, A.~Ar{\=\i}soy, and H.~Temelta{\c{s}}, ``Attitude control of a
+  quadrotor,'' in \emph{Recent Advances in Space Technologies, 2009. RAST'09.
+  4th International Conference on}.\hskip 1em plus 0.5em minus 0.4em\relax
+  IEEE, 2009, pp. 722--727.
+
 \bibitem{Bouffard:EECS-2012-241}
 \BIBentryALTinterwordspacing
 P.~Bouffard, ``On-board model predictive control of a quadrotor helicopter:

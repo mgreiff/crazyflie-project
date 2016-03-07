@@ -60,6 +60,11 @@
 
 \begin{document}
 \maketitle
+
+\newpage
+\tableofcontents
+\newpage
+
 \section{Introduction}
 \section{Dynamics}
 In this project, we consider the non-linear quadcopter equations as derived by Lukkonen et al. ~\cite{luukkonen2011modelling}. A brief description of the dynamics is given to define terms which will be used in the control scheme. Let
@@ -91,9 +96,9 @@ with some constant $k$ and the torque around each motor axis can be written
 \tau_{M_i}\ = b\omega_i^2+I_M\dot{\omega_i}
 \end{equation}
 where $b$ is a drag constant and $I_M$ is the rotor inertia. By the symmetry of the system, the thrust and torque vectors in the body coordinate system can then be wtitten
-\begin{equation}
+\begin{equation}\label{eq:torque}
 \mathbf{T}_{B} =
-{T}_{B} \hat{\mathbf{z}}_B= 
+T \hat{\mathbf{z}}_B= 
 \begin{bmatrix}
 0\\
 0\\
@@ -178,7 +183,7 @@ with
  \mathbf{0}_{7\times 2} & \mathbb{I}_{7\times7} & \mathbf{0}_{7\times 2}
 \end{bmatrix}
 \end{equation}
-The $\mathbf{C}^c$ matrix was chosen to reflect the available sensory information. The height $z$ is measured by a pressure sensor, the angles $\boldsymbol{\eta}$ are retrieved from a gyroscope aboard the quadcopter and the velocities $\dot{\boldsymbol{\xi}}$ are integrated from readings of the accelerometer.
+The $\mathbf{C}^c$ matrix was chosen to reflect the available sensory information. The height $z$ is measured by a pressure sensor, the angles $\boldsymbol{\eta}$ are retrieved from a gyroscope aboard the quadcopter and the velocities $\dot{\boldsymbol{\xi}}$ are integrated from readings of the combined sensory feedback from the accelerometer and magnetometer.
 
 In order to simulate the dynamics, the continuous time system~\eqref{eq:contsys} was implemented in Simulink (see \texttt{quadcopter\_model.m}, \textbf{Section~\ref{sec:appendix}}), and validated by comparison to the results in~\cite{luukkonen2011modelling}. The discrete time system was then computed using zero-order hold at a time step $h$, with the discrete state space representation
 \begin{flalign}
@@ -194,10 +199,80 @@ where
 \end{equation}
 As the final implementation of the control system was done in ROS based in Python and C++, a script was written do simulate the system using only the scipy and numpy modules (see simulate\_system.py, \textbf{Section~\ref{sec:appendix}}). The result  (see Figure~\ref{fig:}).
 
-\subsection{Full model with baseline PD dynamics}
+\subsection{Attitude PD control dynamics}
+The system is inherently unstable, as the only truly stable position is at $\dot{\boldsymbol\xi}=\boldsymbol\eta=\dot{\boldsymbol\eta}=0$. In the derivation of the control schemes, it might be interesting to develop controllers not only for the unstable non-linear systems~\eqref{eq:contsys}, but also for a system which is stabilised with a attitude PD controller. Such a controller was derived in~\cite{luukkonen2011modelling}~\cite{dikmen2009attitude}, and can be summarised in the scheme
+\begin{flalign}
+\begin{split}
+T=&(g + K_{D,z}(\dot{z}_{ref} - \dot{z})) + K_{P,z}(z_{ref} - z))\frac{m}{\cos(\phi)\cos(\theta)}\\
+\tau_{\phi}=&(K_{D,\phi}(\dot{\phi}_{ref} - \dot{\phi})) + K_{P,\phi}(\phi_{ref} - \phi))I_{xx}\\
+\tau_{\theta}=&(K_{D,\theta}(\dot{\theta}_{ref} - \dot{\theta})) + K_{P,\theta}(\theta_{ref} - \theta))I_{yy}\\
+\tau_{\psi}=&(K_{D,\psi}(\dot{\psi}_{ref} - \dot{\psi})) + K_{P,\psi}(\psi_{ref} - \psi))I_{zz}
+\end{split}
+\end{flalign}
+In using this controller, setting all references to 0 results in a stable hovering system. By defining the control error as $e_z = z_{ref} - z$, the controller can be written
+\begin{flalign}
+\begin{split}
+T=&\hat{g} + \alpha_{D,\dot{z}}\dot{e}_{z} +  \alpha_{P,{z}}e_{z}\\
+\tau_{\phi}=& \alpha_{D,\dot{\phi}}\dot{e}_{\phi} +  \alpha_{P,{\phi}}e_{\phi}\\
+\tau_{\theta}=&\alpha_{D,\dot{\theta}}\dot{e}_{\theta} +  \alpha_{P,{\theta}}e_{\theta}\\
+\tau_{\psi}=&\alpha_{D,\dot{\psi}}\dot{e}_{\psi} +  \alpha_{P,{\psi}}e_{\psi}\\
+\end{split}
+\end{flalign}
+Including these dynamics in the system, and linearising around the stable state $\eta = \dot{\eta}= [0,0,0]^T$ we get the linearised system matrices
+
+\subsection{Rotor-loop dynamics}
+
+TODO: Find transfer function from motor current to rotor speed on the form
+\begin{equation}
+H_{I\rightarrow \dot{\omega}}(s) \approx \frac{b_0}{s + a_0}
+\end{equation}
+The step response of the system is then
+\begin{equation}
+\frac{b_0}{s + a_0} \frac{1}{s} = \frac{b_0}{a_0}\Big(\frac{1}{s} - \frac{1}{s + a_0}\Big) \overset{\mathcal{L}_t}{\longrightarrow}
+\frac{b_0}{a_0}(e^{-t} - e^{-a_0t})
+\end{equation}
+and can easily be identified by means of system identification. A simple test would be to measure the response of two unit steps in succession to determine both coefficients. The motor is incredibly responsive, going from ${\boldsymbol\omega} = 0$ to ${\boldsymbol\omega}\approx 2.5\cdot 10^4$ in $< 180$ ms. (see https://www.bitcraze.io/2015/02/measuring-propeller-rpm-part-3/). We have access to RPM measurements and can therefore construct a very fast PI or PID loop for each motor to keep $\boldsymbol\omega^2$ at a desired value. In this section, we could advance such a controller and show that it is indeed viable and very responsive. With this result in mind, it could be an idea to investigate methods of control when using $\boldsymbol\omega^2$, in which case the derived dynamics are the same except for the $\mathbf{B}^c$ matrix, which the must include the mapping of $\boldsymbol\omega^2$ to thrust and torques,
+\begin{equation}
+\begin{bmatrix}
+T\\
+\tau_{\phi}\\
+\tau_{\theta}\\
+\tau_{\psi}
+\end{bmatrix}
+=
+\mathbf{M}_{\omega}\boldsymbol\omega^2
+\quad\text{where}\quad
+\mathbf{M}_{\omega} = 
+\begin{bmatrix}
+    k&    k&   k&   k\\
+    0& -kl&   0& kl\\
+ -kl&    0& kl&  0\\
+   -b&    b&  -b&   b\\
+\end{bmatrix}
+\quad\text{and}\quad
+\mathbf{M}^{-1}_{\omega} = 
+\begin{bmatrix}
+    \frac{1}{4k}& 0 & -\frac{1}{2kl} &  \frac{1}{4b}\\
+    \frac{1}{4k}& -\frac{1}{2kl} & 0 & -\frac{1}{4b}\\
+    \frac{1}{4k}& 0 &  \frac{1}{2kl} &  \frac{1}{4b}\\
+    \frac{1}{4k}&  \frac{1}{2kl} & 0 & -\frac{1}{4b}\\
+\end{bmatrix}
+\end{equation}
+as derived from equation~\eqref{eq:torque}. The updated continuous system, with $\mathbf{u} = \boldsymbol\omega^2$ is then
+\begin{flalign}\label{eq:contsys2}
+\begin{split}
+\dot{\mathbf{x}}(t) =&\mathbf{A}^c\mathbf{x}(t)+\mathbf{B}^c\mathbf{M}_{\omega}\mathbf{u}(t)+\mathbf{G}^c\\
+\mathbf{y}(t) =& \mathbf{C}^c\mathbf{x}(t)
+\end{split}
+\end{flalign}
 
 \section{MPC control}
-The dynamics of the quadcopter defined in~\cite{Bouffard:EECS-2012-241} defines the pitch as $\theta_1$ and yaw as $\theta_2$. The quadcopter is then linearised round $(\theta_1,\theta_2)=\mathbf{0}$ with the control signals $u_1 = \Delta\theta_1$, $u_2 = \Delta\theta_2$ and $u_3$ as the commanded thrust (see \texttt{quadcopter\_MPC\_init.m}). Discretisation is here done through ZOH but other methods could be used as well. The model was replicated in Simulink, and the system responses look reasonable (see \texttt{quadcopter\_MPC\_simulate.m})
+Different implementation paths
+\begin{enumerate}
+\item Include rotor control loops in the system matrix before linearising, thus giving a better model of the system for the MPC controller at the cost of increasing the dimension of $\mathbf{A}^c$ from $12\times 12$ to $21\times 21$ (if using PID control for the rotors). as the rotors are very responsive, this might not be necessary, and we may get away with simply using $\boldsymbol\omega^2$ as input signal and assume that the real value is equal to the reference value at all times. However, this will have to be examined in simulations.
+\item Decide using simulations is the stabilizing PD controller should be used in MPC or if the $\boldsymbol\omega^2$ control signals should be controlled directly.
+\end{enumerate}
+In total, we could test all four combinations of with/without omega-loop dynamics and with/without stabilizing PD.
 \subsubsection*{TODO}
 \begin{enumerate}
 \item \sout{Create simplified linearised system ss-model for use in MPC} (see eg.~\cite{Bouffard:EECS-2012-241}).
@@ -208,6 +283,7 @@ The dynamics of the quadcopter defined in~\cite{Bouffard:EECS-2012-241} defines 
 \item Validate by comparison to the results in Simulink.
 \item System identification.
 \item Simulate system with proper parameters.
+\item Compare the four different implementations based on speed and stability.
 \end{enumerate}
 \section{$\mathcal{L}_1$-control}
 The $\mathbf{\Gamma}$-projection operator for two vectors $\theta,y\in\mathbb{R}^k$ is defined as
