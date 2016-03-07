@@ -6,11 +6,11 @@ system response (in terms of the measured states) and sends the data to a \measu
 
 Currently, an issue that needs to be met is the nondeterministic behavious of the ROS publishers (see eg. \reference_executiontime), which cannot be used in critical parts of the control system. Instead, tests should be made with ZMQ and the realtime_tools C++ layer.
 ###### Contents
-* /scripts - Contains the code for generating nodes.
-* /msg - Contains the message definitions used.
-* /config - Contains a JSON configuration file for all ROS nodes.
-* /launch - Contains the launch XML file.
-* /example - The raw python file for the quadcopter dynamics, example of what a system response in harder realtime will look like.
+* /scripts/* - Contains the code for generating nodes.
+* /msg/* - Contains the message definitions used.
+* /config/* - Contains a JSON configuration file for all ROS nodes.
+* /launch/* - Contains the launch XML file.
+* /example/* - The raw python file for the quadcopter dynamics, example of what a system response in harder realtime will look like.
 
 ###### Useful ROS commands
 * ``roslaunch crazy_ros crazy.launch`` - Launches the entire project in crazy_ros (package) using the crazy.launch XML file.
@@ -21,24 +21,36 @@ Currently, an issue that needs to be met is the nondeterministic behavious of th
 #### /VM_scripts/*
 Contains the scripts that run on the Bitcraze VM. This part of the project is not necessary for running any other script, and will be removed in the future.
 ###### Contents
-* RampMotorExample.py - An example for connecting and controlling thrust
-  to the motors from the Bitcraze VM using ZMQ.
+* RampMotorExample.py - An example for connecting and controlling thrust to the motors from the Bitcraze VM using ZMQ.
 
 #### /documentation/*
 The project documentation, will eventually include a report discussion both the theory and implementation of the project. 
+
 ###### Contents
-* Report.tex - A report containing a short discussion on the dynamics, MPC, L1 control and PD control.
+* **Report.tex** - A report containing a short discussion on the dynamics, PD, MPC, L1 control and TODO's.
 
 #### /simulink_model/*
-Contains the files used in modelling of the quadcopter.
+Contains the files used in modelling of the quadcopter. The necessary paths and parameters are set up by tunning the ``simulink_init.m`` file, after which the examples in the /examples/* directory can be run. Some of these may need additional parameters, in which case an ``init_.m`` file is located in the same directory as the example subdirectory.
 
-* model/quadcopter_init - Constants and initial conditions of the
-  non-linear model (see Luukkonen's work).
-* model/quadcopter_model - A process model based, currently operational
-  but incomplete  (see Luukkonen's work).
+###### Contents - Models
+* /quadcopter_model/**quadcopter_init.m** - Constants and initial conditions of thenon-linear model.
+* /quadcopter_model/**quadcopter_model.mdl** - A process model of the quadcopter based on the Newton-Lagrange equations.
+* /quadcopter_model/**linearization.m** - A script for generating a symbolic expression for the jacobian of the system, the thought was here to derive such an expression which became infeasibly complex (takes ~0.07 s to evaluate with a complete linearization).
+* /PD_controller/**init_PD_controller.m** -  Initalises the constants in the inner PD controller.
+* /PD_controller/**init_PD_position_controller.m** - Initalises the constants in the outer PD controller.
+* /PD_controller/**quadcopter_PD_controller.mdl** - A model for mapping control errors in x, y and z to control signals in phi, theta and z to rotor angular velocities squared.
+* /MPC_controller/**init_MPC.m** - Initializes the MPC controller, setting up the linearized discrete system matrices and declaring weights.
+* /L1_controller/**adaptationlaw_with_projection_op.slx** - A simple adaptation law with the projection operator validated by comparison to the work of Chengyu Cao and Naira Hovakimyan (see /documentation).
+* /kalman_filters/**discrete_kalman_filter.slx** - Implementation of a simple kalman filter for the linearized system (functional)
+* /kalman_filters/**extended_discrete_kalman_filter.slx** - Implementation of an extended kalman filter for the quadcopter process (currently dysfuntional).
 
-* MPC_control/quadcopter_MPC_init.m
-* MPC_control/quadcopter_MPC_simulate.m
+###### Contents - Examples (/examples/*)
+* /quadcopter_model_test/**quadcopter_process_test.slx** - An example of the dynamics responding to rotor speeds, replicating the results in th work of Lukkonens (requires init_process_test.m to run).
+* /pd_control_test/**quadcopter_pd_test.slx** - Demonstrates the system response with only the innen PD controller.
+* /pd_position_control_test/**quadcopter_pd_position_test.slx** - Demonstrates the system response with an inner PD and outer PD position controller.
+* /mpc_control_test/**quadcopter_mpc_position_test.slx** - Demonstrates the system response with an outer inner PD and outer MPC controller (requires init_MPC_test.m to run).
+* /kalman_filter_test/**dicrete_kalman_filter_test.slx** - An example of the state esimation using Kalman filtering.
+* /ekdf_test/**quadcopter_ekdf_test.slx** - An example of the state esimation using EKDF (requires init_ekdf_test.m to run).
 
 #### /trajectory_planning/*
 Contains the scripts trajectory planning, possibly suing IRIS and CVXGEN -
