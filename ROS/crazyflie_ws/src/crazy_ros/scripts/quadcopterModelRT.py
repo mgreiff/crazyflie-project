@@ -11,8 +11,10 @@ import os
 import sys
 from json import dumps, load
 import time
+from parameterLoader import ParameterLoader
 
-class QuadcopterModel(object):
+
+class QuadcopterModelRT(ParameterLoader):
 
     def __init__(self):
         # Sets up subscribers
@@ -25,33 +27,19 @@ class QuadcopterModel(object):
                                                    NumpyArrayFloat64,
                                                    queue_size = 10)
 
-        params = None
-        # Loads configuration parameters
-        for filename in rospy.myargv(argv=sys.argv):
-            if os.path.basename(filename) == 'configparam.cnf':
-                with open(filename) as configfile:
-                    param = load(configfile)
-                configfile.close()
-        if param != None:
-            # Sets configuration parameters
-            self.timestep = param['global']['timestep']
-            self.x_init = np.array(param['quadcopter_model']['x_init'])
-            self.x = self.x_init
+        self.load_parameters()
+        
+        # Set up initial omega
+        hover_omega = sqrt(self.g * self.m / (4 * self.k))        
+        self.omega = np.array([1, 1, 1, 1]) * hover_omega
 
-            self.g = param['quadcopter_model']['g']
-            self.m = param['quadcopter_model']['m']
-            self.k = param['quadcopter_model']['k']
-            self.A = param['quadcopter_model']['A']
-            self.I = param['quadcopter_model']['I']
-            self.l = param['quadcopter_model']['l']
-            self.b = param['quadcopter_model']['b']
-        else:
-            errmsg = ('ERROR. Could not find parameters in %s...\n, shutting down node'%(str(self)))
-            raise Exception(errmsg)
 
     def handle_reference_data(self, msg):
         # TODO include discretised quadcopter dynamics and publish measurements
-        omega = np.array(msg.data)
+        self.omega = np.array(msg.data)
+
+    def simulate_timestep(self):
+        omega = self.omega
         x = self.x
         Ts = self.timestep
         g = self.g
@@ -186,12 +174,11 @@ class QuadcopterModel(object):
 
 def main():
     rospy.init_node('QuadcopterModel')
-    quad = QuadcopterModel()
+    quad = QuadcopterModelRT()
     rate = rospy.Rate(1/quad.timestep)
     while not rospy.is_shutdown():
-        rospy.loginfo("Quadcopter taking one timestep")
+        quad.simulate_timestep()
         rate.sleep()
-    rospy.spin()
 
 if __name__ == '__main__':
     main()
