@@ -22,7 +22,7 @@ class InnerPDController(ParameterLoader):
 
         self.load_parameters()
         self.inner = InnerPD(self.param)
-        self.ref = np.array([5.0, 0.0, 0.0, 0.0])
+        self.ref = np.array([0.0, 0.0, 0.0, 0.0])
 
     def handle_measured_data(self, msg):
         x = np.array(msg.data)
@@ -47,8 +47,8 @@ class InnerPD(object):
         self.Izz = param['quadcopter_model']['I'][2]
         self.l = param['quadcopter_model']['l']
         self.b = param['quadcopter_model']['b']
-        self.Kp = np.transpose(np.array(param['inner_PD']['Kp']))
-        self.Kd = np.transpose(np.array(param['inner_PD']['Kd']))
+        self.Kp = np.array(param['inner_PD']['Kp'])
+        self.Kd = np.array(param['inner_PD']['Kd'])
 
     def __call__(self, ref, dref, x):
         pstates = x[[2,6,7,8]]    #z, phi, theta, psi
@@ -56,8 +56,8 @@ class InnerPD(object):
         perror = ref - pstates
         derror = dref - dstates
 
-        Dpart = self.Kd * derror
-        Ppart = self.Kp * perror
+        Dpart = self.Kd[:,0] * derror
+        Ppart = self.Kp[:,0] * perror
         Gacceleration = np.array([self.g,0,0,0])
 
         phi = x[6]
@@ -65,7 +65,7 @@ class InnerPD(object):
 
         InertiaTransform = np.diag([self.m/(cos(phi)*cos(theta)),self.Ixx,self.Iyy,self.Izz])
 
-        Tvec = np.dot(InertiaTransform, Gacceleration + Dpart[0] + Ppart[0])
+        Tvec = np.dot(InertiaTransform, Gacceleration + Dpart + Ppart)
 
         Tvec2omegaMap = np.array([[1./(4*self.k), 0., -1./(2*self.k*self.l), -1/(4.*self.b)],
                                   [1./(4*self.k), -1./(2*self.k*self.l), 0., 1/(4.*self.b)],
