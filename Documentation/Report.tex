@@ -209,16 +209,7 @@ T=&(g + K_{D,z}(\dot{z}_{ref} - \dot{z})) + K_{P,z}(z_{ref} - z))\frac{m}{\cos(\
 \tau_{\psi}=&(K_{D,\psi}(\dot{\psi}_{ref} - \dot{\psi})) + K_{P,\psi}(\psi_{ref} - \psi))I_{zz}
 \end{split}
 \end{flalign}
-In using this controller, setting all references to 0 results in a stable hovering system. By defining the control error as $e_z = z_{ref} - z$, the controller can be written
-\begin{flalign}
-\begin{split}
-T=&\hat{g} + \alpha_{D,\dot{z}}\dot{e}_{z} +  \alpha_{P,{z}}e_{z}\\
-\tau_{\phi}=& \alpha_{D,\dot{\phi}}\dot{e}_{\phi} +  \alpha_{P,{\phi}}e_{\phi}\\
-\tau_{\theta}=&\alpha_{D,\dot{\theta}}\dot{e}_{\theta} +  \alpha_{P,{\theta}}e_{\theta}\\
-\tau_{\psi}=&\alpha_{D,\dot{\psi}}\dot{e}_{\psi} +  \alpha_{P,{\psi}}e_{\psi}\\
-\end{split}
-\end{flalign}
-Including these dynamics in the system, and linearising around the stable state $\eta = \dot{\eta}= [0,0,0]^T$ we get the linearised system matrices
+In using this controller, setting all references to 0 results in a stable hovering system.
 
 \subsection{Rotor-loop dynamics}
 
@@ -266,6 +257,60 @@ as derived from equation~\eqref{eq:torque}. The updated continuous system, with 
 \end{split}
 \end{flalign}
 
+\section{Linearization and state estimation}
+Consider the continuous time system with input signal $\mathbf{u}=\boldsymbol\omega^2$, it is clear then that the non-linear part of the state-space matrices only concern the $\boldsymbol\eta,\dot{\boldsymbol\eta}$-states and the input signal. By defining the linearisation point of the euler angles around the stable point $\boldsymbol\eta_{p}=\dot{\boldsymbol\eta}_{p}=0$, and the rotor velocities around the rotor speed required to hover $\boldsymbol\omega_{p} = \sqrt{\frac{gm}{4k}}[1,1,1,1]^T$, such that the deviation from the linearisation points become
+\begin{flalign}
+\Delta\boldsymbol\eta =& \boldsymbol\eta - \boldsymbol\eta_{p}\\
+\Delta\dot{\boldsymbol\eta} =& \dot{\boldsymbol\eta} - \dot{\boldsymbol\eta}_{p}\\
+\Delta\boldsymbol\omega =& \boldsymbol\omega - \boldsymbol\omega_{p}
+\end{flalign}
+Close to this point, the non-linear component of the $\mathbf{A}^c$-matrix $(\mathbf{J}^{-1}\mathbf{C}\dot{\boldsymbol\eta})$ can be linearised as
+\begin{equation}
+\frac{\partial\mathbf{J}^{-1}(\boldsymbol\eta)\mathbf{C}(\boldsymbol\eta,\dot{\boldsymbol\eta})\dot{\boldsymbol\eta}}{\partial \boldsymbol\eta}\Big|_{\boldsymbol\eta_p,\dot{\boldsymbol\eta}_p}= \mathbf{0}_{3\times 3},\quad\text{and}\quad
+\frac{\partial\mathbf{J}^{-1}(\boldsymbol\eta)\mathbf{C}(\boldsymbol\eta,\dot{\boldsymbol\eta})\dot{\boldsymbol\eta}}{\partial \dot{\boldsymbol\eta}}\Big|_{\boldsymbol\eta_p,\dot{\boldsymbol\eta}_p}= \mathbf{0}_{3\times 3}
+\end{equation}
+implying that the linearized continuous-time system matrix is
+\begin{equation}
+\mathbf{A}^c_{\Delta\omega}=\begin{bmatrix}
+\mathbf{0} & \mathbb{I}_{3\times 3} & \mathbf{0} & \mathbf{0} \\
+\mathbf{0} & -\frac{1}{m}\mathbf{D} & \mathbf{0} & \mathbf{0} \\
+\mathbf{0} & \mathbf{0} & \mathbf{0} &\mathbb{I}_{3\times 3} & \\
+\mathbf{0} & \mathbf{0} & \mathbf{0} &\mathbf{0}
+\end{bmatrix}.
+\end{equation}
+Using the fact that
+\begin{equation}
+\mathbf{J}^{-1}(\mathbf{0})=
+\begin{bmatrix}
+\frac{1}{I_{xx}} & 0 & 0\\
+0 & \frac{1}{I_{yy}} & 0\\
+0 & 0 & \frac{1}{I_{zz}}\\
+\end{bmatrix}, \quad
+\mathbf{R}(\mathbf{0})\hat{\mathbf{z}}_B=\hat{\mathbf{z}}=
+\begin{bmatrix}
+0\\
+0\\
+1\\
+\end{bmatrix}
+\end{equation}
+we conclude that the linearized continuous-time $\mathbf{B}$-matrix can be written
+\begin{equation}
+\mathbf{B}^c_{\Delta\omega}=\frac{\partial \mathbf{B}^c(\boldsymbol\eta)\mathbf{M}_{\omega}\boldsymbol\omega^2}{\partial \boldsymbol\omega}\Big|_{\boldsymbol\eta=\mathbf{0},\boldsymbol\omega=\boldsymbol\omega_p} = \sqrt{\frac{gm}{k}}
+\begin{bmatrix}
+0&0&0&0\\
+0&0&0&0\\
+0&0&0&0\\
+0&0&0&0\\
+0&0&0&0\\
+k&k&k&k\\
+0&0&0&0\\
+0&0&0&0\\
+0&0&0&0\\
+0 & \frac{-kl}{I_{xx}} & 0 & \frac{kl}{I_{xx}}\\
+\frac{-kl}{I_{yy}} & 0 & \frac{kl}{I_{yy}} & 0\\
+\frac{-b}{I_{zz}} & \frac{b}{I_{zz}} & \frac{-b}{I_{zz}} & \frac{b}{I_{zz}} \\
+\end{bmatrix}
+\end{equation}
 \section{MPC control}
 Different implementation paths
 \begin{enumerate}
