@@ -1,16 +1,15 @@
-if 0 % Use full sym
-    syms psi theta phi phidot thetadot psidot
+if 1 % Use full sym
+    syms Ixx Iyy Izz psi theta phi phidot thetadot psidot
 end
-if 1 % Use partial sym
+if 0 % Use partial sym
     syms psi theta phi
     phidot = 0;
     thetadot = 0;
     psidot = 0;
+    Ixx = I(1); Iyy = I(2); Izz = I(3);
 end
 Sphi = sin(phi); Stheta = sin(theta); Spsi = sin(psi);
 Cphi = cos(phi); Ctheta = cos(theta); Cpsi = cos(psi);
-
-Ixx = I(1); Iyy = I(2); Izz = I(3);
 
 C11 = 0;
 C12 = (Iyy - Izz) * (thetadot*Cphi*Sphi + psidot*Sphi^2*Ctheta) + (Izz - Iyy)*psidot*Cphi^2*Ctheta - Ixx*psidot*Ctheta;
@@ -36,7 +35,8 @@ J = [J11 J12 J13; J21 J22 J23; J31 J32 J33];
 
 etastate = [psi theta phi phidot thetadot psidot];
 NonlinearPart = [];
-iJC = (inv(J)\C)*[phidot thetadot psidot]';
+iJC = linsolve(inv(J),C)*[phidot thetadot psidot]';%linsolve(inv(J,))
+%iJCvectorvaluedFunction = sum(iJC')';
 for jj = 1:6
     NonlinearPart = [NonlinearPart diff(iJC,etastate(1,jj))];
 end
@@ -45,24 +45,24 @@ end
 % to be generated only once and the evaluated on every iteration
 
 % Some linearisation point
-psi = 0.01;
-theta  = 0.01;
-phi = 0.01;
-phidot = 0.01;
-thetadot = 0.3;
-psidot = 0.04;
+psi = 0;
+theta  = 0;
+phi = 0;
+phidot = 0;
+thetadot = 0;
+psidot = 0;
 
 tic
 nlp = eval(NonlinearPart);
 toc
-
-disp('Complete system matrix...')
-Anonlin = [zeros(9,12);zeros(3,6),nlp];
-
-Alin = zeros(12);
-Alin(1:3,1:3) = eye(3);
-Alin(4:6,4:6) = -(1/m).*diag(A);
-Alin(7:9,7:9) = eye(3);
-
-Afull = Alin + Anonlin;
-disp(Afull)
+% 
+% disp('Complete system matrix...')
+% Anonlin = [zeros(9,12);zeros(3,6),nlp];
+% 
+% Alin = zeros(12);
+% Alin(1:3,1:3) = eye(3);
+% Alin(4:6,4:6) = -(1/m).*diag(A);
+% Alin(7:9,7:9) = eye(3);
+% 
+% Afull = Alin + Anonlin;
+% disp(Afull)
