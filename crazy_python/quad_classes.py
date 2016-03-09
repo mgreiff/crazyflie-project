@@ -3,6 +3,7 @@ import numpy as np
 import scipy as sp
 from math import sin, cos
 from scipy.signal import cont2discrete
+from copy import copy
 
 class QuadcopterProcess(object):
     
@@ -26,7 +27,13 @@ class QuadcopterProcess(object):
         self.x = np.array(param['quadcopter_model']['x_init'])
         
     def __call__(self, omega):
-        phi, theta, psi, phidot, thetadot, psidot = np.reshape(self.x[6:12,0:1],[1,6])[0]
+        xout,yout = self.evaluate_system(self.x, omega)
+        self.x = xout
+        return xout,yout
+        
+        
+    def evaluate_system(self, x, u):
+        phi, theta, psi, phidot, thetadot, psidot = np.reshape(x[6:12,0:1],[1,6])[0]
 
         Ts = self.Ts
         
@@ -39,8 +46,8 @@ class QuadcopterProcess(object):
         l = self.l
         b = self.b
         
-        omega = omega[:,0]
-        T = k * sum(omega ** 2)
+        u = u[:,0]
+        T = k * sum(u ** 2)
     
         # Define the C-matrix, see eq. (19)
         Ixx, Iyy, Izz = I
@@ -85,10 +92,10 @@ class QuadcopterProcess(object):
         
         # eq. (8) Modified from the work of lukkonen, here rotor 2 and 4 spin in
         # the opposite directions
-        tau_phi =  l * k * (-omega[1] ** 2 + omega[3] ** 2)
-        tau_theta =  l * k * (-omega[0] ** 2 + omega[2] ** 2)
-        tau_psi =  b * (omega[0] ** 2 - omega[1] ** 2 +
-                        omega[2] ** 2 - omega[3] ** 2)
+        tau_phi =  l * k * (-u[1] ** 2 + u[3] ** 2)
+        tau_theta =  l * k * (-u[0] ** 2 + u[2] ** 2)
+        tau_psi =  b * (u[0] ** 2 - u[1] ** 2 +
+                        u[2] ** 2 - u[3] ** 2)
         
         tau_b = np.array([[tau_phi],[tau_theta],[tau_psi]])
         
@@ -126,13 +133,8 @@ class QuadcopterProcess(object):
         Bc[3:6,0:1] = Rz
         Bc[9:12,1:4] = invJ
         
-        Cc = np.zeros([6,12])
-        Cc[0,0] = 1. # x
-        Cc[1,1] = 1. # y
-        Cc[2,2] = 1. # z
-        Cc[3,6] = 1. # phi
-        Cc[4,7] = 1. # theta
-        Cc[5,8] = 1. # psi
+        Cc = np.zeros([7,12])
+        Cc[0:7,2:9] = np.diag(np.ones([1,7])[0]) # z,rdot,eta
         
         Dc = np.array([])
         
@@ -148,24 +150,23 @@ class QuadcopterProcess(object):
         # Sets up control signal
         u = np.concatenate([[[T]],tau_b])
         
-        xout = np.dot(Ad,self.x) + np.dot(Bd,u) + G*Ts
-        yout = np.dot(Cd,self.x)
-        
-        self.x = xout
+        xout = np.dot(Ad,x) + np.dot(Bd,u) + G*Ts
+        yout = np.dot(Cd,x)
 
-        return self.x, yout
+        return xout, yout
         
 class InnerPD(object):
     
     def __init__(self, param):
         self._set_param(param)
-
+        
     def _set_param(self, param):
         # Global parameters
         self.Ts = param['global']['timestep']
         self.g = param['quadcopter_model']['g']
         self.m = param['quadcopter_model']['m']
         self.k = param['quadcopter_model']['k']
+        self.A = param['quadcopter_model']['A']
         self.Ixx = param['quadcopter_model']['I'][0]
         self.Iyy = param['quadcopter_model']['I'][1]
         self.Izz = param['quadcopter_model']['I'][2]
@@ -204,12 +205,122 @@ class DiscreteKalman(object):
     def __init__(self, param):
         self._set_param(param)
 
+        # Create continouous time linearized model
+        Ac = np.zeros([12,12])
+        Ac[0:3,3:6] = np.diag([1.,1.,1.])
+        Ac[3:6,3:6] = -np.diag(self.A)/self.m
+        Ac[6:9,9:12] = np.diag([1.,1.,1.])
+        
+        Bc = np.zeros([12,4])
+        Bc[5,:] =self.k
+        Bc[9:12,0:4] = np.array([[0., -self.k*self.l/self.Ixx, 0., self.k*self.l/self.Ixx],
+                                 [-self.k*self.l/self.Iyy, 0., self.k*self.l/self.Ixx, 0.],
+                                 [-self.b/self.Izz, self.b/self.Izz, -self.b/self.Izz, self.b/self.Izz]])
+                                 
+        Cc = np.zeros([7,12])
+        Cc[0:7,2:9] = np.diag(np.ones([1,7])[0])
+        
+        Dc = np.zeros([7,4])
+        
+        # Discretize model
+        discreteSystem = cont2discrete((Ac,Bc,Cc,Dc), self.Ts, method='zoh', alpha=None)
+
+        # Set discrete matrices
+        self.Ad = discreteSystem[0]
+        self.Bd = discreteSystem[1]
+        self.Cd = discreteSystem[2]
+        
     def _set_param(self, param):
         # Global parameters
         self.Ts = param['global']['timestep']
+        
+        # Local parameters
+        self.g = param['quadcopter_model']['g']
+        self.m = param['quadcopter_model']['m']
+        self.k = param['quadcopter_model']['k']
+        self.A = param['quadcopter_model']['A']
+        self.Ixx = param['quadcopter_model']['I'][0]
+        self.Iyy = param['quadcopter_model']['I'][1]
+        self.Izz = param['quadcopter_model']['I'][2]
+        self.l = param['quadcopter_model']['l']
+        self.b = param['quadcopter_model']['b']
+        
+        self.P = np.diag(np.ones([1,12])[0]) #param['discrete_kalman_filter']['P0']
+        self.Q = np.diag(np.ones([1,12])[0]) #param['discrete_kalman_filter']['Q']
+        self.R = np.diag(0.001*np.ones([1,7])[0]) #param['discrete_kalman_filter']['R']
     
     def __call__(self, x, u, z):
-        # TODO write complete kalman filter
-        xhat = phid
-        return xhat
+        # Predictor step
+        xf = np.dot(self.Ad,x) + np.dot(self.Bd,u);
+        Pf = np.dot(np.dot(self.Ad, self.P), np.transpose(self.Ad)) + self.Q;
         
+        # Corrector step
+        Knumerator =  np.dot(Pf, np.transpose(self.Cd))
+        Kdenominator = np.dot(np.dot(self.Cd, Pf), np.transpose(self.Cd)) + self.R
+        K = np.dot(Knumerator,sp.linalg.inv(Kdenominator))
+        xhat = xf + np.dot(K, (z - np.dot(self.Cd, xf)))
+        I = np.diag(np.ones([1,12])[0])
+        self.P = np.dot((I - np.dot(K, self.Cd)), Pf)
+        return xhat
+
+class ExtendedDiscreteKalman(object):
+    
+    def __init__(self, param):
+        self._set_param(param)
+
+        #define quadcopter model
+        self.quadCopterModel = QuadcopterProcess(param)
+        
+    def _set_param(self, param):
+        # Global parameters
+        self.Ts = param['global']['timestep']
+        
+        # Local parameters
+        self.g = param['quadcopter_model']['g']
+        self.m = param['quadcopter_model']['m']
+        self.k = param['quadcopter_model']['k']
+        self.A = param['quadcopter_model']['A']
+        self.Ixx = param['quadcopter_model']['I'][0]
+        self.Iyy = param['quadcopter_model']['I'][1]
+        self.Izz = param['quadcopter_model']['I'][2]
+        self.l = param['quadcopter_model']['l']
+        self.b = param['quadcopter_model']['b']
+        
+        self.P = np.diag(np.ones([1,12])[0]) #param['discrete_kalman_filter']['P0']
+        self.Q = np.diag(np.ones([1,12])[0]) #param['discrete_kalman_filter']['Q']
+        self.R = np.diag(0.001*np.ones([1,7])[0]) #param['discrete_kalman_filter']['R']
+    
+        Cc = np.zeros([7,12])
+        Cc[0:7,2:9] = np.diag(np.ones([1,7])[0])
+        self.Cd = Cc
+
+    def __call__(self, x, u, z):
+        # Predictor step
+
+        J = self.compute_jacobian(x, 0*u)
+        xf, yf = self.quadCopterModel.evaluate_system(x, u)
+        Pf = np.dot(np.dot(J, self.P), np.transpose(J)) + self.Q;
+        
+        # Corrector step
+        Knumerator =  np.dot(Pf, np.transpose(self.Cd))
+        Kdenominator = np.dot(np.dot(self.Cd, Pf), np.transpose(self.Cd)) + self.R
+        K = np.dot(Knumerator,sp.linalg.inv(Kdenominator))
+        xhat = xf + np.dot(K, (z - yf))
+        I = np.diag(np.ones([1,12])[0])
+        self.P = np.dot((I - np.dot(K, self.Cd)), Pf)
+        return xhat
+    
+    def compute_jacobian(self, x, u):
+        deltax = 0.0001
+        J = np.zeros([len(x),len(x)])
+        for ii in range(len(x)):
+            fm, _ = self.quadCopterModel.evaluate_system(self.shift(x,ii,-deltax),u)
+            f, _ = self.quadCopterModel.evaluate_system(x,u)
+            fp, _ = self.quadCopterModel.evaluate_system(self.shift(x,ii,deltax),u)
+            J[0:12,ii:ii+1] = (fm - 2*f + fp)/deltax
+        return J
+    
+    def shift(self, vector, index, delta):
+        output = copy(vector)
+        output[index,0] += delta
+        return output

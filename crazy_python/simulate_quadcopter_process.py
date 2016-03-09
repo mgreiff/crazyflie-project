@@ -18,7 +18,7 @@ numberOfTimesteps = int(np.ceil(2/Ts))
 # Sorage variables for plotting purposes
 timevec = np.zeros([1,numberOfTimesteps])
 omegavec = np.zeros([4,numberOfTimesteps])
-measurements = np.zeros([6,numberOfTimesteps])
+measurements = np.zeros([7,numberOfTimesteps])
 states = np.zeros([12,numberOfTimesteps])
 
 # Desgn parameter for omega referene example
@@ -58,14 +58,12 @@ for ii in range(numberOfTimesteps):
     
     omega = hover_omega*np.ones([4,1]) + omegaAmp*omegaOscillation
     
-    # Adds omega to the solution history
-    
     # Simulates the process
     xout, yout = qProcess(omega)
 
     omegavec[0:4,ii:ii+1] = omega
     states[0:12,ii:ii+1] = xout
-    measurements[0:6,ii:ii+1] = yout
+    measurements[0:7,ii:ii+1] = yout
 
 
 # Visualize simulation
