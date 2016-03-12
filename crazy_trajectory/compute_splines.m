@@ -3,7 +3,7 @@ function [ P ] = compute_splines( points , times , N , cost )
     nS = length(points(1,:))-1;
     T = diff(times);
 
-    if 2*length(points(:,1)) < N
+    if 2*length(points(:,1)) > N
         error(['Warning in compute_splines. Optimization will fail due'+...
                'to low polynomial order.'])
     end
@@ -13,56 +13,35 @@ function [ P ] = compute_splines( points , times , N , cost )
     end
     
     % Constructs the hessian
-    Q = zeros(N+1,N+1);
+    Q = zeros((N+1)*nS,(N+1)*nS);
+    for ii = 1:nS
+        Qhat = get_Q( N , T(ii) , cost);
+        index = (N+1)*(ii-1)+1:(N+1)*ii;
+        Q(index,index) = Qhat;
+    end
+    
+    A = zeros(nS*3*2,nS*(N+1)); % 6xN for each spline
+    b = zeros(nS*3*2,1);
+    for ii  = 1:nS
+        boundaryPoints = [points(1:3,ii);points(1:3,ii+1)];
 
-    for r = 0:N
-        Qr = zeros(N+1,N+1);
-        for ii = 0:N
-            for ll = 0:N
-                if ii >= r && ll >= r
-                    row = ii + 1;
-                    col = ll + 1;
-                    Qr(row,col) = 2*(T.^(ii+ll-2*r+1))/(ii+ll-2*r+1);
-                    for m = 0:r-1
-                        Qr(row,col) = Qr(row,col)*(ii-m)*(ll-m);
-                    end
-                end
-            end
+        [A0, AT] = get_A( N , T(ii));
+        
+        Ap = [A0(1:3,:);AT(1:3,:)];
+
+        for jj = 1:6
+            disp(size(Ap))
+        	if ~isnan(boundaryPoints(jj))
+                b(6*(ii-1) + jj) = boundaryPoints(jj);
+            else
+                Ap(jj,:) = 0;
+        	end
         end
-        Q = Q + cost(r+1).*Qr;
+        A((ii-1)*6+1:ii*6, (ii-1)*(N+1)+1:ii*(N+1)) = Ap;
     end
 
-    % Constructs the constraints
-    A0 = zeros((N+1)*nS,(N+1)*nS);
-    AT = zeros((N+1)*nS,(N+1)*nS);
-
-    for r = 0:N
-        for n = 0:N
-            row = r+1;
-            col = n+1;
-            if r == n
-                A0(row, col) = 1;
-                for m = 0:r-1
-                     A0(row, col) = A0(row, col)*(r - m);
-                end
-            end
-            if n >= r
-                AT(row, col) = T^(n-r);
-                for m = 0:r-1
-                    AT(row, col) = AT(row, col)*(r - m);
-                end
-            end
-        end
-    end
-
-    a1 = points(:,1);
-    a2 = points(:,2);
-
-    A = [A0(1:2,:); AT(1,:)];
-    b0 = a1;
-    bT = a2;
-
-    b = [b0(1:2); bT(1)];
+    A(b==0,:)=[];
+    b(b==0)=[];
 
     [ P, ~ ] = quadprog(Q,zeros(length(Q),1),[],[],A,b);
 end

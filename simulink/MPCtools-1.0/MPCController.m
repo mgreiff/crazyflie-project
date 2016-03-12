@@ -158,5 +158,3 @@ x(md.ne+md.pye+md.me+1:md.ne+md.pye+md.me+md.me*md.Hu,:) = duOpt;
 
 sys = [x(md.ne+md.pye+1:md.ne+md.pye+md.me,:);
        x(1:md.ne,1);];
-
-% End of mdlOutputs.
