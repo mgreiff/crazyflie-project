@@ -1,4 +1,9 @@
 function [ A0 , AT ] = get_A( N , T )
+    % Computes the constraint matrix at time t=0 (A0) and t=T (AT), together
+    % [A0;AT] forms A_i, which constitutes the constraint matrix for
+    % Spline p_i, such that A_i*p_i-b_i=0. Returns A0 and AT separate, so
+    % that the enpoints can be treated differently (neuman/dirichlet
+    % conditions at differering derivatives).
     A0 = zeros(N+1,N+1);
     AT = zeros(N+1,N+1);
 
