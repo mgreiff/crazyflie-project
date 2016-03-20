@@ -1,13 +1,22 @@
 if 1 % Use full sym
-    syms Ixx Iyy Izz psi theta phi phidot thetadot psidot
+    xd = sym('xd','real');
+    yd = sym('yd','real');
+    zd = sym('zd','real');
+    x = sym('x','real');
+    y = sym('y','real');
+    z = sym('z','real');
+    phi = sym('phi','real');
+    theta = sym('theta','real');
+    psi = sym('psi','real');
+    phidot = sym('phidot','real');
+    thetadot = sym('thetadot','real');
+    psidot = sym('psidot','real');
+    Ixx = sym('Ixx','real');
+    Iyy = sym('Iyy','real');
+    Izz = sym('Izz','real');
+    d = sym('d','real');
 end
-if 0 % Use partial sym
-    syms psi theta phi
-    phidot = 0;
-    thetadot = 0;
-    psidot = 0;
-    Ixx = I(1); Iyy = I(2); Izz = I(3);
-end
+
 Sphi = sin(phi); Stheta = sin(theta); Spsi = sin(psi);
 Cphi = cos(phi); Ctheta = cos(theta); Cpsi = cos(psi);
 
@@ -33,36 +42,66 @@ J32 = (Iyy - Izz)*Cphi*Sphi*Ctheta;
 J33 = Ixx * Stheta^2 + Iyy * Sphi^2 * Ctheta^2 + Izz * Cphi^2*Ctheta^2;
 J = [J11 J12 J13; J21 J22 J23; J31 J32 J33];
 
-etastate = [psi theta phi phidot thetadot psidot];
+iJC = linsolve(J,C);
+A = [zeros(3),eye(3),zeros(3,6);
+     zeros(3),d*eye(3),zeros(3,6);
+     zeros(3,9),eye(3);
+     zeros(3,9),iJC];
+states = [x y z xd yd zd phi theta psi phidot thetadot psidot]';
+
 NonlinearPart = [];
-iJC = linsolve(inv(J),C)*[phidot thetadot psidot]';%linsolve(inv(J,))
-%iJCvectorvaluedFunction = sum(iJC')';
-for jj = 1:6
-    NonlinearPart = [NonlinearPart diff(iJC,etastate(1,jj))];
+for jj = 1:12
+    NonlinearPart = [NonlinearPart diff(A*states,states(jj))];
 end
 
-% The idea is to save the expression for the nonlinear part so it has
-% to be generated only once and the evaluated on every iteration
+% The idea was to save the expression for the nonlinear part so it has
+% to be generated only once and the evaluated on every iteration, but this
+% proved to be costly, now the script is soley used to linearize the system
+% matrix
+
+d = -0.25;
+Ixx = 0.0001;
+Iyy = 0.0001;
+Izz = 0.0002;
 
 % Some linearisation point
-psi = 0;
-theta  = 0;
-phi = 0;
-phidot = 0;
-thetadot = 0;
-psidot = 0;
+psi = 0.1;
+theta  = 0.1;
+phi = 0.1;
+phidot = 0.1;
+thetadot = 0.1;
+psidot = 0.1;
 
 tic
-nlp = eval(NonlinearPart);
+linearizedA = eval(NonlinearPart);
 toc
-% 
-% disp('Complete system matrix...')
-% Anonlin = [zeros(9,12);zeros(3,6),nlp];
-% 
-% Alin = zeros(12);
-% Alin(1:3,1:3) = eye(3);
-% Alin(4:6,4:6) = -(1/m).*diag(A);
-% Alin(7:9,7:9) = eye(3);
-% 
-% Afull = Alin + Anonlin;
-% disp(Afull)
+
+g = 9.81;
+m = 0.468;      % kg
+l = 0.225;      % m
+k = 2.980e-6;   % unitless
+b = 1.140e-7;   % unitless
+
+Mw = [k,k,k,k;
+      0,-k*l,0,k*l;
+      -k*l,0,k*l,0
+      -b,b,-b,b];
+Bc = zeros(12,4);
+Bc(6,1) = 1;
+Bc(10:12,2:4) = eval(inv(J));
+
+linearizedB = sqrt(g*m/k)*2.*Bc*Mw
+           
+disp('Rank of contollability matrix')
+rank(ctrb(linearizedA,linearizedB)) %=8
+
+% --> locally uncontrollable at linearization point when stable giving problems in LQR design
+
+disp('Rank of observability matrix')
+C1 = [eye(3),zeros(3,9);
+      zeros(3,6),eye(3),zeros(3)];
+C2 = [zeros(7,2) eye(7) zeros(7,3)];
+rank(obsv(linearizedA,C1))
+rank(obsv(linearizedA,C2))
+
+
