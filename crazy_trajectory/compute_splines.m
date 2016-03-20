@@ -58,14 +58,12 @@ function [ P ] = compute_splines( points , times , N , cost )
             end
         end
     end
-    pp = reshape(points,numel(points),1);
-    pp=NaN;
-    pp(nS*(N+1)+1:(nS+1)*(N+1))=0;
-    Afree(nS*(N+1)+1:end,:)=[];
-    Afree(1:(N+1),:)=[];
 
+    Afree(1:N+1,:) = [];
+    Afree(end-N:end,:) = [];
+    bfree = zeros(length(Afree(:,1)),1);
     A = [Abound;Afree];
-    b = [bbound;zeros(length(Afree(:,1)),1)];
+    b = [bbound;bfree];
     
     [ P, ~ ] = quadprog(Q,zeros(length(Q),1),[],[],A,b);
 end

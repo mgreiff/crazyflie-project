@@ -4,7 +4,7 @@
 % Given that the points ai have the correct number of elements (N+1)
 % The cost matrix is set to minimum snap (minimizing jerk), but any
 % combination of costs can be used
-N = 5;
+N = 4;
 switch N
     case 3
         cost = [0,0,0,1];
@@ -33,16 +33,16 @@ end
 % an integer 1,2,3; but any number of splines could be used given
 % consistent information on costs, times and points.
 
-numberOfSplines = 1;
+numberOfSplines = 3;
 switch numberOfSplines
     case 1
         times = [5,10];
         points = [a1,a2];
     case 2
-        times = [0,5,10];
+        times = [0,4,10];
         points = [a1,a2,a3];
     case 3
-        times = [0,5,10,15];
+        times = [0,5,9,15];
         points = [a1,a2,a3,a4]; 
 end
 
@@ -52,7 +52,10 @@ P = compute_splines( points , times , N , cost );
 %% Plots the results in a single graph
 plot_splines( P , times , 'position')
 plot_splines( P , times , 'velocity')
-if N > 2
+if N >= 2
     plot_splines( P , times , 'acceleration')
+end
+if N >= 3
+    plot_splines( P , times , 'jerk')
 end
 grid on;
