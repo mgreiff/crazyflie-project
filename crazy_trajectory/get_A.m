@@ -20,6 +20,8 @@ function [ A0 , AT ] = get_A( N , T )
             if n >= r
                 AT(row, col) = T^(n-r);
                 for m = 0:r-1
+                    disp(AT(row, col))
+                    disp([r,m])
                     AT(row, col) = AT(row, col)*(r - m);
                 end
             end

@@ -65,6 +65,12 @@ function [ P ] = compute_splines( points , times , N , cost )
     A = [Abound;Afree];
     b = [bbound;bfree];
     
-    [ P, ~ ] = quadprog(Q,zeros(length(Q),1),[],[],A,b);
+    options = optimoptions('quadprog');
+    options.TolCon = 1e-12;
+    options.TolFun = 1e-12;
+    options.Diagnostics = 'on';
+    %options.Algorithm = 'active-set';
+    options.Algorithm = 'interior-point-convex';
+    [P, ~, EXITFLAG, OUTPUT, LAMBDA] = quadprog(Q,zeros(length(Q),1),[],[],A,b,[],[],[],options);
 end
 
