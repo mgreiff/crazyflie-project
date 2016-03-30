@@ -1,0 +1,11 @@
+\BOOKMARK [1][-]{section.1}{Introduction}{}% 1
+\BOOKMARK [1][-]{section.2}{Dynamics}{}% 2
+\BOOKMARK [2][-]{subsection.2.1}{Non-linear model}{section.2}% 3
+\BOOKMARK [2][-]{subsection.2.2}{Attitude PD control dynamics}{section.2}% 4
+\BOOKMARK [2][-]{subsection.2.3}{Rotor-loop dynamics}{section.2}% 5
+\BOOKMARK [1][-]{section.3}{Linearization and state estimation}{}% 6
+\BOOKMARK [1][-]{section.4}{Motion planning}{}% 7
+\BOOKMARK [1][-]{section.5}{MPC control}{}% 8
+\BOOKMARK [1][-]{section.6}{L1-control}{}% 9
+\BOOKMARK [1][-]{section.7}{General TODOs}{}% 10
+\BOOKMARK [1][-]{section.8}{Appendix}{}% 11
