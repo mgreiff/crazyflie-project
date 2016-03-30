@@ -23,14 +23,24 @@ Contains the scripts that run on the Bitcraze VM. This part of the project is no
 ###### Contents
 * RampMotorExample.py - An example for connecting and controlling thrust to the motors from the Bitcraze VM using ZMQ.
 
-#### /documentation/*
+#### /crazy_documentation/*
 The project documentation, will eventually include a report discussion both the theory and implementation of the project. 
 
 ###### Contents
-* **Report.tex** - A report containing a short discussion on the dynamics, PD, MPC, L1 control and TODO's.
+* **Report.tex** - A report containing a discussion on the dynamics, filtering, motion planning, PD, MPC, L1 control and TODO's.
 
-#### /simulink_model/*
-Contains the files used in modelling of the quadcopter. The necessary paths and parameters are set up by tunning the ``simulink_init.m`` file, after which the examples in the /examples/* directory can be run. Some of these may need additional parameters, in which case an ``init_.m`` file is located in the same directory as the example subdirectory.
+#### /crazy_trajectory/*
+Contains the scripts for motion planning (see crazy_documentation).
+
+###### Contents
+* **get_A.m** - Computes the constraint matrix of a polynomial spline.
+* **get_Q.m** - Computes the hessian hessian of a polynomial spline.
+* **compute_splines.m** - Assembles the global Q and A matrices and minimizes the const function usin quadprog.
+* **plot_splines.m** - Plots the position-, velocity-, acceleation- and jerkprofiles of the complete trajectory taking the output of quadprog and the time array as input.
+* **splines_2_1D_example.m** - An example which generates the minimum snap trajectory when constraining positional endpoints using 1-3 polynomials of degree 3-5.
+
+#### /simulink/*
+Contains the files used in modelling of the quadcopter. Many of the files are works in progress and some cannot be run at all. The necessary paths and parameters are set up by tunning the ``simulink_init.m`` file, after which the examples in the /examples/* directory can be run. Some of these may need additional parameters, in which case an ``init_.m`` file is located in the same directory as the example subdirectory. The MPC_cvx_test and LQR_control_test can be run but are far from complete just yet, everything else should be OK. 
 
 ###### Contents - Models
 * /quadcopter_model/**quadcopter_init.m** - Constants and initial conditions of thenon-linear model.
@@ -50,9 +60,3 @@ Contains the files used in modelling of the quadcopter. The necessary paths and 
 * /pd_position_control_test/**quadcopter_pd_position_test.slx** - Demonstrates the system response with an inner PD and outer PD position controller.
 * /mpc_control_test/**quadcopter_mpc_position_test.slx** - Demonstrates the system response with an outer inner PD and outer MPC controller (requires init_MPC_test.m to run).
 * /kalman_filter_test/**dicrete_kalman_filter_test.slx** - An example of the state esimation using Kalman filtering.
-* /ekdf_test/**quadcopter_ekdf_test.slx** - An example of the state esimation using EKDF (requires init_ekdf_test.m to run).
-
-#### /trajectory_planning/*
-Contains the scripts trajectory planning, possibly suing IRIS and CVXGEN -
-currently empty.
-
