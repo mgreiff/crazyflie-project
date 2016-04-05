@@ -324,3 +324,66 @@ class ExtendedDiscreteKalman(object):
         output = copy(vector)
         output[index,0] += delta
         return output
+
+class UnscentedDiscreteKalman(object):
+    
+    def __init__(self, param):
+        self._set_param(param)
+        
+        #define quadcopter model
+        self.quadCopterModel = QuadcopterProcess(param)
+        
+        # UKF variables
+        self.L = 12        # Dimension of the ranodm variable x
+        self.alpha = 1e-3  # Scaling parameter
+        self.beta = 2      # Optimal for gaussian distibutions
+        self.keta = 0      # Scaling parameter
+        self.lam = self.alpha ** 2 * (self.L + self.keta) - self.L
+        
+        # UKF weights
+        self.Wom = 1./(self.L + self.lam)
+        self.Woc = 1./(self.L + self.lam) + (1 - self.alpha ** 2 + self.beta)
+        self.Wim = 1./(2 * (self.L + self.lam))
+        
+        # Initial parameters
+        self.xest = np.zeros([12,1])
+        self.covariance = np.diag(np.ones(12))
+        
+    def _set_param(self, param):
+        # Global parameters
+        self.Ts = param['global']['timestep']
+        
+        # Local parameters
+        self.g = param['quadcopter_model']['g']
+        self.m = param['quadcopter_model']['m']
+        self.k = param['quadcopter_model']['k']
+        self.A = param['quadcopter_model']['A']
+        self.Ixx = param['quadcopter_model']['I'][0]
+        self.Iyy = param['quadcopter_model']['I'][1]
+        self.Izz = param['quadcopter_model']['I'][2]
+        self.l = param['quadcopter_model']['l']
+        self.b = param['quadcopter_model']['b']
+        
+        self.P = np.diag(np.ones([1,12])[0]) #param['discrete_kalman_filter']['P0']
+        self.Q = np.diag(np.ones([1,12])[0]) #param['discrete_kalman_filter']['Q']
+        self.R = np.diag(0.001*np.ones([1,7])[0]) #param['discrete_kalman_filter']['R']
+        
+        Cc = np.zeros([7,12])
+        Cc[0:7,2:9] = np.diag(np.ones([1,7])[0])
+        self.Cd = Cc
+    
+    def __call__(self, x, u, z):
+        # Calculate sigma points
+        ssCov = sp.linalg.sqrtm((self.lam + self.L) * self.covariance)
+        Xi = np.zeros([self.L,2 * self.L + 1])
+        for ii in range(2 * self.L + 1):
+            Xi[:,ii] = np.transpose(x)[0]
+            if ii > 0 and ii <= self.L:
+                Xi[:,ii] += ssCov[:, ii - 1]
+            elif  ii > self.L:
+                Xi[:,ii] += ssCov[:, ii - (1 + self. L)]
+        
+        # Time update
+        
+        # Measurement update
+        return x
