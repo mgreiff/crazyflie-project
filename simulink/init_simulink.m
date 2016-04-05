@@ -1,3 +1,6 @@
+close all;
+clear all;
+
 % Add simulink folders to path
 addpath(genpath('.'));
 

@@ -7,9 +7,9 @@ switch flag,
   sys = mdlUpdates(t,x,u,CVXparameters); % Update discrete states
  case 3
   sys = mdlOutputs(t,x,u,CVXparameters); % Calculate outputs
- case {1, 4, 9} % Unused flags
+ case {1, 4, 9}
   sys = [];
-  
+
  otherwise
   error(['unhandled flag = ',num2str(flag)]); % Error handling
 end
@@ -23,14 +23,13 @@ sizes.NumInputs      = CVXparameters.nInputs;
 sizes.DirFeedthrough = 1;
 sizes.NumSampleTimes = 1;
 sys = simsizes(sizes); 
-x0 = CVXparameters.x_0; % 10x1
+x0 = CVXparameters.x_0;
 
 global x;
 x = x0;   
 % Initialize the discrete states.
 str = [];             % Set str to an empty matrix.
 ts  = [CVXparameters.h 0];       % sample time: [period, offset]
-% End of mdlInitializeSizes
 		      
 %==============================================================
 % Update the discrete states
@@ -49,8 +48,6 @@ global x;
 
 fprintf('Update start, t=%4.2f\n',t)
 
-% Optimize
-%[duOpt,zOpt] = MPCOptimizeSolSC(x_hat,u_old,duOpt,refval,md);
 [vars, ~ ] = csolve(CVXparameters);
 
 xx = vars.x{:,1};
