@@ -49,4 +49,3 @@ CVXparameters.nInputs = 10; %?
 CVXparameters.h = Ts; % Stepsize
 
 disp('...complete!')
-

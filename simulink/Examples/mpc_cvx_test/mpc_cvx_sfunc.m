@@ -1,4 +1,4 @@
-function [sys,x0,str,ts] = MPC_CVX(t,x,u,flag,CVXparameters)
+function [sys,x0,str,ts] = mpc_cvx_sfunc(t,x,u,flag,CVXparameters)
 
 switch flag,
  case 0
