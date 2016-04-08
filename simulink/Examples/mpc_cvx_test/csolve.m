@@ -4,7 +4,7 @@
 %
 % solves the convex optimization problem
 %
-%   minimize(quad_form(x_0, Q) + quad_form(u_0, R) + quad_form(x_1, Q) + quad_form(u_1, R) + quad_form(x_2, Q) + quad_form(u_2, R) + quad_form(x_3, Q) + quad_form(u_3, R) + quad_form(x_4, Q) + quad_form(u_4, R) + quad_form(x_5, Q) + quad_form(u_5, R) + quad_form(x_6, Q) + quad_form(u_6, R) + quad_form(x_7, Q) + quad_form(u_7, R) + quad_form(x_8, Q) + quad_form(u_8, R) + quad_form(x_9, Q) + quad_form(u_9, R) + quad_form(x_10, Q) + quad_form(u_10, R))
+%   minimize(quad_form(x_0 - r_0, Q) + quad_form(u_0, R) + quad_form(x_1 - r_1, Q) + quad_form(u_1, R) + quad_form(x_2 - r_2, Q) + quad_form(u_2, R) + quad_form(x_3 - r_3, Q) + quad_form(u_3, R) + quad_form(x_4 - r_4, Q) + quad_form(u_4, R) + quad_form(x_5 - r_5, Q) + quad_form(u_5, R) + quad_form(x_6 - r_6, Q) + quad_form(u_6, R) + quad_form(x_7 - r_7, Q) + quad_form(u_7, R) + quad_form(x_8 - r_8, Q) + quad_form(u_8, R) + quad_form(x_9 - r_9, Q) + quad_form(u_9, R) + quad_form(x_10 - r_10, Q) + quad_form(u_10, R))
 %   subject to
 %     x_1 == A*x_0 + B*u_0
 %     x_2 == A*x_1 + B*u_1
@@ -28,16 +28,16 @@
 %     abs(u_8) <= u_max
 %     abs(u_9) <= u_max
 %     abs(u_10) <= u_max
-%     norm(u_1 - u_0, inf) <= S
-%     norm(u_2 - u_1, inf) <= S
-%     norm(u_3 - u_2, inf) <= S
-%     norm(u_4 - u_3, inf) <= S
-%     norm(u_5 - u_4, inf) <= S
-%     norm(u_6 - u_5, inf) <= S
-%     norm(u_7 - u_6, inf) <= S
-%     norm(u_8 - u_7, inf) <= S
-%     norm(u_9 - u_8, inf) <= S
-%     norm(u_10 - u_9, inf) <= S
+%     norm(u_1 - u_0, inf) <= S_max
+%     norm(u_2 - u_1, inf) <= S_max
+%     norm(u_3 - u_2, inf) <= S_max
+%     norm(u_4 - u_3, inf) <= S_max
+%     norm(u_5 - u_4, inf) <= S_max
+%     norm(u_6 - u_5, inf) <= S_max
+%     norm(u_7 - u_6, inf) <= S_max
+%     norm(u_8 - u_7, inf) <= S_max
+%     norm(u_9 - u_8, inf) <= S_max
+%     norm(u_10 - u_9, inf) <= S_max
 %
 % with variables
 %      u_0   3 x 1
@@ -68,7 +68,18 @@
 %        B  10 x 3
 %        Q  10 x 10   PSD
 %        R   3 x 3    PSD
-%        S   1 x 1    positive
+%    S_max   1 x 1    positive
+%      r_0  10 x 1
+%      r_1  10 x 1
+%      r_2  10 x 1
+%      r_3  10 x 1
+%      r_4  10 x 1
+%      r_5  10 x 1
+%      r_6  10 x 1
+%      r_7  10 x 1
+%      r_8  10 x 1
+%      r_9  10 x 1
+%     r_10  10 x 1
 %    u_max   1 x 1    positive
 %      x_0  10 x 1
 %
@@ -81,7 +92,7 @@
 %
 % Specify params.A, ..., params.x_0, then run
 %   [vars, status] = csolve(params, settings)
-% Produced by CVXGEN, 2016-03-10 15:07:54 -0500.
+% Produced by CVXGEN, 2016-04-06 11:46:11 -0400.
 % CVXGEN is Copyright (C) 2006-2012 Jacob Mattingley, jem@cvxgen.com.
 % The code in this file is Copyright (C) 2006-2012 Jacob Mattingley.
 % CVXGEN, or solvers produced by CVXGEN, cannot be used for commercial
