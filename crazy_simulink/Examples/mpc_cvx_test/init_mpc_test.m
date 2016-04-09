@@ -43,11 +43,12 @@ CVXparameters.Q = eye(10);
 CVXparameters.R = eye(3);
 CVXparameters.S_max = 1000;
 CVXparameters.u_max = 10000;
+CVXparameters.predictionHorizon = 10;
 
 % Must be specified to make the S-fucntion run
-CVXparameters.nDiscreteStates = 10; %?
-CVXparameters.nOutputs = 10; %?
-CVXparameters.nInputs = 10; %?
+CVXparameters.nDiscreteStates = 10;
+CVXparameters.nOutputs = 3;
+CVXparameters.nInputs = CVXparameters.nDiscreteStates*(CVXparameters.predictionHorizon+2);
 CVXparameters.h = Ts; % Stepsize
 disp('...complete!')
 
