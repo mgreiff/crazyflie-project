@@ -4,24 +4,14 @@ Model {
   MdlSubVersion		  0
   SavedCharacterEncoding  "US-ASCII"
   GraphicalInterface {
-    NumRootInports	    4
+    NumRootInports	    2
     Inport {
-      Name		      "r"
+      Name		      "references"
       BusObject		      ""
       OutputFunctionCall      "off"
     }
     Inport {
-      Name		      "eta"
-      BusObject		      ""
-      OutputFunctionCall      "off"
-    }
-    Inport {
-      Name		      "r_d"
-      BusObject		      ""
-      OutputFunctionCall      "off"
-    }
-    Inport {
-      Name		      "eta_d"
+      Name		      "states"
       BusObject		      ""
       OutputFunctionCall      "off"
     }
@@ -32,7 +22,7 @@ Model {
       BusOutputAsStruct	      "off"
     }
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.60"
+    ComputedModelVersion    "1.65"
     NumModelReferences	    0
     NumTestPointedSignals   0
   }
@@ -54,7 +44,7 @@ Model {
       $ObjectID		      2
       $ClassName	      "Simulink.WindowInfo"
       IsActive		      [1]
-      Location		      [0.0, 23.0, 1280.0, 714.0]
+      Location		      [0.0, 23.0, 1280.0, 709.0]
       Object {
 	$PropName		"ModelBrowserInfo"
 	$ObjectID		3
@@ -78,9 +68,9 @@ Model {
 	IsActive		[1]
 	ViewObjType		"SimulinkTopLevel"
 	LoadSaveID		"0"
-	Extents			[1246.0, 541.0]
-	ZoomFactor		[0.5]
-	Offset			[-28.33333333333394, -75.077174087364256]
+	Extents			[1246.0, 536.0]
+	ZoomFactor		[0.55606955860901619]
+	Offset			[405.118431021466, -150.75716653320785]
       }
     }
   }
@@ -90,9 +80,9 @@ Model {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "mgreiff"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Sun Mar 06 16:37:01 2016"
-  RTWModifiedTimeStamp	  379183016
-  ModelVersionFormat	  "1.%<AutoIncrement:60>"
+  LastModifiedDate	  "Sat Apr 09 21:14:04 2016"
+  RTWModifiedTimeStamp	  382137240
+  ModelVersionFormat	  "1.%<AutoIncrement:65>"
   ConfigurationManager	  "none"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -831,10 +821,6 @@ Model {
       BusSelectionMode	      off
     }
     Block {
-      BlockType		      Derivative
-      CoefficientInTFapproximation "inf"
-    }
-    Block {
       BlockType		      Inport
       Port		      "1"
       OutputFunctionCall      off
@@ -912,7 +898,7 @@ Model {
   }
   System {
     Name		    "quadcopter_pd_controller"
-    Location		    [0, 23, 1280, 737]
+    Location		    [0, 23, 1280, 732]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -924,47 +910,25 @@ Model {
     TiledPaperMargins	    [0.500000, 0.500000, 0.500000, 0.500000]
     TiledPageScale	    1
     ShowPageBoundaries	    off
-    ZoomFactor		    "50"
+    ZoomFactor		    "56"
     ReportName		    "simulink-default.rpt"
-    SIDHighWatermark	    "31"
+    SIDHighWatermark	    "34"
     Block {
       BlockType		      Inport
-      Name		      "r"
-      SID		      "23"
-      Position		      [715, 398, 745, 412]
-      ZOrder		      108
+      Name		      "references"
+      SID		      "33"
+      Position		      [680, 593, 710, 607]
+      ZOrder		      124
       IconDisplay	      "Port number"
-      PortDimensions	      "3"
     }
     Block {
       BlockType		      Inport
-      Name		      "eta"
-      SID		      "25"
-      Position		      [715, 468, 745, 482]
-      ZOrder		      110
+      Name		      "states"
+      SID		      "23"
+      Position		      [680, 453, 710, 467]
+      ZOrder		      122
       Port		      "2"
       IconDisplay	      "Port number"
-      PortDimensions	      "3"
-    }
-    Block {
-      BlockType		      Inport
-      Name		      "r_d"
-      SID		      "26"
-      Position		      [715, 538, 745, 552]
-      ZOrder		      111
-      Port		      "3"
-      IconDisplay	      "Port number"
-      PortDimensions	      "3"
-    }
-    Block {
-      BlockType		      Inport
-      Name		      "eta_d"
-      SID		      "27"
-      Position		      [715, 608, 745, 622]
-      ZOrder		      112
-      Port		      "4"
-      IconDisplay	      "Port number"
-      PortDimensions	      "3"
     }
     Block {
       BlockType		      Constant
@@ -1023,32 +987,26 @@ Model {
       Value		      "l"
     }
     Block {
-      BlockType		      Derivative
-      Name		      "Derivative"
-      SID		      "5"
-      Position		      [795, 425, 825, 455]
-      ZOrder		      5
+      BlockType		      Demux
+      Name		      "Demux"
+      SID		      "32"
+      Ports		      [1, 4]
+      Position		      [755, 385, 760, 530]
+      ZOrder		      121
+      ShowName		      off
+      Outputs		      "[3,3,3,3]"
+      DisplayOption	      "bar"
     }
     Block {
-      BlockType		      Derivative
-      Name		      "Derivative1"
-      SID		      "6"
-      Position		      [795, 495, 825, 525]
-      ZOrder		      6
-    }
-    Block {
-      BlockType		      Derivative
-      Name		      "Derivative2"
-      SID		      "7"
-      Position		      [795, 565, 825, 595]
-      ZOrder		      7
-    }
-    Block {
-      BlockType		      Derivative
-      Name		      "Derivative3"
-      SID		      "8"
-      Position		      [795, 635, 825, 665]
-      ZOrder		      8
+      BlockType		      Demux
+      Name		      "Demux1"
+      SID		      "34"
+      Ports		      [1, 4]
+      Position		      [775, 525, 780, 670]
+      ZOrder		      123
+      ShowName		      off
+      Outputs		      "[3,3,3,3]"
+      DisplayOption	      "bar"
     }
     Block {
       BlockType		      SubSystem
@@ -1398,64 +1356,30 @@ Model {
       PortDimensions	      "4"
     }
     Line {
-      ZOrder		      109
-      SrcBlock		      "eta_d"
-      SrcPort		      1
-      Points		      [25, 0]
-      Branch {
-	ZOrder			27
-	DstBlock		"MATLAB Function"
-	DstPort			7
-      }
-      Branch {
-	ZOrder			22
-	Points			[0, 35]
-	DstBlock		"Derivative3"
-	DstPort			1
-      }
-    }
-    Line {
-      ZOrder		      108
-      SrcBlock		      "r_d"
-      SrcPort		      1
-      Points		      [25, 0]
-      Branch {
-	ZOrder			26
-	DstBlock		"MATLAB Function"
-	DstPort			5
-      }
-      Branch {
-	ZOrder			19
-	Points			[0, 35]
-	DstBlock		"Derivative2"
-	DstPort			1
-      }
-    }
-    Line {
-      ZOrder		      11
-      SrcBlock		      "Derivative"
-      SrcPort		      1
+      ZOrder		      135
+      SrcBlock		      "Demux"
+      SrcPort		      2
       DstBlock		      "MATLAB Function"
       DstPort		      2
     }
     Line {
-      ZOrder		      14
-      SrcBlock		      "Derivative1"
-      SrcPort		      1
+      ZOrder		      137
+      SrcBlock		      "Demux"
+      SrcPort		      4
       DstBlock		      "MATLAB Function"
       DstPort		      4
     }
     Line {
-      ZOrder		      17
-      SrcBlock		      "Derivative2"
-      SrcPort		      1
+      ZOrder		      153
+      SrcBlock		      "Demux1"
+      SrcPort		      2
       DstBlock		      "MATLAB Function"
       DstPort		      6
     }
     Line {
-      ZOrder		      20
-      SrcBlock		      "Derivative3"
-      SrcPort		      1
+      ZOrder		      155
+      SrcBlock		      "Demux1"
+      SrcPort		      4
       DstBlock		      "MATLAB Function"
       DstPort		      8
     }
@@ -1481,10 +1405,6 @@ Model {
       DstPort		      11
     }
     Line {
-      FontName		      "Helvetica"
-      FontSize		      9
-      FontWeight	      "normal"
-      FontAngle		      "normal"
       ZOrder		      103
       SrcBlock		      "Constant5"
       SrcPort		      1
@@ -1520,37 +1440,46 @@ Model {
       DstPort		      1
     }
     Line {
-      ZOrder		      104
-      SrcBlock		      "r"
+      ZOrder		      133
+      SrcBlock		      "states"
       SrcPort		      1
-      Points		      [30, 0]
-      Branch {
-	ZOrder			106
-	DstBlock		"Derivative"
-	DstPort			1
-      }
-      Branch {
-	ZOrder			105
-	DstBlock		"MATLAB Function"
-	DstPort			1
-      }
+      DstBlock		      "Demux"
+      DstPort		      1
     }
     Line {
-      ZOrder		      107
-      SrcBlock		      "eta"
+      ZOrder		      134
+      SrcBlock		      "Demux"
       SrcPort		      1
-      Points		      [26, 0]
-      Branch {
-	ZOrder			111
-	Points			[0, 35]
-	DstBlock		"Derivative1"
-	DstPort			1
-      }
-      Branch {
-	ZOrder			110
-	DstBlock		"MATLAB Function"
-	DstPort			3
-      }
+      DstBlock		      "MATLAB Function"
+      DstPort		      1
+    }
+    Line {
+      ZOrder		      136
+      SrcBlock		      "Demux"
+      SrcPort		      3
+      DstBlock		      "MATLAB Function"
+      DstPort		      3
+    }
+    Line {
+      ZOrder		      151
+      SrcBlock		      "references"
+      SrcPort		      1
+      DstBlock		      "Demux1"
+      DstPort		      1
+    }
+    Line {
+      ZOrder		      152
+      SrcBlock		      "Demux1"
+      SrcPort		      1
+      DstBlock		      "MATLAB Function"
+      DstPort		      5
+    }
+    Line {
+      ZOrder		      154
+      SrcBlock		      "Demux1"
+      SrcPort		      3
+      DstBlock		      "MATLAB Function"
+      DstPort		      7
     }
   }
 }

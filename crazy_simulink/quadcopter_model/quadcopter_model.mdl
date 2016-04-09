@@ -2,7 +2,7 @@ Model {
   Name			  "quadcopter_model"
   Version		  8.6
   MdlSubVersion		  0
-  SavedCharacterEncoding  "windows-1252"
+  SavedCharacterEncoding  "US-ASCII"
   GraphicalInterface {
     NumRootInports	    1
     Inport {
@@ -10,14 +10,9 @@ Model {
       BusObject		      ""
       OutputFunctionCall      "off"
     }
-    NumRootOutports	    3
+    NumRootOutports	    2
     Outport {
-      Name		      "r"
-      BusObject		      ""
-      BusOutputAsStruct	      "off"
-    }
-    Outport {
-      Name		      "eta"
+      Name		      "x_measured"
       BusObject		      ""
       BusOutputAsStruct	      "off"
     }
@@ -27,7 +22,7 @@ Model {
       BusOutputAsStruct	      "off"
     }
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.114"
+    ComputedModelVersion    "1.117"
     NumModelReferences	    0
     NumTestPointedSignals   0
   }
@@ -49,7 +44,7 @@ Model {
       $ObjectID		      2
       $ClassName	      "Simulink.WindowInfo"
       IsActive		      [1]
-      Location		      [164.0, 321.0, 1261.0, 762.0]
+      Location		      [19.0, 23.0, 1261.0, 709.0]
       Object {
 	$PropName		"ModelBrowserInfo"
 	$ObjectID		3
@@ -73,9 +68,9 @@ Model {
 	IsActive		[1]
 	ViewObjType		"SimulinkTopLevel"
 	LoadSaveID		"0"
-	Extents			[1211.0, 587.0]
-	ZoomFactor		[1.0]
-	Offset			[-176.22500142455067, 20.0]
+	Extents			[1227.0, 536.0]
+	ZoomFactor		[0.96334807239090026]
+	Offset			[-213.00568665157573, -27.417108261443957]
       }
     }
   }
@@ -83,11 +78,11 @@ Model {
   Creator		  "Daniel"
   UpdateHistory		  "UpdateHistoryNever"
   ModifiedByFormat	  "%<Auto>"
-  LastModifiedBy	  "Daniel"
+  LastModifiedBy	  "mgreiff"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Thu Mar 03 17:11:52 2016"
-  RTWModifiedTimeStamp	  378925911
-  ModelVersionFormat	  "1.%<AutoIncrement:114>"
+  LastModifiedDate	  "Sat Apr 09 21:27:28 2016"
+  RTWModifiedTimeStamp	  382138045
+  ModelVersionFormat	  "1.%<AutoIncrement:117>"
   ConfigurationManager	  "none"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -862,6 +857,14 @@ Model {
       ContinuousStateAttributes	"''"
     }
     Block {
+      BlockType		      Mux
+      Inputs		      "4"
+      DisplayOption	      "none"
+      UseBusObject	      off
+      BusObject		      "BusObject"
+      NonVirtualBus	      off
+    }
+    Block {
       BlockType		      Outport
       Port		      "1"
       OutMin		      "[]"
@@ -921,7 +924,7 @@ Model {
   }
   System {
     Name		    "quadcopter_model"
-    Location		    [164, 321, 1425, 1083]
+    Location		    [19, 23, 1280, 732]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -933,14 +936,14 @@ Model {
     TiledPaperMargins	    [0.500000, 0.500000, 0.500000, 0.500000]
     TiledPageScale	    1
     ShowPageBoundaries	    off
-    ZoomFactor		    "100"
+    ZoomFactor		    "96"
     ReportName		    "simulink-default.rpt"
-    SIDHighWatermark	    "117"
+    SIDHighWatermark	    "119"
     Block {
       BlockType		      Inport
       Name		      "omega"
       SID		      "113"
-      Position		      [-50, 98, -20, 112]
+      Position		      [40, 98, 70, 112]
       ZOrder		      100
       IconDisplay	      "Port number"
       PortDimensions	      "4"
@@ -1323,6 +1326,16 @@ Model {
       }
     }
     Block {
+      BlockType		      Mux
+      Name		      "Mux"
+      SID		      "119"
+      Ports		      [4, 1]
+      Position		      [645, 128, 650, 252]
+      ZOrder		      105
+      ShowName		      off
+      DisplayOption	      "bar"
+    }
+    Block {
       BlockType		      Integrator
       Name		      "i_eta"
       SID		      "7"
@@ -1360,28 +1373,19 @@ Model {
     }
     Block {
       BlockType		      Outport
-      Name		      "r"
-      SID		      "114"
-      Position		      [635, 123, 665, 137]
-      ZOrder		      101
-      IconDisplay	      "Port number"
-    }
-    Block {
-      BlockType		      Outport
-      Name		      "eta"
-      SID		      "115"
-      Position		      [635, 198, 665, 212]
-      ZOrder		      102
-      Port		      "2"
+      Name		      "x_measured"
+      SID		      "118"
+      Position		      [690, 183, 720, 197]
+      ZOrder		      104
       IconDisplay	      "Port number"
     }
     Block {
       BlockType		      Outport
       Name		      "R"
       SID		      "116"
-      Position		      [635, 273, 665, 287]
+      Position		      [690, 273, 720, 287]
       ZOrder		      103
-      Port		      "3"
+      Port		      "2"
       IconDisplay	      "Port number"
     }
     Line {
@@ -1404,6 +1408,12 @@ Model {
       SrcPort		      1
       Points		      [18, 0]
       Branch {
+	ZOrder			89
+	Points			[0, 45]
+	DstBlock		"Mux"
+	DstPort			2
+      }
+      Branch {
 	ZOrder			12
 	Points			[0, -61; -277, 0; 0, 56]
 	DstBlock		"MATLAB Function"
@@ -1422,9 +1432,18 @@ Model {
       Points		      [18, 0]
       Branch {
 	ZOrder			8
-	Points			[0, 143; -291, 0; 0, -183]
-	DstBlock		"MATLAB Function"
-	DstPort			4
+	Points			[0, 30]
+	Branch {
+	  ZOrder		  92
+	  Points		  [0, 113; -291, 0; 0, -183]
+	  DstBlock		  "MATLAB Function"
+	  DstPort		  4
+	}
+	Branch {
+	  ZOrder		  87
+	  DstBlock		  "Mux"
+	  DstPort		  4
+	}
       }
       Branch {
 	ZOrder			7
@@ -1438,22 +1457,23 @@ Model {
       SrcPort		      1
       Points		      [14, 0]
       Branch {
-	ZOrder			63
-	DstBlock		"eta"
-	DstPort			1
-      }
-      Branch {
-	ZOrder			23
+	ZOrder			91
 	Points			[0, 157; -381, 0; 0, -217]
 	DstBlock		"MATLAB Function"
 	DstPort			3
       }
+      Branch {
+	ZOrder			84
+	DstBlock		"Mux"
+	DstPort			3
+      }
     }
     Line {
-      ZOrder		      62
+      ZOrder		      82
       SrcBlock		      "i_r"
       SrcPort		      1
-      DstBlock		      "r"
+      Points		      [40, 0; 0, 15]
+      DstBlock		      "Mux"
       DstPort		      1
     }
     Line {
@@ -1519,6 +1539,13 @@ Model {
       DstBlock		      "MATLAB Function"
       DstPort		      1
     }
+    Line {
+      ZOrder		      90
+      SrcBlock		      "Mux"
+      SrcPort		      1
+      DstBlock		      "x_measured"
+      DstPort		      1
+    }
   }
 }
 #Finite State Machines
@@ -1545,10 +1572,7 @@ Stateflow {
     firstTransition	    19
     firstJunction	    18
     viewObj		    2
-    visible		    1
     machine		    1
-    subviewS {
-    }
     ssIdHighWaterMark	    18
     decomposition	    CLUSTER_CHART
     type		    EML_CHART
