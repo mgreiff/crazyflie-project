@@ -1,0 +1,79 @@
+\relax 
+\providecommand\hyper@newdestlabel[2]{}
+\providecommand\HyperFirstAtBeginDocument{\AtBeginDocument}
+\HyperFirstAtBeginDocument{\ifx\hyper@anchor\@undefined
+\global\let\oldcontentsline\contentsline
+\gdef\contentsline#1#2#3#4{\oldcontentsline{#1}{#2}{#3}}
+\global\let\oldnewlabel\newlabel
+\gdef\newlabel#1#2{\newlabelxx{#1}#2}
+\gdef\newlabelxx#1#2#3#4#5#6{\oldnewlabel{#1}{{#2}{#3}}}
+\AtEndDocument{\ifx\hyper@anchor\@undefined
+\let\contentsline\oldcontentsline
+\let\newlabel\oldnewlabel
+\fi}
+\fi}
+\global\let\hyper@last\relax 
+\gdef\HyperFirstAtBeginDocument#1{#1}
+\providecommand\HyField@AuxAddToFields[1]{}
+\providecommand\HyField@AuxAddToCoFields[2]{}
+\citation{luukkonen2011modelling}
+\@writefile{toc}{\contentsline {section}{\numberline {1}Introduction}{3}{section.1}}
+\@writefile{toc}{\contentsline {section}{\numberline {2}Dynamics}{3}{section.2}}
+\newlabel{eq:torque}{{6}{3}{Dynamics}{equation.2.6}{}}
+\citation{luukkonen2011modelling}
+\citation{luukkonen2011modelling}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.1}Non-linear model}{4}{subsection.2.1}}
+\newlabel{eq:contsys}{{10}{4}{Non-linear model}{equation.2.10}{}}
+\newlabel{eq:continuoussys}{{11}{4}{Non-linear model}{equation.2.11}{}}
+\newlabel{eq:contsys2}{{13}{5}{Non-linear model}{equation.2.13}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.2}Linearised dynamics}{5}{subsection.2.2}}
+\citation{luukkonen2011modelling}
+\citation{dikmen2009attitude}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.3}Stabilising PD control dynamics}{7}{subsection.2.3}}
+\newlabel{sec:PD}{{2.3}{7}{Stabilising PD control dynamics}{subsection.2.3}{}}
+\newlabel{eq:contsys}{{26}{7}{Stabilising PD control dynamics}{equation.2.26}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {2.4}Rotor-loop dynamics}{7}{subsection.2.4}}
+\@writefile{toc}{\contentsline {section}{\numberline {3}State estimation}{8}{section.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.1}Kalman filter}{8}{subsection.3.1}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2}Extended kalman filter}{8}{subsection.3.2}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.3}Unscented kalman filter}{8}{subsection.3.3}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.4}Particle filter}{8}{subsection.3.4}}
+\@writefile{toc}{\contentsline {section}{\numberline {4}Motion planning}{8}{section.4}}
+\newlabel{sec:reftraj}{{4}{8}{Motion planning}{section.4}{}}
+\newlabel{eq:cont}{{45}{9}{Motion planning}{equation.4.45}{}}
+\newlabel{eq:cont}{{4}{10}{Motion planning}{equation.4.45}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {1}{\ignorespaces A reference trajectory composed of three splines with a maximum order of $N = 5$ and cost vector $c = [0,0,0,1,0,0]$ (minimum snap), enforcing positional endpoint conditions and at unevenly spaced times, with $t = [8,13.6,24,32]$.\relax }}{10}{figure.caption.2}}
+\providecommand*\caption@xref[2]{\@setref\relax\@undefined{#1}}
+\newlabel{fig:splines}{{1}{10}{A reference trajectory composed of three splines with a maximum order of $N = 5$ and cost vector $c = [0,0,0,1,0,0]$ (minimum snap), enforcing positional endpoint conditions and at unevenly spaced times, with $t = [8,13.6,24,32]$.\relax }{figure.caption.2}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {5}Reference tracking LQR with feedforward term}{10}{section.5}}
+\@writefile{toc}{\contentsline {section}{\numberline {6}MPC control}{10}{section.6}}
+\citation{Bouffard:EECS-2012-241}
+\citation{Bouffard:EECS-2012-241}
+\citation{Bouffard:EECS-2012-241}
+\citation{Bouffard:EECS-2012-241}
+\citation{Bouffard:EECS-2012-241}
+\citation{mattingley2012cvxgen}
+\citation{lavretsky2011projection}
+\@writefile{lof}{\contentsline {figure}{\numberline {2}{\ignorespaces A reference trajectory composed of three 3D-splines with a maximum order of $N = 5$ and cost vector $c = [0,0,0,1,0,0]$ (minimum snap), enforcing positional endpoint conditions and at unevenly spaced times, with $t_0=8$ and $t_f=32$. The splines were evaluated with $T_s = 0.5$, $m = 10$, $t_c = 6\Rightarrow $ some $t_k < t_0$ (cyan), $t_c = 20\Rightarrow $ all $t_k\in [t_0,t_f]$ (red) and $t_c = 30\Rightarrow $ some $t_k > t_f$ (green). As can be seen, the algorithm properly evaluates the splines at evenly spaced times and makes the reference hover at a trajectory endpoint if $t_k\not =[t_0,t_f]$. Here, only the positional elements of $\mathbf  {R}_{ref}$ are plotted, note the reference velocities and anles are also evaluated. \relax }}{12}{figure.caption.3}}
+\newlabel{fig:trajectory}{{2}{12}{A reference trajectory composed of three 3D-splines with a maximum order of $N = 5$ and cost vector $c = [0,0,0,1,0,0]$ (minimum snap), enforcing positional endpoint conditions and at unevenly spaced times, with $t_0=8$ and $t_f=32$. The splines were evaluated with $T_s = 0.5$, $m = 10$, $t_c = 6\Rightarrow $ some $t_k < t_0$ (cyan), $t_c = 20\Rightarrow $ all $t_k\in [t_0,t_f]$ (red) and $t_c = 30\Rightarrow $ some $t_k > t_f$ (green). As can be seen, the algorithm properly evaluates the splines at evenly spaced times and makes the reference hover at a trajectory endpoint if $t_k\neq [t_0,t_f]$. Here, only the positional elements of $\mathbf {R}_{ref}$ are plotted, note the reference velocities and anles are also evaluated. \relax }{figure.caption.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {7}$\mathcal  {L}_1$-control}{12}{section.7}}
+\citation{cao2006design}
+\citation{L1control}
+\citation{cao2006design}
+\citation{L1control}
+\citation{huynh20141}
+\citation{L1control}
+\citation{cao2006design}
+\@writefile{toc}{\contentsline {section}{\numberline {8}General TODOs}{13}{section.8}}
+\bibdata{bibliography}
+\bibcite{luukkonen2011modelling}{1}
+\bibcite{dikmen2009attitude}{2}
+\bibcite{Bouffard:EECS-2012-241}{3}
+\bibcite{mattingley2012cvxgen}{4}
+\bibcite{lavretsky2011projection}{5}
+\bibcite{cao2006design}{6}
+\bibcite{L1control}{7}
+\bibcite{huynh20141}{8}
+\bibstyle{IEEEtran}
+\@writefile{toc}{\contentsline {section}{\numberline {9}Appendix}{14}{section.9}}
+\newlabel{sec:appendix}{{9}{14}{Appendix}{section.9}{}}

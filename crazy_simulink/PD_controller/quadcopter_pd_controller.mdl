@@ -22,7 +22,7 @@ Model {
       BusOutputAsStruct	      "off"
     }
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.65"
+    ComputedModelVersion    "1.67"
     NumModelReferences	    0
     NumTestPointedSignals   0
   }
@@ -69,8 +69,8 @@ Model {
 	ViewObjType		"SimulinkTopLevel"
 	LoadSaveID		"0"
 	Extents			[1246.0, 536.0]
-	ZoomFactor		[0.55606955860901619]
-	Offset			[405.118431021466, -150.75716653320785]
+	ZoomFactor		[1.6288474804448463]
+	Offset			[641.00777546006725, 332.53466386546177]
       }
     }
   }
@@ -80,9 +80,9 @@ Model {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "mgreiff"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Sat Apr 09 21:14:04 2016"
-  RTWModifiedTimeStamp	  382137240
-  ModelVersionFormat	  "1.%<AutoIncrement:65>"
+  LastModifiedDate	  "Mon Apr 11 16:05:45 2016"
+  RTWModifiedTimeStamp	  382291542
+  ModelVersionFormat	  "1.%<AutoIncrement:67>"
   ConfigurationManager	  "none"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -910,7 +910,7 @@ Model {
     TiledPaperMargins	    [0.500000, 0.500000, 0.500000, 0.500000]
     TiledPageScale	    1
     ShowPageBoundaries	    off
-    ZoomFactor		    "56"
+    ZoomFactor		    "163"
     ReportName		    "simulink-default.rpt"
     SIDHighWatermark	    "34"
     Block {
@@ -991,7 +991,7 @@ Model {
       Name		      "Demux"
       SID		      "32"
       Ports		      [1, 4]
-      Position		      [755, 385, 760, 530]
+      Position		      [750, 422, 755, 493]
       ZOrder		      121
       ShowName		      off
       Outputs		      "[3,3,3,3]"
@@ -1002,7 +1002,7 @@ Model {
       Name		      "Demux1"
       SID		      "34"
       Ports		      [1, 4]
-      Position		      [775, 525, 780, 670]
+      Position		      [750, 564, 755, 631]
       ZOrder		      123
       ShowName		      off
       Outputs		      "[3,3,3,3]"
@@ -1359,6 +1359,7 @@ Model {
       ZOrder		      135
       SrcBlock		      "Demux"
       SrcPort		      2
+      Points		      [53, 0; 0, -10]
       DstBlock		      "MATLAB Function"
       DstPort		      2
     }
@@ -1366,6 +1367,7 @@ Model {
       ZOrder		      137
       SrcBlock		      "Demux"
       SrcPort		      4
+      Points		      [27, 0; 0, 30]
       DstBlock		      "MATLAB Function"
       DstPort		      4
     }
@@ -1373,6 +1375,7 @@ Model {
       ZOrder		      153
       SrcBlock		      "Demux1"
       SrcPort		      2
+      Points		      [57, 0; 0, -10]
       DstBlock		      "MATLAB Function"
       DstPort		      6
     }
@@ -1380,6 +1383,7 @@ Model {
       ZOrder		      155
       SrcBlock		      "Demux1"
       SrcPort		      4
+      Points		      [34, 0; 0, 30]
       DstBlock		      "MATLAB Function"
       DstPort		      8
     }
@@ -1450,6 +1454,7 @@ Model {
       ZOrder		      134
       SrcBlock		      "Demux"
       SrcPort		      1
+      Points		      [25, 0; 0, -30]
       DstBlock		      "MATLAB Function"
       DstPort		      1
     }
@@ -1457,6 +1462,7 @@ Model {
       ZOrder		      136
       SrcBlock		      "Demux"
       SrcPort		      3
+      Points		      [53, 0; 0, 10]
       DstBlock		      "MATLAB Function"
       DstPort		      3
     }
@@ -1471,6 +1477,7 @@ Model {
       ZOrder		      152
       SrcBlock		      "Demux1"
       SrcPort		      1
+      Points		      [30, 0; 0, -30]
       DstBlock		      "MATLAB Function"
       DstPort		      5
     }
@@ -1478,6 +1485,7 @@ Model {
       ZOrder		      154
       SrcBlock		      "Demux1"
       SrcPort		      3
+      Points		      [58, 0; 0, 10]
       DstBlock		      "MATLAB Function"
       DstPort		      7
     }

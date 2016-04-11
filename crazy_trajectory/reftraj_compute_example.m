@@ -2,7 +2,7 @@
 N = 5;
 
 % Minimum snap cost vector
-cost = [0,0,0,1,0,0];
+cost = [0,0,0,1,0,0,0,0,0,0];
 
 % Sets all conditions free
 a1 = nan(N+1,3);
@@ -12,6 +12,7 @@ a4 = nan(N+1,3);
 
 % Enforces positional conditions
 a1(1,:) = 5; % x,y,z-positions in the first point
+a1(2,1) = 0; % x-velocity in the first point
 
 a2(1,1) = 7; % x-position in the second point
 a2(1,2) = 6; % y-position in the second point
