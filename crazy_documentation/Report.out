@@ -2,7 +2,7 @@
 \BOOKMARK [1][-]{section.2}{Dynamics}{}% 2
 \BOOKMARK [2][-]{subsection.2.1}{Non-linear model}{section.2}% 3
 \BOOKMARK [2][-]{subsection.2.2}{Linearised dynamics}{section.2}% 4
-\BOOKMARK [2][-]{subsection.2.3}{Stabilising PD control dynamics}{section.2}% 5
+\BOOKMARK [2][-]{subsection.2.3}{Stabilising controller}{section.2}% 5
 \BOOKMARK [2][-]{subsection.2.4}{Rotor-loop dynamics}{section.2}% 6
 \BOOKMARK [1][-]{section.3}{State estimation}{}% 7
 \BOOKMARK [2][-]{subsection.3.1}{Kalman filter}{section.3}% 8
