@@ -19,4 +19,11 @@
     output="screen"
     args="$(find crazy_ros)/config/configparam.cnf"
   />
+  <node
+    name="kinectLink"
+    pkg="crazy_ros"
+    type="kinectLink.py"
+    output="screen"
+    args="$(find crazy_ros)/config/configparam.cnf"
+  />
 </launch>

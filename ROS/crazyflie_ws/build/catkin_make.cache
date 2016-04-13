@@ -1,2 +1,0 @@
-crazy_ros
--DCATKIN_DEVEL_PREFIX=/home/daniel/Documents/Crazyflie/crazyflie_project/ROS/crazyflie_ws/devel -DCMAKE_INSTALL_PREFIX=/home/daniel/Documents/Crazyflie/crazyflie_project/ROS/crazyflie_ws/install -G Unix Makefiles

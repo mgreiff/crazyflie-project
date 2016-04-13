@@ -1,8 +1,0 @@
-prefix=/home/daniel/Documents/Crazyflie/crazyflie_project/ROS/crazyflie_ws/install
-
-Name: crazy_ros
-Description: Description of crazy_ros
-Version: 0.0.0
-Cflags: -I/home/daniel/Documents/Crazyflie/crazyflie_project/ROS/crazyflie_ws/install/include
-Libs: -L/home/daniel/Documents/Crazyflie/crazyflie_project/ROS/crazyflie_ws/install/lib 
-Requires: message_runtime
