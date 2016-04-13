@@ -1,23 +1,37 @@
 #!/usr/bin/env python
 
 from std_msgs.msg import String, Float64
-import ros_numpy
+#import ros_numpy
 import numpy as np
+from scipy.linalg import svd, norm
+from math import acos, pi
 from stereo_msgs.msg import DisparityImage
 from rospy.numpy_msg import numpy_msg
 import rospy
+
 class KinectLink(object):
-    ##########################################################################
-    # Node for configuring and linking the kinect 1 to the quadcopter driver #
-    ##########################################################################
+    # Node for configuring and linking the kinect 1 to the quadcopter driver.
+    # Reads a disparity image from the openni driver over the /camera/depth/disparity
+    # topic, computes the true positions and sents the data to the
+    # kinect_pos_measurement topic. Can calibrate for background noise
+    # and find a mapping from the camera coordinate system to the true,
+    # global coordinate system, mapped to eachother using the transformation
+    #             _                                  _
+    #            |cos(self.angle)  0         0        |
+    # u_camera = |       0         1         0        |u_global
+    #            |_      0         0  cos(self.angle)_|
+    #
+    # The self.angle and background noise calibration can be done from the master.
+ 
     def __init__(self):
+
         # Sets up subscribers
         self.data_sub = rospy.Subscriber('/camera/depth/disparity', numpy_msg(DisparityImage), self.handle_kinect_data)
         self.status_sub = rospy.Subscriber('Kinect_status', String, self.handle_status_data)
 
         # Sets up publisher
         self.status_pub = rospy.Publisher('system_status', String, queue_size = 10)
-        self.data_pub = rospy.Publisher('kinect_position_measurement', String, queue_size = 10)
+        self.data_pub = rospy.Publisher('kinect_pos_measurement', String, queue_size = 10)
 
         self.mode = 'ConfigureBackground'
         self.angle = None
@@ -44,13 +58,10 @@ class KinectLink(object):
         #        presentl.
         #    * Run - prints the current position of the quadcopter to the
         #        /kinect_position_measurement topic
-        image = msg.image
-        np_image = ros_numpy.numpify(image)
-        image = np_image - self.background
-        #max_ind = np.argmax(np_image)
-        #i,j = np.unravel_index(np_image.argmax(), np_image.shape)
 
-        #print i, j, np.max(np_image)
+        np_image = np.zeros((480, 640))
+        #np_image = ros_numpy.numpify(msg.image)
+        image = np_image - self.background
 
         if self.mode == 'ConfigureBackground':
             # Takes a total of 100 backround samples and stores the mean
@@ -59,13 +70,14 @@ class KinectLink(object):
                 self.framecount += 1
             else:
                 self.background = self.background / float(self.framecount)
-                self.mode = 'Run'
+                self.mode = 'Idle'
 
-        elif self.mode == 'ConfigureDepth':
+                # Allows the master node to continue operation
+                self.status_pub.publish('True')
+
+        elif self.mode == 'ConfigureDepth' or self.mode == 'ConfigureAngle':
             self.currentImage = image
 
-        elif self.mode == 'ConfigureAngle':
-            self.currentImage = image
         else:
             self.currentImage = image
 
@@ -80,19 +92,23 @@ class KinectLink(object):
 
     def handle_status_data(self, msg):
         # Callback for the status of the kinect.
-        if msg.data == 'ConfigureBackround':
+        if msg.data == 'ConfigBackround':
             self.mode = msg.data
-            print msg.data
-        elif msg.data == 'ConfigureDepth':
+
+        elif msg.data == 'ConfigDepth':
+            self.mode = msg.data
             self.configure_depth()
-            print msg.data
-        elif msg.data == 'ConfigureAngle':
+
+        elif msg.data == 'ConfigAngle':
             self.mode = msg.data
-            print msg.data
+            self.configure_angle()
         else:
-            print 'Unsupported kinecto mode %s, no action taken' % (msg.data)
+            print 'Unsupported kinect mode %s, no action taken' % (msg.data)
 
     def configure_depth(self):
+        # Configures depth by finding a linear relasionship between
+        # a set of measured and user supplied points in space
+        print 'Configuring depth...'
         maxSamples = 5
         nSamples = 0
 
@@ -103,11 +119,44 @@ class KinectLink(object):
             # TODO handle data
 
         print 'Configuration complete!'
+
+        # Allows the master node to continue operation
+        self.status_pub.publish('True')
+
+    def configure_angle(self):
+        # configures angle using the single value decomposition, such that
+        # the x-axis in the camera frame is parallell with the cameras line
+        # of sight, and that the camera rotates around the y-axis in both the
+        # global and camera coordinate system.
+        print 'Configuring angle...'
+
+        # TODO replace the points variable with random depth data in the lower
+        # center of an actual image
+        points = np.random.rand(10,3)
+
+        x = points[:,0]*0.5
+        y = points[:,1]
+        z = points[:,2]
+
+        P = np.array([sum(x),sum(y),sum(z)])/len(x);
+        [U,S,V] = svd(np.transpose(np.array([x-P[0],y-P[1],z-P[2]])));
+        N = -1./V[2,2]*V[2,:]
+
+        XZnormal = np.array([[N[0]],[N[2]]])
+        angle = (N[0]/abs(N[0]))*acos(N[0]/norm(XZnormal))
+
+        if abs(angle) > pi/2 and abs(angle) < 3*pi/2:
+            angle=pi-angle
+
+        self.angle = angle*180./pi
+        print 'Angle = %s [degree]' % (str(self.angle))
+        print 'Configuration complete!'
+
         # Allows the master node to continue operation
         self.status_pub.publish('True')
 
     def __str__(self):
-        return 'Kinect Link'
+        return 'kinect node'
 
 def main():
     rospy.init_node('KinectLink')
