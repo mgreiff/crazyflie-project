@@ -1,33 +1,29 @@
 #!/usr/bin/env python
 
 from std_msgs.msg import String, Float64
-from crazy_ros.msg import NumpyArrayFloat64 # Can handle messages of type np.array, list and tuple
+import ros_numpy
 import numpy as np
-from math import sin, pi, sqrt
+from stereo_msgs.msg import DisparityImage
+from rospy.numpy_msg import numpy_msg
 import rospy
-import os
-import sys
-from json import dumps, load
-import time
-
 class KinectLink(object):
     ##########################################################################
     # Node for configuring and linking the kinect 1 to the quadcopter driver #
     ##########################################################################
     def __init__(self):
         # Sets up subscribers
-        self.data_sub = rospy.Subscriber('Kinect_data', String, self.handle_kinect_data)
+        self.data_sub = rospy.Subscriber('/camera/depth/disparity', numpy_msg(DisparityImage), self.handle_kinect_data)
         self.status_sub = rospy.Subscriber('Kinect_status', String, self.handle_status_data)
 
         # Sets up publisher
         self.status_pub = rospy.Publisher('system_status', String, queue_size = 10)
         self.data_pub = rospy.Publisher('kinect_position_measurement', String, queue_size = 10)
 
-        self.mode = 'Run'
+        self.mode = 'ConfigureBackground'
         self.angle = None
 
         # Used in configure bckground
-        self.background = None
+        self.background = np.zeros((480, 640))
         self.framecount = 0
 
         # Used in configure depth
@@ -42,29 +38,45 @@ class KinectLink(object):
         #        processing.
         #    * ConfigureDepth - Stores each received image in the
         #        self.currentImage attribute, where it is then accessed by the
-        #        configure_* functions 
+        #        configure_* functions
         #    * ConfigureAngle configures the angle of the kinect based on the
         #        assumption that the kinect is facing a wall, does nothing
         #        presentl.
         #    * Run - prints the current position of the quadcopter to the
         #        /kinect_position_measurement topic
+        image = msg.image
+        np_image = ros_numpy.numpify(image)
+        image = np_image - self.background
+        #max_ind = np.argmax(np_image)
+        #i,j = np.unravel_index(np_image.argmax(), np_image.shape)
 
-        if self.mode == 'ConfigureBackround':
+        #print i, j, np.max(np_image)
+
+        if self.mode == 'ConfigureBackground':
             # Takes a total of 100 backround samples and stores the mean
             if self.framecount < 100:
-                self.background = self.background + msg.data
+                self.background = self.background + np_image
                 self.framecount += 1
             else:
                 self.background = self.background / float(self.framecount)
-                self.mode == 'Run'
+                self.mode = 'Run'
 
         elif self.mode == 'ConfigureDepth':
-            self.currentImage = msg.data
+            self.currentImage = image
 
         elif self.mode == 'ConfigureAngle':
-            self.currentImage = msg.data
+            self.currentImage = image
         else:
-            self.currentImage = msg.data
+            self.currentImage = image
+
+            i,j = np.unravel_index(image.argmax(), image.shape)
+            print i, j, image[i, j], np_image[i, j], self.background[i, j]
+            print type(image)
+            #i,j = np.unravel_index(np_image.argmax(), np_image.shape)
+            #print i, j, np.max(np_image)
+            #i,j = np.unravel_index(self.background.argmax(), self.background.shape)
+            #print i, j, np.max(self.background)
+            print '-'*10
 
     def handle_status_data(self, msg):
         # Callback for the status of the kinect.
