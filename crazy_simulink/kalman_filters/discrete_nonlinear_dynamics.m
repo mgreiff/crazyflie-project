@@ -1,4 +1,4 @@
-function xnew = EKF_dynamics(omega, x, g, m, k, A, I, l, b, Ts)
+function xnew = discrete_nonlinear_dynamics(omega, x, g, m, k, A, I, l, b, Ts)
     % Equations from Teppo Luukkonen, Modelling and control of quadcopter
     phi = x(7); theta = x(8); psi = x(9); % Roll, pitch, yaw
     phidot = x(10); thetadot = x(11); psidot = x(12); % Roll, pitch, yaw

@@ -38,6 +38,9 @@ sizes.NumSampleTimes = 1;
 sys = simsizes(sizes); 
 
 x0 = param.x0;
+global P;
+P = param.P0;
+
 str = [];                % Set str to an empty matrix.
 ts  = [param.h 0];       % sample time: [period, offset]
 		      
@@ -45,16 +48,32 @@ ts  = [param.h 0];       % sample time: [period, offset]
 % Update the discrete states
 %==============================================================
 function sys = mdlUpdates(t,x,u,param)
-omega = u(1:4);
-xnew = discrete_nonlinear_dynamics(omega, x, param.g, param.m, param.k,...
-                                   param.A, param.I,param.l, param.b,...
-                                   param.h);
+Ad = param.Ad;
+Bd = param.Bd;
+Cd = param.Cd;
+Q = param.Q;
+R = param.R;
 
-sys =  xnew;
+persistent P
+if isempty(P)
+    P = param.P0;
+end
 
-%==============================================================
-% Calculate outputs
-%==============================================================
+uk = u(1:4);
+zk = u(5:end);
+
+% Predictor step
+xf = Ad * x + Bd * uk;
+Pf = Ad * P * Ad' + Q;
+
+% Corrector step
+K =  Pf * Cd' / (Cd * Pf * Cd'+ R);
+xhat = xf + K * (zk - Cd * xf);
+P = (eye(12) - K * Cd) * Pf;
+
+% Updates the states
+sys = xhat;
+
 function sys = mdlOutputs(t,x,u,param)
-disp(x)
+% Returns the current estimation
 sys = x;
