@@ -587,6 +587,40 @@ if $r \equiv$ constant.
 \item Simulate control.
 \end{enumerate}
 
+\section{ROS implemetation}
+\subsection{Kinect node}
+The kinect node subscribes to the /camera/depth/image\_rect-topic, to which the ``openni'' software publishes information in the data type ``Image'', which is part of the standard ROS messages library ``sensor\_msgs''. This node handles the raw camera data and publishes the quadcopter position to the topic /kinect\_pos\_measurement as a 3x1 float 64 numpy array. The reason for this choice of data type is to enable realt time plotting of the position with rviz and rqt\_plot.
+
+The camera is calibrated by taking 100 consecutive samples of the background noise, from which a mean depth is computed. 
+When running, the measured depth matrix is subtracted with the background noise so that only a handful of pixels are zero separate (or rather above some threshold $\epsilon\approx 2$ depth units). This set of pixels, $S$, is then used to compute the depth of the copter as the mean of the depths of all pixels in $S$. Similarity, the quadcopter position in the image is computed as the mean of all x and y pixel indices of the points in $S$.
+
+The angle of the camera is calibrated by taking a set of $N$ measurement points, $\mathbf{p}_i=\begin{bmatrix}x_i,y_i,z_i\end{bmatrix}$, in the background depth matrix. From these points, the center of mass is computed as
+\begin{equation}
+\bar{\mathbf{p}}= \begin{bmatrix}\bar{x},\bar{y},\bar{z}\end{bmatrix} = \frac{1}{N}\sum_{i = 1}^N \mathbf{p}_i,
+\end{equation}
+and a matrix for each point's deviation from the center of mass is set up
+\begin{equation}
+\mathbf{P} = \begin{bmatrix}\mathbf{p}_1\\ \vdots \\ \mathbf{p}_N\end{bmatrix} -  \begin{bmatrix}\bar{\mathbf{p}}\\ \vdots \\ \bar{\mathbf{p}}\end{bmatrix}\in\mathbb{R}^{N\times 3},
+\end{equation}
+The matrix $\mathbf{P}$ is then factorised using the singlar value decomposition (SVD), from which, the left-singular vector corresponding to the smallest of the three singular values is the normal of the best fitting plane in a least-squares sense, $\bar{\mathbf{n}}_{xyz}$. As we are only interested in the angle $\alpha$ in the $xz$-plane, the normal is projected onto this plane, resulting in the normal $\bar{\mathbf{n}}_{xz}$ (see Figure~\ref{fig:planecalibration}). From this, the angle is simply computed using the cosine dot product definition
+\begin{equation}
+\alpha = \arccos\Big(\frac{\bar{\mathbf{n}}_{xz}\cdot \hat{\mathbf{x}}_c}{||\bar{\mathbf{n}}_{xz}||_2}\Big).
+\end{equation}
+
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.5\textwidth]{figures/kinectcal.png}
+\rule{35em}{0.5pt}
+\caption{.}
+\label{fig:planecalibration}
+\end{figure}
+
+Once the angle has been computed, we are ready to detect moving objects. By subtracting the background data from each measured image and computing the center of mass of all the points in $S$, we get an estimate of the quadcopter's center of mass in terms of depth and pixel indices. This point is then mapped into the camera coordinate system [m], where the depth unit is mapped to a distance from the camera to the quadcopter [m] by an exponential function, and the aperture of the camera is used to translate the position of the copter to a point in space in the camera coordinate system, $\mathbf{p}_c$, with origin at the camera. This point is then translated into the global coordinate system, $\mathbf{p}$, (in which the controller operates) by means of the transformation
+\begin{equation}
+\mathbf{p} = \begin{bmatrix} \cos(\alpha)& 0 & -\sin(\alpha) \\ 0 & 1 & 0 \\ \sin(\alpha) & 0 & \cos(\alpha)\end{bmatrix} \mathbf{p}_c.
+\end{equation}
+
 \section{General TODOs}
 \begin{enumerate}
 \item Found that one of the copters were broken - sent to Bitcraze for repairs, expected to be done in early march.
