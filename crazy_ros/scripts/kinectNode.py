@@ -5,6 +5,8 @@ import ros_numpy
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.linalg import svd, norm, solve
+from math import acos, pi
 from sensor_msgs.msg import Image
 from rospy.numpy_msg import numpy_msg
 from geometry_msgs.msg import Point
@@ -66,8 +68,12 @@ class KinectNode(object):
             np_image_rel = self.background - np_image
             if self.angle is None:
                 print '(@ kinectNode) Calibrating angle...'
+
                 self.calibrate_angle()
-                print '(@ kinectNode) Angle: %f degrees' % (180/3.1415 * self.angle)
+                print '(@ kinectNode) Angle using poyfit: %f degrees' % (180/3.1415 * self.angle)
+
+                self.calibrate_angle_SVD()
+                print '(@ kinectNode) Angle using SVD: %f degrees' % (180/3.1415 * self.angle)
                 print '(@ kinectNode) Calibration complete!\n'
                 self.status_pub.publish('True')
 
@@ -87,7 +93,7 @@ class KinectNode(object):
             plt.draw()
             plt.pause(0.01)
 
-        x, y, z = self.point_from_ij(i, j, np_image)
+        z, y, x = self.point_from_ij(i, j, np_image)
         p = Point(x=x, y=y, z=z)
         self.point_pub.publish(p)
 
@@ -119,8 +125,6 @@ class KinectNode(object):
                 if self.angle < 0:
                     #print 'roof'
                     self.angle += math.pi/2
-        #print best_i
-
 
     def calibrate_angle_o(self, o):
         j = 320
@@ -137,6 +141,35 @@ class KinectNode(object):
         p, r, _, _, _ = np.polyfit(y_l, z_l, 1, full = True)
         return np.arctan(p[0]), r
 
+    def calibrate_angle_SVD(self):
+        # Approximates a 3D-plane to the set of points and computes the angle.
+        # See the /crazy_documentation for the mathematics involved.
+
+        # Samples background matrix, finds S
+        nZ = nY = 11
+        indY = range(nY)
+        indZ = range(nZ)
+        x = np.zeros(nY*nZ)
+        y = np.zeros(nY*nZ)
+        z = np.zeros(nY*nZ)
+        count = 0
+        for ii in indY:
+            for jj in indZ:
+                x[count] = self.background[ii,jj]
+                y[count] = ii
+                z[count] = jj
+                count += 1
+
+        # Sets up P and computes 3D-plane normal
+        P = np.array([sum(x),sum(y),sum(z)])/len(x);
+        [U,S,V] = svd(np.transpose(np.array([x-P[0],y-P[1],z-P[2]])));
+        N = -1./V[2,2]*V[2,:]
+        XZnormal = np.array([[N[0]],[N[2]]])
+
+        # Computes angle
+        self.angle = (N[0]/abs(N[0]))*acos(N[0]/norm(XZnormal))
+        if abs(self.angle) > pi/2 and abs(self.angle) < 3*pi/2:
+            self.angle=pi-self.angle
 
 if __name__ == '__main__':
     rospy.init_node('kinectNode')
