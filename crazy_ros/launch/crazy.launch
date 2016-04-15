@@ -20,10 +20,15 @@
     args="$(find crazy_ros)/config/configparam.cnf"
   />
   <node
-    name="kinectLink"
+    name="kinectNode"
     pkg="crazy_ros"
-    type="kinectLink.py"
+    type="kinectNode.py"
     output="screen"
-    args="$(find crazy_ros)/config/configparam.cnf"
+  />
+  <node
+    name="dummyCamera"
+    pkg="crazy_ros"
+    type="dummyCamera.py"
+    output="screen"
   />
 </launch>

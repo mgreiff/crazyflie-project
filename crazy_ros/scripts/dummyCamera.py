@@ -1,0 +1,27 @@
+#!/usr/bin/env python
+
+import rospy
+import ros_numpy
+import math
+import numpy as np
+from time import sleep
+from crazy_ros.msg import NumpyArrayFloat64
+
+class DummyCamera(object):
+    def __init__(self):
+        # Publishes data to the /kinect/dummyimage topic at 20 Hz as a np.array
+        self.pub = rospy.Publisher('/kinect/dummy', NumpyArrayFloat64, queue_size = 10)
+
+def main():
+    rospy.init_node('dummyCamera')
+    dC = DummyCamera()
+    maxCount = 400
+    count = 0
+    while count < maxCount:
+        sleep(0.05)
+        data = np.random.rand(480*640) + 10
+        dC.pub.publish(data)
+        count += 1
+
+if __name__ == '__main__':
+    main()
