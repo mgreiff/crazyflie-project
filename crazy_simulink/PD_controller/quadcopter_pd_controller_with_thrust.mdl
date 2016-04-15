@@ -2,7 +2,7 @@ Model {
   Name			  "quadcopter_pd_controller_with_thrust"
   Version		  8.6
   MdlSubVersion		  0
-  SavedCharacterEncoding  "windows-1252"
+  SavedCharacterEncoding  "US-ASCII"
   GraphicalInterface {
     NumRootInports	    3
     Inport {
@@ -27,7 +27,7 @@ Model {
       BusOutputAsStruct	      "off"
     }
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.70"
+    ComputedModelVersion    "1.72"
     NumModelReferences	    0
     NumTestPointedSignals   0
   }
@@ -49,7 +49,7 @@ Model {
       $ObjectID		      2
       $ClassName	      "Simulink.WindowInfo"
       IsActive		      [1]
-      Location		      [186.0, 12.0, 1358.0, 969.0]
+      Location		      [0.0, 23.0, 1280.0, 709.0]
       Object {
 	$PropName		"ModelBrowserInfo"
 	$ObjectID		3
@@ -73,7 +73,7 @@ Model {
 	IsActive		[1]
 	ViewObjType		"SimulinkTopLevel"
 	LoadSaveID		"0"
-	Extents			[1308.0, 794.0]
+	Extents			[1246.0, 536.0]
 	ZoomFactor		[1.0]
 	Offset			[350.66666666666663, 191.1666666666672]
       }
@@ -83,11 +83,11 @@ Model {
   Creator		  "Daniel"
   UpdateHistory		  "UpdateHistoryNever"
   ModifiedByFormat	  "%<Auto>"
-  LastModifiedBy	  "Daniel"
+  LastModifiedBy	  "mgreiff"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Thu Mar 03 16:01:03 2016"
-  RTWModifiedTimeStamp	  378921662
-  ModelVersionFormat	  "1.%<AutoIncrement:70>"
+  LastModifiedDate	  "Fri Apr 15 13:24:25 2016"
+  RTWModifiedTimeStamp	  382627462
+  ModelVersionFormat	  "1.%<AutoIncrement:72>"
   ConfigurationManager	  "none"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -907,7 +907,7 @@ Model {
   }
   System {
     Name		    "quadcopter_pd_controller_with_thrust"
-    Location		    [186, 12, 1544, 981]
+    Location		    [0, 23, 1280, 732]
     Open		    on
     ModelBrowserVisibility  off
     ModelBrowserWidth	    200
@@ -1487,11 +1487,11 @@ Stateflow {
       isEML		      1
       script		      "function omega = copter_PD(dT, eta, etadot, eta_d, etadot_d, g, k, m, b, l, I, K)\n    KzP = K(1,"
       "1); KetaP = K(1,2:4)';\n    KzD = K(2,1); KetaD = K(2,2:4)';\n    \n    phi = eta(1); theta = eta(2); psi = eta("
-      "3);\n    \n    T = dT + m*g;\n    \n    tau = diag(I) * (KetaD .* (0*etadot_d - etadot) + KetaP .* (eta_d - eta)"
-      ");\n    tau_phi = tau(1); tau_theta = tau(2); tau_psi = tau(3);\n    \n    \n    w1sq = T/(4*k) - tau_theta/(2*k"
-      "*l) - tau_psi / (4*b);\n    w2sq = T/(4*k) - tau_phi/(2*k*l) + tau_psi / (4*b);\n    w3sq = T/(4*k) + tau_theta/"
-      "(2*k*l) - tau_psi / (4*b);\n    w4sq = T/(4*k) + tau_phi/(2*k*l) + tau_psi / (4*b);\n    \n    omega = sqrt(max("
-      "[w1sq w2sq w3sq w4sq]', 0));\nend"
+      "3);\n    \n    T = dT + m*g;\n\n    tau = diag(I) * (KetaD .* (0*etadot_d - etadot) + KetaP .* (eta_d - eta));\n"
+      "    tau_phi = tau(1); tau_theta = tau(2); tau_psi = tau(3);\n    \n    \n    w1sq = T/(4*k) - tau_theta/(2*k*l) "
+      "- tau_psi / (4*b);\n    w2sq = T/(4*k) - tau_phi/(2*k*l) + tau_psi / (4*b);\n    w3sq = T/(4*k) + tau_theta/(2*k"
+      "*l) - tau_psi / (4*b);\n    w4sq = T/(4*k) + tau_phi/(2*k*l) + tau_psi / (4*b);\n    \n    omega = sqrt(max([w1s"
+      "q w2sq w3sq w4sq]', 0));\nend"
       editorLayout	      "100 M4x1[10 5 700 500]"
     }
   }

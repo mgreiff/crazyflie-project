@@ -1,3 +1,6 @@
+%% Adds cvx_helpfunctions to path
+addpath(genpath('.'));
+
 %% Set up basic model
 Ad = diag(A);
 a1 = 4.8; a2 = 8.32; b = 8.32;
@@ -30,19 +33,20 @@ Ts = 0.2; % sample time
 disp('Generate CVXGEN data struct...')
 % Must be specified to run the solver eg using
 % 
-%   [vars, status] = csolve(CVXparameters)
+%   [vars, status] = csolve(CVXparameters, settings)
 %
 
 % Dynamics and initial conditions
 CVXparameters.A = Ad;
 CVXparameters.B = Bd;
-CVXparameters.x_0 = [1;1;1;0;0;0;0;0;0;0];
+CVXparameters.u_0 = [0;0;0];
+CVXparameters.x_0 = [0;0;0;0;0;0;0;0;0;0];
 
 % Design parameters
-CVXparameters.Q = eye(10);
-CVXparameters.R = eye(3);
+CVXparameters.Q = diag([2, 2, 2, 1, 1, 0.1, 0.1, 0.1, 0.1, 0.1]);
+CVXparameters.R = diag([2, 2, 0.1]);
 CVXparameters.S_max = 1000;
-CVXparameters.u_max = 10000;
+CVXparameters.u_max = 0.3;
 CVXparameters.predictionHorizon = 10;
 
 % Must be specified to make the S-fucntion run
@@ -50,20 +54,10 @@ CVXparameters.nDiscreteStates = 10;
 CVXparameters.nOutputs = 3;
 CVXparameters.nInputs = CVXparameters.nDiscreteStates*(CVXparameters.predictionHorizon+2);
 CVXparameters.h = Ts; % Stepsize
+
+% Settings for the CVXsolver and debugging 
+CVXparameters.verbose = 1;
+CVXparameters.max_iters = 20;
+CVXparameters.plot = 0;
+
 disp('...complete!')
-
-%% Should be updated within simulink, just included here to make the file run
-%  where positions change(on the prediction horizon) but the
-%  speeds and angular parameters are kept constant. 
-
-CVXparameters.r_0 = [1.0,1.00,1.0,0,0,0,0,0,0,0]';
-CVXparameters.r_1 = [1.1,0.90,1.0,0,0,0,0,0,0,0]';
-CVXparameters.r_2 = [1.2,0.81,1.1,0,0,0,0,0,0,0]';
-CVXparameters.r_3 = [1.3,0.73,1.1,0,0,0,0,0,0,0]';
-CVXparameters.r_4 = [1.4,0.65,1.2,0,0,0,0,0,0,0]';
-CVXparameters.r_5 = [1.5,0.55,1.2,0,0,0,0,0,0,0]';
-CVXparameters.r_6 = [1.6,0.49,1.2,0,0,0,0,0,0,0]';
-CVXparameters.r_7 = [1.7,0.42,1.1,0,0,0,0,0,0,0]';
-CVXparameters.r_8 = [1.8,0.39,1.1,0,0,0,0,0,0,0]';
-CVXparameters.r_9 = [1.9,0.38,1.0,0,0,0,0,0,0,0]';
-CVXparameters.r_10 = [2.0,0.38,1.0,0,0,0,0,0,0,0]';
