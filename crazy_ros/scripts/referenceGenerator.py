@@ -9,19 +9,16 @@ import os
 import sys
 from json import dumps, load
 import time
+import signal
 
 class ReferenceGenerator(object):
 
     def __init__(self):
         # Sets up subscribers
-        self.mode_sub = rospy.Subscriber('RG_mode', String, self.handle_mode_data)
-        self.status_sub = rospy.Subscriber('RG_status', String, self.handle_status_data)
-
-        # Sets up publishers
-        self.reference_pub = rospy.Publisher('reference_signal', NumpyArrayFloat64, queue_size = 10)
+        self.status_sub = rospy.Subscriber('/system/status_controller', String, self.handle_status_data)
+        self.control_pub = rospy.Publisher('/system/control_signal', NumpyArrayFloat64, queue_size = 10)
         self.et_pub = rospy.Publisher('reference_executiontime', Float64, queue_size = 10)
  
-        # Initial attributes
         self.status = False
         self.mode = 0
         self.totalTime = 0
@@ -40,82 +37,78 @@ class ReferenceGenerator(object):
         else:
             print 'ERROR. Could not load configuration parameters in %s' % (str(self))
 
-    def handle_mode_data(self, msg):
-        self.mode = int(msg.data.split(' ')[0])
-        
     def handle_status_data(self, msg):
-        data = msg.data.split(' ')[0]
-        if data == 'IDLE':
-            self.status = False
-        elif data == 'ACTIVE':
+        # Callback for commands from master which generates a trajectory
+        # if RefGen is broadcasted, but turns of the controller if anything
+        # else is broadcasted and sets all conttrol signals to 0 if "q"
+        # is broadcasted
+        if msg.data == 'RefGen':
             self.status = True
-            self.generate_reference()
         else:
-            print 'ERROR. The cannot set the status in the reference generator to %s' % (data)
-
-    def generate_reference(self):
-        runtime = time.time()
-        while self.status:
-
-            # Tries to compensate for execution time
-            startTime = time.time()
-
-            # Publish omega reference for testing the quadcompter dynamics 
-            if self.mode == 0:
-                self.totalTime += self.timestep
-                t = self.totalTime
-                g = self.param['quadcopter_model']['g']
-                m = self.param['quadcopter_model']['m']
-                k = self.param['quadcopter_model']['k']
-                hover_omega = sqrt(g * m / (4 * k));
-                omegaAmp = 25.
-                omegaOscillation = np.ones([4,1])
-                if t<=0.5:
-                    omegaOscillation *= 2 * sin(t*4*pi)
-                elif 0.5<t and t<=1:
-                    omegaOscillation[0] = 0
-                    omegaOscillation[1] *= -sin(t*4*pi)
-                    omegaOscillation[2] = 0
-                    omegaOscillation[3] *= sin(t*4*pi)
-                elif 1<t and t<=1.5:
-                    omegaOscillation[0] *= -sin(t*4*pi)
-                    omegaOscillation[1] = 0
-                    omegaOscillation[2] *= sin(t*4*pi)
-                    omegaOscillation[3] = 0
-                elif 1.5<t and t<=2.:
-                    omegaOscillation[0] *= -sin(t*4*pi)
-                    omegaOscillation[1] *= sin(t*4*pi)
-                    omegaOscillation[2] *= -sin(t*4*pi)
-                    omegaOscillation[3] *= sin(t*4*pi)
-                else:
-                    self.status = False
-                    self.totalTime = 0
-                ref = hover_omega*np.ones([4,1]) + omegaAmp*omegaOscillation
-
-            # Dummy publisher
-            elif self.mode == 1:
-                ref = [1,1,1,1,1]
-
-            # Dummy publisher
-            elif self.mode == 2:
-                ref = [2,2,2,2,2]
-
-            executionTime = time.time() - startTime
-            time.sleep(self.timestep - executionTime)
-
-            self.et_pub.publish(time.time()-runtime)
-            runtime = time.time()
-
-            # Publish reference
-            self.reference_pub.publish(ref)
+            self.status = False
+            if msg.data == 'q':
+                self.control_pub.publish(np.zeros((4,1)))
 
     def __str__(self):
         return 'reference generator node'
 
+def signal_handler(signal, frame):
+    print 'Shutting down PID node nicely!'
+    sys.exit(0)
+
 def main():
     rospy.init_node('ReferenceGenerator')
-    rG = ReferenceGenerator()
-    rospy.spin()
+    refGen = ReferenceGenerator()
+    signal.signal(signal.SIGINT, signal_handler)
+
+    g = refGen.param['quadcopter_model']['g']
+    m = refGen.param['quadcopter_model']['m']
+    k = refGen.param['quadcopter_model']['k']
+
+    runtime = time.time()
+    while True:
+        if not refGen.status:
+            refGen.totalTime = 0
+        else:
+            # Tries to compensate for execution time
+            startTime = time.time()
+
+            # Publish omega reference for testing the quadcompter dynamics 
+            refGen.totalTime += refGen.timestep
+            t = refGen.totalTime
+            hover_omega = sqrt(g * m / (4 * k));
+            omegaAmp = 25.
+            omegaOscillation = np.ones([4,1])
+            if t<=0.5:
+                omegaOscillation *= 2 * sin(t*4*pi)
+            elif 0.5<t and t<=1:
+                omegaOscillation[0] = 0
+                omegaOscillation[1] *= -sin(t*4*pi)
+                omegaOscillation[2] = 0
+                omegaOscillation[3] *= sin(t*4*pi)
+            elif 1<t and t<=1.5:
+                omegaOscillation[0] *= -sin(t*4*pi)
+                omegaOscillation[1] = 0
+                omegaOscillation[2] *= sin(t*4*pi)
+                omegaOscillation[3] = 0
+            elif 1.5<t and t<=2.:
+                omegaOscillation[0] *= -sin(t*4*pi)
+                omegaOscillation[1] *= sin(t*4*pi)
+                omegaOscillation[2] *= -sin(t*4*pi)
+                omegaOscillation[3] *= sin(t*4*pi)
+            else:
+                refGen.status = False
+                refGen.totalTime = 0
+            ref = hover_omega*np.ones([4,1]) + omegaAmp*omegaOscillation
+
+            executionTime = time.time() - startTime
+            time.sleep(refGen.timestep - executionTime)
+
+            refGen.et_pub.publish(time.time()-runtime)
+            runtime = time.time()
+
+            # Publish reference
+            refGen.control_pub.publish(ref)
 
 if __name__ == '__main__':
     main()

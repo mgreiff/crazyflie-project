@@ -4,6 +4,8 @@ project(crazy_ros)
 find_package(catkin REQUIRED COMPONENTS
   rospy
   std_msgs
+  sensor_msgs
+  geometry_msgs
   message_generation
 )
 
@@ -17,6 +19,8 @@ find_package(catkin REQUIRED COMPONENTS
 generate_messages(
   DEPENDENCIES
   std_msgs
+  sensor_msgs
+  geometry_msgs
 )
 
 catkin_package(

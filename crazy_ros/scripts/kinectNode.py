@@ -37,7 +37,7 @@ class KinectNode(object):
             self.disparity_sub = rospy.Subscriber('/camera/depth/image_rect', Image, self.handle_disparity_image)
         self.status_sub = rospy.Subscriber('/system/kinect', String, self.handle_status) # Commands from the master
         self.point_pub = rospy.Publisher('/kinect/position', Point, queue_size = 10) # Publishes position
-        self.status_pub = rospy.Publisher('/system/status', String, queue_size = 10) # Publish to the master
+        self.status_pub = rospy.Publisher('/system/status_master', String, queue_size = 10) # Publish to the master
 
     def handle_status(self, msg):
         if msg.data == 'Calibrate':

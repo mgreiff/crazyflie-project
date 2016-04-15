@@ -1,11 +1,5 @@
 <launch>
   <node
-    name="master"
-    pkg="crazy_ros"
-    type="master.py"
-    output="screen"
-  />
-  <node
     name="referenceGenerator"
     pkg="crazy_ros"
     type="referenceGenerator.py"
@@ -29,6 +23,26 @@
     name="dummyCamera"
     pkg="crazy_ros"
     type="dummyCamera.py"
+    output="screen"
+  />
+  <node
+    name="MPCcontroller"
+    pkg="crazy_ros"
+    type="MPCController.py"
+    output="screen"
+    args="$(find crazy_ros)/config/configparam.cnf"
+  />
+  <node
+    name="PIDcontroller"
+    pkg="crazy_ros"
+    type="PIDController.py"
+    output="screen"
+    args="$(find crazy_ros)/config/configparam.cnf"
+  />
+  <node
+    name="master"
+    pkg="crazy_ros"
+    type="master.py"
     output="screen"
   />
 </launch>

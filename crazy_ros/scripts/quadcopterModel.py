@@ -16,7 +16,7 @@ class QuadcopterModel(object):
 
     def __init__(self):
         # Sets up subscribers
-        self.reference_sub = rospy.Subscriber('reference_signal',
+        self.reference_sub = rospy.Subscriber('/system/control_signal',
                                               NumpyArrayFloat64,
                                               self.handle_reference_data)
 
