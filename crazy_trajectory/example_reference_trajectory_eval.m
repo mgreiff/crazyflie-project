@@ -1,7 +1,7 @@
 load('trajectoryData')
 currentTime = 8;  % Starting time
 Ts = 0.5;         % Time between samples
-predHorizon = (32-8)/0.5; % Number of points on the prediction horizon
+predHorizon = (20-8)/0.5; % Number of points on the prediction horizon
 
 times = currentTime + Ts.* (0:predHorizon-1);
 referenceTrajectory = zeros(6,predHorizon);
