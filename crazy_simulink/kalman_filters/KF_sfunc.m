@@ -1,4 +1,4 @@
-function [sys,x0,str,ts] = EKF_sfunc(t,x,u,flag,param)
+function [sys,x0,str,ts] = KF_sfunc(t,x,u,flag,param)
 
 switch flag,
     case 0 % Initialization

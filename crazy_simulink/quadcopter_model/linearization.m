@@ -11,10 +11,13 @@ if 1 % Use full sym
     phidot = sym('phidot','real');
     thetadot = sym('thetadot','real');
     psidot = sym('psidot','real');
-    Ixx = sym('Ixx','real');
-    Iyy = sym('Iyy','real');
-    Izz = sym('Izz','real');
-    d = sym('d','real');
+    %Ixx = sym('Ixx','real');
+    %Iyy = sym('Iyy','real');
+    %Izz = sym('Izz','real');
+    %d = sym('d','real');
+    Ixx = I(1);
+    Iyy = I(2);
+    Izz = I(3);
 end
 
 Sphi = sin(phi); Stheta = sin(theta); Spsi = sin(psi);
@@ -43,28 +46,29 @@ J33 = Ixx * Stheta^2 + Iyy * Sphi^2 * Ctheta^2 + Izz * Cphi^2*Ctheta^2;
 J = [J11 J12 J13; J21 J22 J23; J31 J32 J33];
 
 iJC = linsolve(J,C);
-A = [zeros(3),eye(3),zeros(3,6);
-     zeros(3),d*eye(3),zeros(3,6);
-     zeros(3,9),eye(3);
-     zeros(3,9),iJC];
+systemMatrix = [zeros(3),eye(3),zeros(3,6);
+                zeros(3),-(1/m)*diag(A),zeros(3,6);
+                zeros(3,9),eye(3);
+                zeros(3,9),iJC];
 states = [x y z xd yd zd phi theta psi phidot thetadot psidot]';
 
-NonlinearPart = [];
+EKFLinSys = [];
 for jj = 1:12
-    NonlinearPart = [NonlinearPart diff(A*states,states(jj))];
+    EKFLinSys = [EKFLinSys diff(systemMatrix*states,states(jj))];
 end
-
+save('EKFLinearizedSystem','EKFLinSys')
 % The idea was to save the expression for the nonlinear part so it has
 % to be generated only once and the evaluated on every iteration, but this
 % proved to be costly, now the script is soley used to linearize the system
 % matrix
 
-d = -0.25;
-Ixx = 0.0001;
-Iyy = 0.0001;
-Izz = 0.0002;
-
 % Some linearisation point
+x = 0.1;
+y  = 0.1;
+z = 0.1;
+xd = 0.1;
+yd = 0.1;
+zd = 0.1;
 psi = 0.1;
 theta  = 0.1;
 phi = 0.1;
@@ -73,7 +77,7 @@ thetadot = 0.1;
 psidot = 0.1;
 
 tic
-linearizedA = eval(NonlinearPart);
+eval(EKFLinSys);
 toc
 
 g = 9.81;

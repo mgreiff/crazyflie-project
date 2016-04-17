@@ -22,7 +22,7 @@ Model {
       BusOutputAsStruct	      "off"
     }
     ParameterArgumentNames  ""
-    ComputedModelVersion    "1.67"
+    ComputedModelVersion    "1.68"
     NumModelReferences	    0
     NumTestPointedSignals   0
   }
@@ -69,8 +69,8 @@ Model {
 	ViewObjType		"SimulinkTopLevel"
 	LoadSaveID		"0"
 	Extents			[1246.0, 536.0]
-	ZoomFactor		[1.6288474804448463]
-	Offset			[641.00777546006725, 332.53466386546177]
+	ZoomFactor		[0.71675500576852769]
+	Offset			[18.35484153190032, 202.76113967217063]
       }
     }
   }
@@ -80,9 +80,9 @@ Model {
   ModifiedByFormat	  "%<Auto>"
   LastModifiedBy	  "mgreiff"
   ModifiedDateFormat	  "%<Auto>"
-  LastModifiedDate	  "Mon Apr 11 16:05:45 2016"
-  RTWModifiedTimeStamp	  382291542
-  ModelVersionFormat	  "1.%<AutoIncrement:67>"
+  LastModifiedDate	  "Sat Apr 16 16:56:04 2016"
+  RTWModifiedTimeStamp	  382726561
+  ModelVersionFormat	  "1.%<AutoIncrement:68>"
   ConfigurationManager	  "none"
   SampleTimeColors	  off
   SampleTimeAnnotations	  off
@@ -910,7 +910,7 @@ Model {
     TiledPaperMargins	    [0.500000, 0.500000, 0.500000, 0.500000]
     TiledPageScale	    1
     ShowPageBoundaries	    off
-    ZoomFactor		    "163"
+    ZoomFactor		    "72"
     ReportName		    "simulink-default.rpt"
     SIDHighWatermark	    "34"
     Block {
@@ -1020,6 +1020,7 @@ Model {
       PermitHierarchicalResolution "ExplicitOnly"
       TreatAsAtomicUnit	      on
       MinAlgLoopOccurrences   on
+      SystemSampleTime	      "innerLoopSampleRate"
       RequestExecContextInheritance off
       SFBlockType	      "MATLAB Function"
       Variant		      off

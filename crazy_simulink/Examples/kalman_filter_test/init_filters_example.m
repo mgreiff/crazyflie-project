@@ -32,7 +32,7 @@ Cc(10:12,:) = []; % remove angular speeds
 Dc = zeros(length(Cc(:,1)), 4);
 
 %% Discretetise model
-KFparam.h = 0.1;
+KFparam.h = innerLoopSampleRate;
 contsys = ss(Ac,Bc,Cc,Dc);
 discsys = c2d(contsys, KFparam.h);
 
@@ -46,9 +46,8 @@ KFparam.Dd = KF_D;
 % Parameters for use in all Kalman filters
 KFparam.P0 = eye(nStates); % Initial covariance matrix, tbd
 KFparam.Q = eye(nStates);
-KFparam.Q(12,12) = 0.1;
 
-KF_R = diag([0.1,0.1,0.1,0.1,0.1,0.1,0.01,0.01,0.01]);
+KF_R = diag([0.1,0.1,0.1,0.01,0.01,0.01,0.0001,0.0001,0.0001]);
 KFparam.R = KF_R;
 
 if length(KFparam.R) ~= length(KFparam.Cd(:,1))
@@ -57,6 +56,7 @@ end
 
 % State description f?r the S-function
 KFparam.nInputs = nControlsignals + nMeasuredStates;
+KFparam.nMeasuredStates = nMeasuredStates;
 KFparam.nOutputs = nStates;
 KFparam.nDiscreteStates = nStates;
 
@@ -64,6 +64,10 @@ KFparam.nDiscreteStates = nStates;
 KFparam.x0 = zeros(KFparam.nDiscreteStates,1);
 
 % Additional parameters for the EKF
+load('EKFLinearizedSystem')
+KFparam.EKFLinSys = EKFLinSys;
+
+% Additional parameters for the UKF
 KFparam.g = g;
 KFparam.m = m;
 KFparam.k = k;

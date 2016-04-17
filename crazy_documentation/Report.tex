@@ -375,17 +375,16 @@ The step response of the system is then
 where the coefficients can be found with a regression. A simple test would be to measure the response of two unit steps in succession to determine both coefficients but for the purposes of simualtion, a rough estimate would be $a_0=40$ and $b_0 \approx 40*\omega_{max}/I_{max}$, which mathces the specification $||{\boldsymbol\omega}||_{\infty} \approx 0$ to $||{\boldsymbol\omega}||_{\infty} \approx 2.5\cdot 10^4$ in $< 180$ ms (see https://www.bitcraze.io/2015/02/measuring-propeller-rpm-part-3/). Here, $\omega_{max}$ is the maximum rotor speed of the quadcopter and $I_{max}\approx 1100$ mA is the peak motor current.
 
 \section{State estimation}
-\subsection{Kalman filter}
+To estimate the states properly, many approaches are considered and compared in simulation. The first is a regular Kalman filter (KF) which used the dynamics linearised around the stable hovering state to compute the filter gain. The second is an extended kalman filter (EKF), which effectively linearises the system around the previous state estimate on each time step. This is done by computing an expression for the Jacobian offline, which is then evaluated on-line thereby putting great constraints on how fast the inner loop can be run. In contrast to the KF, the EKF provides much better estimates when the system is far from the hovering state but it's not optimal an optimal estimator. The third method is the uncented Kalman filter (UKF) (not yet operational) and the generic particle filter (GPF) (not yet operational).
 
-\subsection{Extended kalman filter}
-In addition to the regular kalman filter, an extended kalman filter (EKF) was implemented in python using the system representation
+The regular Kalman filter equations are omitted for brevity, but the EKF is implemented using the system representation
 \begin{flalign}
 \begin{split}
 \mathbf{x}_{k+1} =& \mathbf{F}(\mathbf{x}_k,\mathbf{u}_k,\mathbf{v})\\
 \mathbf{y}_{k} =& \mathbf{H}(\mathbf{x}_k,\mathbf{e})
 \end{split}
 \end{flalign}
-The prediction step in the EKF is then
+The prediction step is then
 \begin{flalign}
 \begin{split}
 \hat{\mathbf{x}}_{k}^- = & \mathbf{F}(\hat{\mathbf{x}}_{k-1},\mathbf{u}_{k-1}, \mathbf{v})\\
@@ -406,6 +405,14 @@ where
 \qquad
 \mathbf{J}^H_k = \frac{\partial \mathbf{H}(\mathbf{x}, \mathbf{e})}{\partial \mathbf{x}}\Big|_{\mathbf{x}_k}.
 \end{equation}
+In our implementation, $\mathbf{J}^F_k$ is stored as a symbolic expression and then evaluated on each iteration. The $\mathbf{H(x,e)}$ is a linear function and can therefore be replaced by $\mathbf{C}_d$ in ~\eqref{eq:continuoussys}. An implementation of both filters was made in Simulink using the convenient S-functions to allow the use of nestled- and external .m-functions. The example \texttt{filters\_example.slx} in /Examples/kalman\_filter\_test/* can be run, in which the state estimation model block can be set with a filter by selecting one of the models in /kalman\_filters. Which states to measure and design parameters are specified in the \texttt{init\_filters\_example.m} file, and when simulating the KF and EKF both function exactly as expected (see~\ref{fig:KF-EKF}). The regular kalman filter performs badly when the system is far from the stable state (i.e. $\dot{\boldsymbol\eta}_k$ far from $\mathbf{0}$) and the over all error if much larger in the KF. However, simulating the system at an inner loop sample rate of 50 Hz, the EKF is demands so much processing power that it becomes infeasible to implement in the physical process (unless other methods of computing the Jacobian are considered).
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/kalman-EKF.png}
+\rule{35em}{0.5pt}
+\caption{Demonstration of the drawbacks in using a regular Kalman compared to the EKF when estimating an unknown $\dot{\boldsymbol\eta}_k$, using (i) the same parameters in both filters (ii) having $\dot{\boldsymbol\eta}_k$ unknown and using (iii) corrupted measurements of $\boldsymbol\xi, \dot{\boldsymbol\xi}_k, \boldsymbol\eta_k$.}
+\label{fig:KF-EKF}
+\end{figure}
 
 \subsection{Unscented kalman filter}
 
@@ -588,6 +595,14 @@ if $r \equiv$ constant.
 \end{enumerate}
 
 \section{ROS implemetation}
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth,trim={1mm 0 0 0.7mm},clip]{figures/ROSstruct.png}
+\rule{35em}{0.5pt}
+\caption{The current ROS structure as generated in \texttt{rqt\_plot} with nodes (ellipses), topics (boxes) and the connecting arrows intdicating the flow of information.}
+\label{fig:ROSstruct}
+\end{figure}
 \subsection{Kinect node}
 The kinect node subscribes to the /camera/depth/image\_rect-topic, to which the ``openni'' software publishes information in the data type ``Image'', which is part of the standard ROS messages library ``sensor\_msgs''. This node handles the raw camera data and publishes the quadcopter position to the topic /kinect\_pos\_measurement as a 3x1 float 64 numpy array. The reason for this choice of data type is to enable realt time plotting of the position with rviz and rqt\_plot.
 
@@ -606,7 +621,6 @@ The matrix $\mathbf{P}$ is then factorised using the singlar value decomposition
 \begin{equation}
 \alpha = \arccos\Big(\frac{\bar{\mathbf{n}}_{xz}\cdot \hat{\mathbf{x}}_c}{||\bar{\mathbf{n}}_{xz}||_2}\Big).
 \end{equation}
-
 
 \begin{figure}[htbp]
 \centering

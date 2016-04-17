@@ -1,4 +1,4 @@
-function xnew = discrete_nonlinear_dynamics(omega, x, g, m, k, A, I, l, b, Ts)
+function xnew = discrete_nonlinear_dynamics(omega, x, g, m, k, A, I, l, b, h)
     % Equations from Teppo Luukkonen, Modelling and control of quadcopter
     phi = x(7); theta = x(8); psi = x(9); % Roll, pitch, yaw
     phidot = x(10); thetadot = x(11); psidot = x(12); % Roll, pitch, yaw
@@ -31,7 +31,9 @@ function xnew = discrete_nonlinear_dynamics(omega, x, g, m, k, A, I, l, b, Ts)
     tau_b = [tau_phi; tau_theta; tau_psi];
     
     % (16)
-    J11 = Ixx; J12 = 0; J13 = -Ixx*Stheta;
+    J11 = Ixx;
+    J12 = 0;
+    J13 = -Ixx*Stheta;
     J21 = 0;
     J22 = Iyy * Cphi^2 + Izz * Sphi^2;
     J23 = (Iyy - Izz) * Cphi * Sphi * Ctheta;
@@ -51,24 +53,24 @@ function xnew = discrete_nonlinear_dynamics(omega, x, g, m, k, A, I, l, b, Ts)
     Ac(7:9,10:12) = I3;
     Ac(10:12,10:12) = -invJ*C;
 
-    Rz = (1/m) * [Cpsi*Stheta*Cphi+Spsi*Sphi;...
-                  Spsi*Stheta*Cphi-Cpsi*Sphi;...
-                  Ctheta*Cphi];
+    Rz =  [Cpsi*Stheta*Cphi+Spsi*Sphi;...
+           Spsi*Stheta*Cphi-Cpsi*Sphi;...
+           Ctheta*Cphi];
 
     Bc = zeros(12,4);
-    Bc(4:6,1) = Rz;
+    Bc(4:6,1) = (1/m)*Rz;
     Bc(10:12,2:4) = invJ;
 
     Cc = eye(12);
 
     Dc = [];
     sysc = ss(Ac,Bc,Cc,Dc);
-    sysd = c2d(sysc, Ts);
+    sysd = c2d(sysc,h);
     
     u = [T;tau_b];
     
     Gd = zeros(12,1);
-    Gd(6) = -g*Ts;
+    Gd(6) = -g*h;
     
     xnew = sysd.a*x + sysd.b*u + Gd;
 end
