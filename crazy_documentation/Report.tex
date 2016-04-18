@@ -380,8 +380,8 @@ To estimate the states properly, many approaches are considered and compared in 
 The regular Kalman filter equations are omitted for brevity, but the EKF is implemented using the system representation
 \begin{flalign}
 \begin{split}
-\mathbf{x}_{k+1} =& \mathbf{F}(\mathbf{x}_k,\mathbf{u}_k,\mathbf{v})\\
-\mathbf{y}_{k} =& \mathbf{H}(\mathbf{x}_k,\mathbf{e})
+\mathbf{x}_{k+1} =& \mathbf{F}(\mathbf{x}_k,\mathbf{u}_k,\mathbf{v}_k)\\
+\mathbf{y}_{k} =& \mathbf{H}(\mathbf{x}_k,\mathbf{e}_k)
 \end{split}
 \end{flalign}
 The prediction step is then
@@ -415,8 +415,14 @@ In our implementation, $\mathbf{J}^F_k$ is stored as a symbolic expression and t
 \end{figure}
 
 \subsection{Unscented kalman filter}
+Attempted to implement the UKF (see algorithm 1 on page 4 in ~\cite{wan2000unscented}).
+
+TODO: Find out why the covariance matrix becomes imaginary after a few iterations. Solve the problem of matrix dimensions - to me, the covariance update $\mathbf{P}_k = \mathbf{P}^-_k - \mathbf{K}\mathbf{P}_{yy}\mathbf{K}$ seems impossible to implement, as $ \text{dim}(\mathbf{P}^a_k)\neq \text{dim}(\mathbf{P}^-_k)$?
 
 \subsection{Particle filter}
+Attempted to implement the generic particle filter (see algorithm 3 on page 8 in ~\cite{arulampalam2002tutorial}). To combat degeneracy in the filter the systematic resampling is implemented due to it's simplicity and performance when compared to e.g. multinomial resampling~\cite{douc2005comparison}~\cite{hol2006resampling}.
+
+TODO: Find out why the state amplitude becomes so small after resampling.
 
 \section{Motion planning}\label{sec:reftraj}
 In this part of the project, we consider the polynomial generation method advanced by Roy et.al. cite XX. The general method is presented to make the Matlab code coherent, using the same nomenclature as in the code. The idea is to set up a constrained QP problem and solve it using Matlab's \texttt{quadprog} to find a minimum snap trajectory. The code will later be rewritten in Python/ROS with CVXGEN, and additional constraints will be enforced to ensure that the trajectory always stay in safe convex regions of space. These regions can conceivably be computed using IRIS, but will be assumed to be known initially.

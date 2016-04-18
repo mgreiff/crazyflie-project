@@ -54,17 +54,16 @@ Q = param.Q;
 R = param.R;
 Cd = param.Cd;
 
-persistent P
-if isempty(P)
-    %P = blkdiag(param.P0, param.Q, param.R);
-    P = param.P0;
-elseif t == 0
-	%P = blkdiag(param.P0, param.Q, param.R);
-    P = param.P0;
+persistent Pa
+if isempty(Pa) || t == 0 % Assuming the simulaiton starts at t=0
+    Pa = blkdiag(param.P0, param.Q, param.R);
+    %P = param.P0;
 end
+xa = [x ; zeros(size(Q,1),1); zeros(size(R,1),1)];
 
 % ~~~ UKF Parameters ~~~
 L = param.nDiscreteStates;          % Number of discrete states
+L = 33;
 beta = 2;                           % Optimal for gaussian distributions
 alpha = 1e-4;                       % Tuning parameter (0 < alpha < 1e-4)
 keta = 0;                           % Tuning parameter (set to 0 or 3-L)
@@ -80,14 +79,15 @@ Wc = [lambda/(L + lambda)+(1 - alpha^2 + beta);... % i = 0
       1/(2 * (L + lambda))*ones(2*L,1)];           % i \neq 0
 
 % ~~~ Computes covariances and sigma points (predictive step) ~~~
-Ps = sqrtm((L+lambda)*P);
-%Ps = sqrt(L + lambda) * chol(P)';
+%Psqrt = sqrtm((L+lambda)*Pa);
+Psqrt = sqrt(L + lambda) * chol(Pa)';
 
-X = [x, x(:,ones(1,length(x)))+Ps, x(:,ones(1,length(x)))-Ps];
-Xf = X;
+Xa = [xa, xa(:,ones(1,length(xa)))+Psqrt, xa(:,ones(1,length(xa)))-Psqrt];
+Xx = Xa(1:length(x),:);
 
-for ii = 1:length(X(1,:))
-    Xf(:,ii) = discrete_nonlinear_dynamics(uk, X(:,ii), param.g, param.m, param.k,...
+Xf = zeros(size(Xx));
+for ii = 1:length(Xx(1,:))
+    Xf(:,ii) = discrete_nonlinear_dynamics(uk, Xx(:,ii), param.g, param.m, param.k,...
                                            param.A, param.I,param.l, param.b,...
                                            param.h);
 end
@@ -95,7 +95,7 @@ end
 % ~~~ UT-transform of the dynamics (time update) ~~~
 xMean = zeros(L,1);
 for ii = 1:2*L+1
-    xMean =+ Wm(ii)*Xf(:,ii);               % Transformed mean (x)
+    xMean =+ Wm(ii)*Xf(:,ii);                 % Transformed mean (x)
 end
 xDev = Xf - xMean(:,ones(1,length(Xf(1,:)))); % Transformed deviations (x)
 
@@ -108,14 +108,19 @@ yMean = Cd * xMean; % Transformed mean (y) using the fact that C is linear
 yDev = Yf - yMean(:,ones(1,length(Yf(1,:)))); % Transformed deviations (y)
 
 % ~~~ Compute transformed covariance matrices ~~~
-Pxx = xDev*diag(Wc)*xDev'+Q;  % transformed state covariance
+Pxx = xDev*diag(Wc)*xDev';  % transformed state covariance
 Pxy = xDev*diag(Wc)*yDev';    % transformed cross covariance
-Pyy = yDev*diag(Wc)*yDev'+R;  % transformed measurement covariance
+Pyy = yDev*diag(Wc)*yDev';  % transformed measurement covariance
+
+%Pxx = xDev(:,1:2*L+1)*diag(Wc)*xDev(:,1:2*L+1)';  % transformed state covariance
+%Pxy = xDev(:,1:2*L+1)*diag(Wc)*yDev(:,1:2*L+1)';    % transformed cross covariance
+%Pyy = yDev(:,1:2*L+1)*diag(Wc)*yDev(:,1:2*L+1)';  % transformed measurement covariance
 
 % Correction update
 K = Pxy / Pyy;
-xhat = xMean + K * (zk - yMean);
-P = Pxx - K * Pyy * K';
+xhat = xMean + K * (zk - yMean);    % State estimation
+P0 = Pxx - K * Pyy * K';            % Computes new covariance
+Pa(1:size(P0,1),1:size(P0,2)) = P0; % Updates covariance
 sys = xhat;
 
 %==============================================================
