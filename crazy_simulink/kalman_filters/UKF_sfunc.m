@@ -68,7 +68,7 @@ end
 % ~~~ UKF Parameters ~~~
 L = size(x,1);                     % Number of discrete states
 beta = 2;                           % Optimal for gaussian distributions
-alpha = 1e-3;                       % Tuning parameter (0 < alpha < 1e-4)
+alpha = 5e-1; %1e-3 in DI           % Tuning parameter (0 < alpha < 1e-4)
 keta = 0;                           % Tuning parameter (set to 0 or 3-L)
 lambda =  alpha^2 * (L + keta) - L; % Scaling factor (see E. Wan for details)
 

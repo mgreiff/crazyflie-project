@@ -45,10 +45,10 @@ KFparam.Dd = KF_D;
 
 % Parameters for use in all Kalman filters
 KFparam.P0 = eye(nStates); % Initial covariance matrix, tbd
-KFparam.Q = eye(nStates);
+KFparam.Q = 0*eye(nStates);
 
 KF_R = diag([0.1,0.1,0.1,0.01,0.01,0.01,0.0001,0.0001,0.0001]);
-KFparam.R = KF_R;
+KFparam.R = sqrt(KF_R);
 
 if length(KFparam.R) ~= length(KFparam.Cd(:,1))
     disp('The number of measured states in C does not match R')

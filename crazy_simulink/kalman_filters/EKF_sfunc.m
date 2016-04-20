@@ -47,9 +47,7 @@ ts  = [param.h 0];       % sample time: [period, offset]
 function sys = mdlUpdates(t,x,u,param)
 
 persistent P
-if isempty(P)
-    P = param.P0;
-elseif t == 0
+if isempty(P) || t == 0
     P = param.P0;
 end
 
