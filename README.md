@@ -62,18 +62,21 @@ Contains the files used in modelling of the quadcopter. Many of the files are wo
 
 ###### Contents - Examples (/examples/*)
 **Dynamics**
-* /quadcopter_model_test/**quadcopter_process_test.slx** - An example of the dynamics responding to rotor speeds, replicating the results in the work of Lukkonens.
+* /dynamics_test/**quadcopter_process_test.slx** - An example of the dynamics responding to rotor speeds, replicating the results in the work of Lukkonens.
 
-**Stabilising inner controller**
-* /pd_control_test/**quadcopter_pd_test.slx** - Demonstrates the system response with only the inner PD controller.
-* /LQR_control_test/**quadcopter_LQR_2_test.slx** - Demonstrates the system response with only the inner LQR controller.
+**Stabilising inner controllers**
+* /inner_loop_PD_test/**quadcopter_pd_test.slx** - Demonstrates the system response with only the inner PD controller.
+* /inner_loop_LQR_test/**quadcopter_LQR_2_test.slx** - Demonstrates the system response with only the inner LQR controller.
 
 **Outer positional controllers**
-* /pd_position_control_test/**quadcopter_pd_position_test.slx** - Demonstrates the system response with an inner PD and outer PD position controller.
-* /mpc_control_test/**quadcopter_mpc_position_test.slx** - Demonstrates the system response with an outer inner PD and outer MPC controller.
-* /mpc_cvx_test/**mpc_cvxgen.slx** - Simulates the same problem as in the /mpc_control_test/ directory, but uses the CVXgen mex solver (currently dysfunctional) 
-* /mpc_cvx_test/**example_mpc_trajectory.slx** - Example showing exactly how the trajectory is evaluated in the model.
-* /mpc_cvx_test/**example_mpc_cycle.m** - Example showing how the optimization works and what it achieves.
+* /outer_loop_pd_test/**quadcopter_pd_position_test.slx** - Demonstrates the system response with an inner PD and outer PD position controller.
+* /outer_loop_mpc_test/**quadcopter_mpc_position_test.slx** - Demonstrates the system response with an outer inner PD and outer MPC controller.
+* /outer_loop_mpc_cvx_test/**mpc_cvxgen.slx** - Simulates the same problem as in the /mpc_control_test/ directory, but uses the CVXgen mex solver (currently dysfunctional) 
+* /outer_loop_mpc_cvx_test/**example_mpc_trajectory.slx** - Example showing exactly how the trajectory is evaluated in the model.
+* /outer_loop_mpc_cvx_test/**example_mpc_cycle.m** - Example showing how the optimization works and what it achieves.
 
 **State estimation**
-* /kalman_filter_test/**dicrete_kalman_filter_test.slx** - An example of the state esimation using varoius filters that can be switched between by clicking the state estimation model block and selecting any .slx file in the /kalman_filter/* directory.
+* /double_integrator_filter_test/**integrator_filter_test.slx** - An example of the state esimation of a double integrator using KF, UKF and GPF simultaneously.
+* /inner_loop_filter_test/**filters_example.slx** - An example of the state esimation using varoius filters that can be switched between by clicking the state estimation model block and selecting any .slx file in the /kalman_filter/* directory. This uses the full nonlinear dynamics of the quadcopter, and an example estimation is shown below.
+
+<img src="https://github.com/mgreiff/crazyflie_project/blob/master/crazy_documentation/figures/KalmanFilterComparison.png" height="300"/>
