@@ -337,7 +337,7 @@ T=&(g + K_{D,z}(\dot{z}_{ref} - \dot{z})) + K_{P,z}(z_{ref} - z))\frac{m}{\cos(\
 \end{flalign}
 In using this controller, setting all references to 0 results in a stable hovering system assuming the state estimation is good. In our implementation, we also include the mapping of thrusts and torques to references in rotor speeds, given by~\ref{eq:tomegamapping}.
 
-As an alternative, we developed an LQR-controller for the same purpose using the linearised model ~\eqref{eq:linprocess} and removing the uncontrollable modes. Using standard approach cite XX, the cost function is defined as
+As an alternative, we developed an LQR-controller for the same purpose using the linearised model ~\eqref{eq:linprocess} and removing the uncontrollable modes. Using standard approach ~\cite{glad2000control}, the cost function is defined as
 \begin{equation}
 J = \int_0^{\infty} \mathbf{x}^T(t)\mathbf{Q}\mathbf{x}(t) + \mathbf{u}^T(t)\mathbf{R}\mathbf{u}(t)dt
 \end{equation}
@@ -375,7 +375,7 @@ The step response of the system is then
 where the coefficients can be found with a regression. A simple test would be to measure the response of two unit steps in succession to determine both coefficients but for the purposes of simualtion, a rough estimate would be $a_0=40$ and $b_0 \approx 40*\omega_{max}/I_{max}$, which mathces the specification $||{\boldsymbol\omega}||_{\infty} \approx 0$ to $||{\boldsymbol\omega}||_{\infty} \approx 2.5\cdot 10^4$ in $< 180$ ms (see https://www.bitcraze.io/2015/02/measuring-propeller-rpm-part-3/). Here, $\omega_{max}$ is the maximum rotor speed of the quadcopter and $I_{max}\approx 1100$ mA is the peak motor current.
 
 \section{State estimation}
-To estimate the states properly, many approaches are considered and compared in simulation. The first is a regular Kalman filter (KF) which used the dynamics linearised around the stable hovering state to compute the filter gain. The second is an extended kalman filter (EKF), which effectively linearises the system around the previous state estimate on each time step. This is done by computing an expression for the Jacobian offline, which is then evaluated on-line thereby putting great constraints on how fast the inner loop can be run. In contrast to the KF, the EKF provides much better estimates when the system is far from the hovering state but it's not optimal an optimal estimator. The third method is the uncented Kalman filter (UKF) (not yet operational) and the generic particle filter (GPF) (not yet operational).
+To estimate the states properly, many approaches are considered and compared in simulation. The first is a regular Kalman filter (KF) which used the dynamics linearised around the stable hovering state to compute the filter gain ~\cite{glad2000control}. The second is an extended kalman filter (EKF), which effectively linearises the system around the previous state estimate on each time step. This is done by computing an expression for the Jacobian offline, which is then evaluated on-line thereby putting great constraints on how fast the inner loop can be run. In contrast to the KF, the EKF provides much better estimates when the system is far from the hovering state but it's not optimal an optimal estimator. The third method is the uncented Kalman filter (UKF) (not yet operational) and the generic particle filter (GPF) (not yet operational).
 
 The regular Kalman filter equations are omitted for brevity, but the EKF is implemented using the system representation
 \begin{flalign}
@@ -601,6 +601,7 @@ if $r \equiv$ constant.
 \end{enumerate}
 
 \section{ROS implemetation}
+Wolfgang's crazyros driver~\cite{HoenigMixedReality2015}
 
 \begin{figure}[htbp]
 \centering

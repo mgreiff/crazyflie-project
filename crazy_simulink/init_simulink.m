@@ -14,5 +14,5 @@ run('init_pd_controller'); % /PD_controller
 run('init_pd_position_controller'); % /PD_controller
 
 % Sample rates
-innerLoopSampleRate = 0.01; % 100 Hz
+innerLoopSampleRate = 0.001; % 1000 Hz
 outerLoopSampleRate = 0.05; % 20 Hz

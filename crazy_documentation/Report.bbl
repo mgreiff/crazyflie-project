@@ -31,6 +31,10 @@ T.~Luukkonen, ``Modelling and control of quadcopter,'' \emph{Independent
   4th International Conference on}.\hskip 1em plus 0.5em minus 0.4em\relax
   IEEE, 2009, pp. 722--727.
 
+\bibitem{glad2000control}
+T.~Glad and L.~Ljung, \emph{Control theory}.\hskip 1em plus 0.5em minus
+  0.4em\relax CRC press, 2000.
+
 \bibitem{wan2000unscented}
 E.~A. Wan and R.~Van Der~Merwe, ``The unscented kalman filter for nonlinear
   estimation,'' in \emph{Adaptive Systems for Signal Processing,
@@ -89,5 +93,10 @@ M.~Q. Huynh, W.~Zhao, and L.~Xie, ``L 1 adaptive control for quadcopter: Design
   and implementation,'' in \emph{Control Automation Robotics \& Vision
   (ICARCV), 2014 13th International Conference on}.\hskip 1em plus 0.5em minus
   0.4em\relax IEEE, 2014, pp. 1496--1501.
+
+\bibitem{HoenigMixedReality2015}
+W.~Hoenig, C.~Milanes, L.~Scaria, T.~Phan, M.~Bolas, and N.~Ayanian, ``Mixed
+  reality for robotics,'' in \emph{IEEE/RSJ Intl Conf. Intelligent Robots and
+  Systems}, Hamburg, Germany, Sept 2015, pp. 5382 -- 5387.
 
 \end{thebibliography}

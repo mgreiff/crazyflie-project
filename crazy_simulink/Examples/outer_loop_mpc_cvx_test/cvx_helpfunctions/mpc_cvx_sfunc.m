@@ -91,10 +91,14 @@ end
 % Plots reference trajectory and optimized trajectory for debugging
 if CVXparameters.plot
     Xval = [CVXparameters.x_0];
+    Uval = [vars.u_0];
     for ii = 1:np
         eval(['Xval = [Xval, [vars.x_',num2str(ii),'()]];'])
+        eval(['Uval = [Uval, [vars.u_',num2str(ii),'()]];'])
     end
     figure(1);
+    subplot(2,1,1)
+    title('states')
     hold on;
     tt = t:h:t+h*np;
     plot(tt,Rref(1,:),'r')
@@ -103,9 +107,18 @@ if CVXparameters.plot
     plot(tt,Xval(1,:),'r*')
     plot(tt,Xval(2,:),'b*')
     plot(tt,Xval(3,:),'g*')
+    subplot(2,1,2)
+    title('control signals')
+    hold on;
+    plot(tt,Uval(1,:),'r')
+    plot(tt(2),Uval(1,2),'r*')
+    plot(tt,Uval(2,:),'b')
+    plot(tt(2),Uval(2,2),'b*')
+    plot(tt,Uval(3,:),'g')
+    plot(tt(2),Uval(3,2),'g*')
 end
 
-x(1:3) = vars.u_1;
+x(1:3) = vars.u_2;
 sys =  x;
 
 %=========================================================================

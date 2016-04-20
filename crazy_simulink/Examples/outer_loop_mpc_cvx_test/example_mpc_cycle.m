@@ -42,7 +42,7 @@ CVXparameters.x_0 = [1;1;1;0;0;0;0;0;0;0];
 CVXparameters.Q = eye(10);
 CVXparameters.R = eye(3);
 CVXparameters.S_max = 1000;
-CVXparameters.u_max = 10000;
+CVXparameters.u_max = [0.6;0.6;10];
 
 % Must be specified to make the S-fucntion run
 CVXparameters.nDiscreteStates = 10; %?

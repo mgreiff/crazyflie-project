@@ -38,8 +38,6 @@ sizes.NumSampleTimes = 1;
 sys = simsizes(sizes); 
 
 x0 = param.x0;
-global P;
-P = param.P0;
 
 str = [];                % Set str to an empty matrix.
 ts  = [param.h 0];       % sample time: [period, offset]
@@ -55,12 +53,15 @@ Q = param.Q;
 R = param.R;
 
 persistent P
-if isempty(P)
+if isempty(P) || t == 0
     P = param.P0;
 end
 
-uk = u(1:4);
-zk = u(5:end);
+Nc = param.nControlsignals;
+Nx = param.nDiscreteStates;
+
+uk = u(1:Nc);
+zk = u(Nc+1:end);
 
 % Predictor step
 xf = Ad * x + Bd * uk;
@@ -69,7 +70,7 @@ Pf = Ad * P * Ad' + Q;
 % Corrector step
 K =  Pf * Cd' / (Cd * Pf * Cd'+ R);
 xhat = xf + K * (zk - Cd * xf);
-P = (eye(12) - K * Cd) * Pf;
+P = (eye(Nx) - K * Cd) * Pf;
 
 % Updates the states
 sys = xhat;

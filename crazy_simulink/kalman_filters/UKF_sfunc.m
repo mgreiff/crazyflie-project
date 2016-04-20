@@ -48,24 +48,27 @@ function sys = mdlUpdates(t,x,u,param)
 % System update with the UKF following nomenclature and
 % algorithm description in E. Wan, chapter 7
 
-uk = u(1:4);  % Control signal
-zk = u(5:end);   % Measurements
-Q = param.Q;
-R = param.R;
+Nc = param.nControlsignals;
+
+uk = u(1:Nc); % Control signal
+zk = u(Nc+1:end); % Measurements
+
+Ad = param.Ad;
+Bd = param.Bd;
 Cd = param.Cd;
 
-persistent Pa
-if isempty(Pa) || t == 0 % Assuming the simulaiton starts at t=0
-    Pa = blkdiag(param.P0, param.Q, param.R);
-    %P = param.P0;
+Q = param.Q;
+R = param.R;
+
+persistent P
+if isempty(P) || t == 0 % Assuming the simulaiton starts at t=0
+    P = param.P0;
 end
-xa = [x ; zeros(size(Q,1),1); zeros(size(R,1),1)];
 
 % ~~~ UKF Parameters ~~~
-L = param.nDiscreteStates;          % Number of discrete states
-L = 33;
+L = size(x,1);                     % Number of discrete states
 beta = 2;                           % Optimal for gaussian distributions
-alpha = 1e-4;                       % Tuning parameter (0 < alpha < 1e-4)
+alpha = 1e-3;                       % Tuning parameter (0 < alpha < 1e-4)
 keta = 0;                           % Tuning parameter (set to 0 or 3-L)
 lambda =  alpha^2 * (L + keta) - L; % Scaling factor (see E. Wan for details)
 
@@ -80,47 +83,47 @@ Wc = [lambda/(L + lambda)+(1 - alpha^2 + beta);... % i = 0
 
 % ~~~ Computes covariances and sigma points (predictive step) ~~~
 %Psqrt = sqrtm((L+lambda)*Pa);
-Psqrt = sqrt(L + lambda) * chol(Pa)';
+Psqrt = sqrt(L + lambda) * chol(P)';
 
-Xa = [xa, xa(:,ones(1,length(xa)))+Psqrt, xa(:,ones(1,length(xa)))-Psqrt];
-Xx = Xa(1:length(x),:);
+X = [x, x(:,ones(1,length(x)))+Psqrt, x(:,ones(1,length(x)))-Psqrt];
 
-Xf = zeros(size(Xx));
-for ii = 1:length(Xx(1,:))
-    Xf(:,ii) = discrete_nonlinear_dynamics(uk, Xx(:,ii), param.g, param.m, param.k,...
-                                           param.A, param.I,param.l, param.b,...
-                                           param.h);
+Xf = zeros(size(X));
+for ii = 1:length(X(1,:))
+    %Xf(:,ii) = discrete_nonlinear_dynamics(uk, X(:,ii), param.g, param.m, param.k,...
+    %                                       param.A, param.I,param.l, param.b,...
+    %                                       param.h);
+    Xf(:,ii) = Ad*X(:,ii) + Bd*uk;
 end
 
 % ~~~ UT-transform of the dynamics (time update) ~~~
 xMean = zeros(L,1);
 for ii = 1:2*L+1
-    xMean =+ Wm(ii)*Xf(:,ii);                 % Transformed mean (x)
+    xMean = xMean + Wm(ii)*Xf(:,ii);                 % Transformed mean (x)
 end
 xDev = Xf - xMean(:,ones(1,length(Xf(1,:)))); % Transformed deviations (x)
 
 % ~~~ UT-transform of the measurements (measurement update) ~~~
-Yf = zeros(length(Cd(:,1)), 2*L+1);
+Yf = zeros(size(Cd,1), 2*L+1);
 for ii = 1:2*L+1
     Yf(:,ii) = Cd*Xf(:,ii);
 end
-yMean = Cd * xMean; % Transformed mean (y) using the fact that C is linear
+
+yMean = zeros(L,1);
+for ii = 1:2*L+1
+    yMean =+ Wm(ii)*Yf(:,ii);                 % Transformed mean (x)
+end
 yDev = Yf - yMean(:,ones(1,length(Yf(1,:)))); % Transformed deviations (y)
 
 % ~~~ Compute transformed covariance matrices ~~~
-Pxx = xDev*diag(Wc)*xDev';  % transformed state covariance
+Pxx = xDev*diag(Wc)*xDev' + Q;  % transformed state covariance
 Pxy = xDev*diag(Wc)*yDev';    % transformed cross covariance
-Pyy = yDev*diag(Wc)*yDev';  % transformed measurement covariance
-
-%Pxx = xDev(:,1:2*L+1)*diag(Wc)*xDev(:,1:2*L+1)';  % transformed state covariance
-%Pxy = xDev(:,1:2*L+1)*diag(Wc)*yDev(:,1:2*L+1)';    % transformed cross covariance
-%Pyy = yDev(:,1:2*L+1)*diag(Wc)*yDev(:,1:2*L+1)';  % transformed measurement covariance
+Pyy = yDev*diag(Wc)*yDev' + R;  % transformed measurement covariance
 
 % Correction update
 K = Pxy / Pyy;
 xhat = xMean + K * (zk - yMean);    % State estimation
-P0 = Pxx - K * Pyy * K';            % Computes new covariance
-Pa(1:size(P0,1),1:size(P0,2)) = P0; % Updates covariance
+P = Pxx - K * Pyy * K';            % Computes new covariance
+
 sys = xhat;
 
 %==============================================================

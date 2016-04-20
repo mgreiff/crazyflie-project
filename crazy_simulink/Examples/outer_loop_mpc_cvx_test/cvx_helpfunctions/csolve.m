@@ -80,7 +80,7 @@
 %      r_8  10 x 1
 %      r_9  10 x 1
 %     r_10  10 x 1
-%    u_max   1 x 1    positive
+%    u_max   3 x 1
 %      x_0  10 x 1
 %
 % Note:
@@ -92,7 +92,7 @@
 %
 % Specify params.A, ..., params.x_0, then run
 %   [vars, status] = csolve(params, settings)
-% Produced by CVXGEN, 2016-04-06 11:46:11 -0400.
+% Produced by CVXGEN, 2016-04-19 11:47:14 -0400.
 % CVXGEN is Copyright (C) 2006-2012 Jacob Mattingley, jem@cvxgen.com.
 % The code in this file is Copyright (C) 2006-2012 Jacob Mattingley.
 % CVXGEN, or solvers produced by CVXGEN, cannot be used for commercial

@@ -26,7 +26,7 @@ Cm(4:5, 7:8) = eye(2);
 Dm = zeros(5, 3);
 
 %% Discretize
-Ts = 0.2; % sample time
+Ts = 0.1; % sample time
 
 [Ad, Bd, Cyd, Dzd]=ssdata(c2d(ss(Am,Bm,Cm,Dm),Ts));
 
@@ -43,10 +43,10 @@ CVXparameters.u_0 = [0;0;0];
 CVXparameters.x_0 = [0;0;0;0;0;0;0;0;0;0];
 
 % Design parameters
-CVXparameters.Q = diag([2, 2, 2, 1, 1, 0.1, 0.1, 0.1, 0.1, 0.1]);
+CVXparameters.Q = diag([2, 2, 2, 1, 1, 1,1,1,1,1,]);
 CVXparameters.R = diag([2, 2, 0.1]);
 CVXparameters.S_max = 1000;
-CVXparameters.u_max = 0.3;
+CVXparameters.u_max = [0.6;0.6;5];
 CVXparameters.predictionHorizon = 10;
 
 % Must be specified to make the S-fucntion run
@@ -58,6 +58,6 @@ CVXparameters.h = Ts; % Stepsize
 % Settings for the CVXsolver and debugging 
 CVXparameters.verbose = 1;
 CVXparameters.max_iters = 20;
-CVXparameters.plot = 0;
+CVXparameters.plot = 1;
 
 disp('...complete!')
