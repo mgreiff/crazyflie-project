@@ -38,8 +38,6 @@ sizes.NumSampleTimes = 1;
 sys = simsizes(sizes); 
 
 x0 = param.x0;
-global P;
-P = param.P0;
 
 str = [];                % Set str to an empty matrix.
 ts  = [param.h 0];       % sample time: [period, offset]
@@ -51,6 +49,7 @@ function sys = mdlUpdates(t,x,u,param)
 Ad = param.Ad;
 Bd = param.Bd;
 Cd = param.Cd;
+R = param.R;
 
 Nc = param.nControlsignals;
 Nx = param.nDiscreteStates;
@@ -58,7 +57,7 @@ Nx = param.nDiscreteStates;
 uk = u(1:Nc);
 zk = u(Nc+1:end);
 
-Np = 5000;                   % Number of particles
+Np = 10000;                   % Number of particles
 
 % Generates a persistent variable of normally distributed states at t=0
 persistent particles
@@ -66,7 +65,7 @@ persistent weights
 if t == 0 || isempty(particles) || isempty(weights)
     variance = 0.2;                                   % Variance of initial states
     particles = normrnd(zeros(Nx,Np),sqrt(variance)); % Initial states
-    weights = log((1 / Np)) * ones(1,Np);             % Use logarithm for numerical stability
+    weights = (1 / Np) * ones(1,Np);                  % Use logarithm for numerical stability
 end
 
 % Puts every paticle through the non-linearity and computes weight
@@ -77,17 +76,22 @@ for ii = 1:Np
 
     % OBS! The discrete_nonlinear_dynamics must be uncommented in order
     % to update using the non-linear model (if defined)
-    xf = Ad*particles(:,ii) + Bd*uk;
-    wf = weights(ii) * (zk - Cd*xf)^2;
+    particles(:,ii) = Ad*particles(:,ii) + Bd*uk;
 
-    % Updates variables
-    particles(:,ii) = xf;
-    weights(ii) = wf;
+    % Does this hold true happens is state dependent?
+    weights(ii) = weights(ii) * exp(-sum((zk - Cd*particles(:,ii)).^2)*(2*R)^-1);
 end
 
-weights = log(exp(weights)/sum(exp(weights))); % Normalize weight vector - exponentiera
+weights = weights/sum(weights); % Normalize weight vector - exponentiera
 
-Neff = 1/sum(exp(weights).^2);       % Effective sample size
+% State estimation
+xmean = zeros(Nx,1);
+for ii = 1:Np;
+   xmean = xmean + weights(ii)*particles(:,ii);
+end
+particles = xmean(:,ones(1,Np));
+
+Neff = 1/sum(weights.^2); % Effective sample size
 
 % Resample using the systematic resampling method by looking at the
 % cumulative distribution function and removing points in bins that are
@@ -101,26 +105,17 @@ if Neff < 0.5*Np % Condition to combat degeneracy
     particles = particles(:,index);
 end
 
-if 0 % Plots distributions
+if 1 %&& mod(t,1) == 0
     figure(1);
-    subplot(3,1,1);
-    hist(particles(1,:), 100)
-    subplot(3,1,2);
-    hist(particles(2,:), 100)
-    subplot(3,1,3);
+    subplot(2,1,1);
+    plot(weights)
+    subplot(2,1,1);
     hold on;
     plot(cumsum(exp(weights)))
 end
-
-% State estimation
-xmean = zeros(Nx,1);
-for ii = 1:Np;
-   xmean =+ exp(weights(ii))*particles(:,ii);
-end
-particles = xmean(:,ones(1,Np));
-
 sys = xmean;
 
 function sys = mdlOutputs(t,x,u,param)
 % Returns the current estimation
+
 sys = x;
