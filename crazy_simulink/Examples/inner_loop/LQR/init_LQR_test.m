@@ -14,33 +14,24 @@ Bm = sqrt(g*m/k).*[zeros(4,4);
                    0,        -k*l/Ixx, 0,       k*l/Ixx;
                    -k*l/Iyy, 0,        k*l/Iyy, 0;
                    -b/Ixx,   b/Ixx,    -b/Ixx,  b/Ixx];
+Cm = eye(8);
 
-Cm = [eye(4), zeros(4)];
-
-% Augments the state space with integrator states on the elevation and
-% position \dot x_i = [z, \phi, \theta, \psi] \in\mathbb{R}^{4x1} so that
-% x_e = [x ; x_i]
-
-Ai = [Am, zeros(8,4);
-      Cm, eye(4)];
-Bi = [Bm; zeros(4,4)];
-Ci = [Cm, zeros(4,4)];
+sys = ss(Am,Bm,Cm,[]);
 
 % Puts large weights on the 0th derivatives
-Q = 10*eye(size(Ai));
+Q = eye(size(Am));
+
 Q(1,1) = 1000;
-Q(2,2) = 100;
-Q(3,3) = 100;
+Q(2,2) = 1;
+Q(3,3) = 1;
 Q(4,4) = 100;
-Q(5,5) = 0.001;
-Q(6,6) = 0.001;
-Q(7,7) = 0.001;
-Q(8,8) = 0.001;
+Q(5,5) = 100;
+Q(6,6) = 1;
+Q(7,7) = 1;
+Q(8,8) = 100;
 
-sys_i = ss(Ai,Bi,Ci,[]);
-
-R = 1*eye(size(Bm,2));
-[K,S,E] = lqr(sys_i,Q,R);
+R = 0.01*eye(size(Bm,2));
+[K,S,E] = lqr(sys,Q,R);
 
 LQR_K = 0.17;
 LQR_I = 0;

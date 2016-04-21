@@ -309,58 +309,8 @@ the number of observable and controllable states are
 \text{rank}\Big(\begin{bmatrix} \mathbf{C}_c^T& \cdots &(\mathbf{C}_c\tilde{\mathbf{A}}_{\Delta\omega}^{n-1})^T\end{bmatrix}^T\Big) = 8 \neq 12
 \end{cases}
 \end{equation}
-respectively. Closer investigation shows that we have a pole-zero cancellation of the positional $x,y$-states and their derivarives, implying that we need to have external motion capture of these states in order to use Kalman filters for state estimation (requiring full observability) or linear quadratic gaussian regulator for reference tracking (requiring full controllability). This could be done by integrating measurements from the accelerometer twice and introducing a complementary filter to decrease positional drift in stationarity, but is best handled by some external of motion capture. Yet another alternative is to augment the model with a stabilising PD-regulator, which will be shown to render the system observable and controllable.
-
-\subsection{Stabilising controller}\label{sec:PD}
-The system is inherently unstable, as the only truly stable position is when the copter hovers at a certain point in space, i.e. $\dot{\boldsymbol\xi}=\boldsymbol\eta=\dot{\boldsymbol\eta}=0$. In addition, we know that the x- and y-positions are unobservable and uncontrollable (as shown in the previous section), meaning the we cannot have good positional control using designs based solely on ~\eqref{eq:contsys}. However, if a stabilising controller is included, we may show that the system is defined to a point where good position control can be done using the augmented dynamics. In addition, the stabilising controller may be run on the crazyflie at very high frequencies increasing overall performance of the final implementation. In this section, we define two controllers to create a stable open loop system in with the control signal 
-\begin{equation}
-\mathbf{u} = 
-\begin{bmatrix}
-z_{ref}&
-\phi_{ref}&
-\theta_{ref}&
-\psi_{ref}&
-\dot{z}_{ref}&
-\dot{\phi}_{ref}&
-\dot{\theta}_{ref}&
-\dot{\psi}_{ref}&
-\end{bmatrix}^T\in\mathbb{R}^{8\times 1}
-\end{equation}
-A common way of accomplishing this is by using a non-model based design, and implementing a PD-controller. Such a controller was derived in e.g.~\cite{luukkonen2011modelling}~\cite{dikmen2009attitude}, and can be summarised in the scheme
-\begin{flalign}
-\begin{split}
-T=&(g + K_{D,z}(\dot{z}_{ref} - \dot{z})) + K_{P,z}(z_{ref} - z))\frac{m}{\cos(\phi)\cos(\theta)}\\
-\tau_{\phi}=&(K_{D,\phi}(\dot{\phi}_{ref} - \dot{\phi})) + K_{P,\phi}(\phi_{ref} - \phi))I_{xx}\\
-\tau_{\theta}=&(K_{D,\theta}(\dot{\theta}_{ref} - \dot{\theta})) + K_{P,\theta}(\theta_{ref} - \theta))I_{yy}\\
-\tau_{\psi}=&(K_{D,\psi}(\dot{\psi}_{ref} - \dot{\psi})) + K_{P,\psi}(\psi_{ref} - \psi))I_{zz}
-\end{split}
-\end{flalign}
-In using this controller, setting all references to 0 results in a stable hovering system assuming the state estimation is good. In our implementation, we also include the mapping of thrusts and torques to references in rotor speeds, given by~\ref{eq:tomegamapping}.
-
-As an alternative, we developed an LQR-controller for the same purpose using the linearised model ~\eqref{eq:linprocess} and removing the uncontrollable modes. Using standard approach ~\cite{glad2000control}, the cost function is defined as
-\begin{equation}
-J = \int_0^{\infty} \mathbf{x}^T(t)\mathbf{Q}\mathbf{x}(t) + \mathbf{u}^T(t)\mathbf{R}\mathbf{u}(t)dt
-\end{equation}
-where $\mathbf{Q}$ determines the costs of certain states and $\mathbf{R}$ punishes the control signals. The corresponding linear feedback law
-\begin{equation}
-\mathbf{u}= -\underbrace{\mathbf{R}^{-1}\mathbf{B}^T\mathbf{S} }_{\mathbf{K}}\mathbf{x}
-\end{equation}
-where the symmetric matrix $\mathbf{S}$ solves the associated Riccati equation,
-\begin{equation}
-\mathbf{A}^T\mathbf{S}+\mathbf{S}\mathbf{A}-\mathbf{S}\mathbf{B}\mathbf{R}^{-1}\mathbf{B}^T\mathbf{S}+\mathbf{Q}=0.
-\end{equation}
-The resulting control signals 
-This method naturally has the drawback of using the linearised model, which only accurately describes the system close to the stable, hovering state. But by bounding the pitch and yaw angles to $\varphi,\theta \in [-0.3,0.3]$ rad, the controller performs very well (see Fig~\ref{fig:LQR-PD-comp}).
-
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=0.8\textwidth]{figures/LQR-PD-comp.png}
-\rule{35em}{0.5pt}
-\caption{Comparision between the stabilising LQR- and PD-controllers.}
-\label{fig:LQR-PD-comp}
-\end{figure}
-
-TODO: Write out the augmented linearised system matrices used in MPC.
+respectively. Closer investigation shows that we have a pole-zero cancellation of the positional $x,y$-states and their derivarives, implying that we need to have external motion capture of these states in order to use Kalman filters for state estimation (requiring full observability) or linear quadratic gaussian regulator for reference tracking (requiring full controllability). This could be done by integrating measurements from the accelerometer twice and introducing a complementary filter to decrease positional drift in stationarity, but is best handled by some external of motion capture. Yet another alternative is to 
+augment the model with a stabilising PD-regulator, which will be shown to render the system observable and controllable.
 
 \subsection{Rotor-loop dynamics}
 TODO: Find transfer function from motor current to rotor speed on the form
@@ -374,7 +324,101 @@ The step response of the system is then
 \end{equation}
 where the coefficients can be found with a regression. A simple test would be to measure the response of two unit steps in succession to determine both coefficients but for the purposes of simualtion, a rough estimate would be $a_0=40$ and $b_0 \approx 40*\omega_{max}/I_{max}$, which mathces the specification $||{\boldsymbol\omega}||_{\infty} \approx 0$ to $||{\boldsymbol\omega}||_{\infty} \approx 2.5\cdot 10^4$ in $< 180$ ms (see https://www.bitcraze.io/2015/02/measuring-propeller-rpm-part-3/). Here, $\omega_{max}$ is the maximum rotor speed of the quadcopter and $I_{max}\approx 1100$ mA is the peak motor current.
 
-\section{State estimation}
+\subsection{Inner stabilising controller}\label{sec:PD}
+The system is inherently unstable, as the only truly stable position is when the copter hovers at a certain point in space, i.e. $\dot{\boldsymbol\xi}=\boldsymbol\eta=\dot{\boldsymbol\eta}=0$. In addition, we know that the x- and y-positions are unobservable and uncontrollable (as shown in the previous section), meaning the we cannot have good positional control using designs based solely on ~\eqref{eq:contsys}. However, if a stabilising inner controller is included, we can not only stabilise the system, but also make the x- and y- states observable in the augmented system. In addition, the stabilising controller may be run on the crazyflie at very high frequencies (currently, the inner stabilising loop is run at 500 Hz) increasing overall performance of the final implementation. In this section, we define three controllers the purpose of creating a stable open loop system in with the control signal 
+\begin{equation}
+\mathbf{u} = 
+\begin{bmatrix}
+z_{ref}&
+\phi_{ref}&
+\theta_{ref}&
+\psi_{ref}&
+\dot{z}_{ref}&
+\dot{\phi}_{ref}&
+\dot{\theta}_{ref}&
+\dot{\psi}_{ref}&
+\end{bmatrix}^T\in\mathbb{R}^{8\times 1},
+\end{equation}
+with subindices $(\cdot)_{ref}$ denotes reference values for the respective state. This state space vector is used as the $x,y,\dot{x},\dot{y}$ states are unobservable in both the linearised and the non-linear dynamics, and cannot be observed in the inner control loop.
+
+A common way of accomplishing the goal is by using a non-model based design, and implementing a PD-controller. Such a controller was derived in e.g.~\cite{luukkonen2011modelling}~\cite{dikmen2009attitude}, and can be summarised in the scheme
+\begin{flalign}
+\begin{split}
+T=&(g + K_{D,z}(\dot{z}_{ref} - \dot{z})) + K_{P,z}(z_{ref} - z))\frac{m}{\cos(\phi)\cos(\theta)}\\
+\tau_{\phi}=&(K_{D,\phi}(\dot{\phi}_{ref} - \dot{\phi})) + K_{P,\phi}(\phi_{ref} - \phi))I_{xx}\\
+\tau_{\theta}=&(K_{D,\theta}(\dot{\theta}_{ref} - \dot{\theta})) + K_{P,\theta}(\theta_{ref} - \theta))I_{yy}\\
+\tau_{\psi}=&(K_{D,\psi}(\dot{\psi}_{ref} - \dot{\psi})) + K_{P,\psi}(\psi_{ref} - \psi))I_{zz}
+\end{split}
+\end{flalign}
+In using this controller, setting all references to 0 results in a stable hovering system assuming the state estimation is good. In our implementations, we also include the mapping of thrusts and torques to references in rotor speeds, given by~\eqref{eq:tomegamapping}. Note that the controller is non-linear in terms of thrust, and using the PD augmented system for model based outer loop control (such as MPC) does not capture the full PD controller dynamics.
+
+As an alternative, a fully linear LQR-controller is proposed for the same purpose, using the linearised model ~\eqref{eq:linprocess} and only including the controllable modes. By the standard approach presented in~\cite{glad2000control}, the cost function is defined as
+\begin{equation}
+J = \int_0^{\infty} \mathbf{x}^T(t)\mathbf{Q}\mathbf{x}(t) + \mathbf{u}^T(t)\mathbf{R}\mathbf{u}(t)dt
+\end{equation}
+where $\mathbf{Q},\mathbf{R} > \mathbf{0}$ determines the costs of certain states and control signals respectively. The  optimal linear feedback law is then
+\begin{equation}
+\mathbf{u}= -\underbrace{\mathbf{R}^{-1}\mathbf{B}^T\mathbf{S} }_{\mathbf{K}}\mathbf{x}
+\end{equation}
+where the symmetric matrix $\mathbf{S}$ solves the associated Riccati equation,
+\begin{equation}
+\mathbf{A}^T\mathbf{S}+\mathbf{S}\mathbf{A}-\mathbf{S}\mathbf{B}\mathbf{R}^{-1}\mathbf{B}^T\mathbf{S}+\mathbf{Q}=0.
+\end{equation}
+This method naturally has the drawback of using the linearised model, which only accurately describes the system close to the stable, hovering state. But by bounding the pitch and yaw angles to $\varphi,\theta \in [-0.3,0.3]$ rad, the controller performs very well. One inherent disadvantage with LQR is that it is a proportional state feedback system, and therefore may give rise to stationary errors. To combat this issue, an LQR scheme with integrator (LQRi) was implemented by introducing four additional states,
+\begin{equation}
+\mathbf{x}_i = \begin{bmatrix} z_i&\phi_i & \theta_i & \psi_i \end{bmatrix}^T \in \mathbb{R}^{4\times 1}
+\end{equation}
+such that
+\begin{equation}
+\mathbf{x}_i = \int\mathbf{e}(t) dt = \int\mathbf{C}\mathbf{x} - \mathbf{y} dt,\qquad\text{with} \;\;\mathbf{C} = \begin{bmatrix} \mathbb{I}_{4\times 4} &  \mathbf{0}_{4\times 4}\end{bmatrix}
+\end{equation}
+thereby only integrating the positional control errors, $\mathbf{e}(t)$. The reason for not integrating control errors in the velocity is to avoid duplicate states( which in this case renders the system uncontrollable eliminating the possibility of using an LQR scheme).
+
+The extended state space model becomes
+\begin{flalign}\label{eq:contsys}
+\begin{split}
+\dot{\mathbf{x}}_e(t) =&\mathbf{A}_e\mathbf{x}(t)+\mathbf{B}_e\mathbf{u}(t)+\mathbf{G}_e\\
+\mathbf{y}(t) =& \mathbf{C}_e\mathbf{x}(t)
+\end{split}
+\end{flalign}
+with the extended state vector $\mathbf{x}_e = \begin{bmatrix} \mathbf{x} & \mathbf{x}_i \end{bmatrix}^T \in \mathbb{R}^{12\times 1}$ and
+\begin{align}
+\begin{split} \;\;
+\mathbf{A}_e = \begin{bmatrix} \mathbf{A}_c & \mathbf{0}_{8\times4} \\ \mathbf{C} & -\mathbb{I}_{4\times 4} \end{bmatrix} \in\mathbb{R}^{12\times 12}, \;\;
+\mathbf{B}_e =  \begin{bmatrix} \mathbf{B}_c \\ \mathbf{0}_{4\times 4} \end{bmatrix} \in \mathbb{R}^{12\times 4}, \;\;
+\mathbf{C}_e \in \mathbb{R}^{N\times 12},  \;\;
+\mathbf{G}_e \in \mathbb{R}^{12\times 1}
+\end{split}
+\end{align}
+Here, the integer $4\leq N\leq8$ denotes the number of observed states (not confined to the four positional used in $\mathbf{C}_e$, but can output velocities as well).
+
+In order to allow large integral gains, the common conditional anti-windup (AW) scheme was implemented so as to set the integral part to zero when having any of the four of the rotor speeds in saturation. The implemented AW scheme can be summarised in terms of the positional control error,
+\begin{equation}
+\begin{cases}
+\mathbf{e}(t) := \mathbf{C}\mathbf{x} - \mathbf{y}, \quad\text{if}\quad\text{sat}(\boldsymbol\omega) - \boldsymbol\omega = \mathbf{0}\\
+\mathbf{e}(t) :=\mathbf{0}, \quad\quad\quad\;\;\;\text{if}\quad\text{sat}(\boldsymbol\omega) - \boldsymbol\omega \neq \mathbf{0}
+\end{cases},
+\end{equation}
+with the saturation function defined as
+\begin{equation}
+\text{sat}(x) = \begin{cases}
+x_{max} \qquad x_{max} < x\\
+x \qquad\quad\; \;x_{min}\leq x \leq x_{max}\\
+x_{min}\qquad x < x_{min}\end{cases}
+\end{equation}
+Using this effectively disablines integral action when any motor is in a saturated state, and has the added benefit of being very predictable. When setting up the state space model for use in MPC, we would in practice only have to define two different linearised state space models (the LQR when in saturation and the LQRi otherwise). The only downside is the additional four states, which greatly increase the complexity of the optimisation problem in MPC.
+
+The three stabilising controllers were simulated using the parameters described in the work of Lukkonen~\cite{luukkonen2011modelling} (for which the above PD regulator was developed and tuned) and at an inner loop rate of 100 Hz (note that the original stabilising controller on the crazyflie runs at 500 Hz). The generated reference trajectory lowpass filtered unit steps the amplitudes $z\in[0,30]$ [m] and $\phi,\theta,\psi \in[-0.3,0.3]$  [rad], which is far more aggressive than anything that will be run on the real process (see Figure~\ref{fig:LQR-PD-comp}). The LQG regulators were tuned to give reasonable trajectory following in terms of Euler angles, with more pronunciation of yaw and elevation (as the yaw will later be assumed to be 0 in the external loop). As expected the LQG-controller performs well, but also yields the predicted steady state errors. In the depicted simulation, the stationary error were to be of magnitude 7 cm at $t\approx 37$ s, which is unacceptable precise indoor flying. As a contrast, both the PD and LQRi (with AW) yield errors of $\approx 0.1$ cm less than 10 seconds after a reference change, with the error still decreasing. We also note that the reference following in elevation is much more precise with the LQRi compared to the PD alternative, and that it is only outperformed by the PD in terms of overshoot when making large reference changes in angular positions. However, an acceptable angular error of $<0.005$ [rad] is reached around the same time with both regulators. In conclusion, the PD and LQRi perform almost en par, with a slight edge to the LQRi in terms of altitude changes and in less aggressive trajectories. Both should be implemented and tested on the physical process.
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=\textwidth]{figures/innerLoopStates.png}
+\includegraphics[width=\textwidth]{figures/innerLoopError.png}
+\rule{35em}{0.5pt}
+\caption{Comparision between the stabilising controllers with simulated elevation and roll (top) and the coresponding control errors (bottom).}
+\label{fig:LQR-PD-comp}
+\end{figure}
+
+\clearpage\section{State estimation}
 To estimate the states properly, many approaches are considered and compared in simulation. The first is a regular Kalman filter (KF) which used the dynamics linearised around the stable hovering state to compute the filter gain ~\cite{glad2000control}. The second is an extended kalman filter (EKF), which effectively linearises the system around the previous state estimate on each time step. This is done by computing an expression for the Jacobian offline, which is then evaluated on-line, putting great constraints on how fast the inner loop can be run. In contrast to the KF, the EKF provides much better estimates when the system is far from the hovering state but it's not an optimal estimator.
 
 \subsection{Unscented kalman filter}
@@ -513,14 +557,6 @@ A general method of generating the $\mathbf{Q}$- and $\mathbf{A}$-matrices was i
 \label{fig:splines}
 \end{figure}
 
-\section{Reference tracking LQR with feedforward term}
-In this section, we the PD augmented linearised state-space model in discrete time and include integrated states
-\begin{equation}
-\mathbf{x}_{e} = \begin{bmatrix}\mathbf{x}\\\mathbf{z}\end{bmatrix}
-\mathbf{A}_{e} = []
-\end{equation}
-
-o solve the associated Ricatti equation for 
 \section{MPC control}
 For the MPC control, the system dynamics is augmented with stabilising PD control in \textbf{Section \ref{sec:PD}}, and linearised around a stable point. The system was implemented in Matlab without state estimation using the MPC-tools 1.0 developed at LTH cite XX as a proof of concept (see \texttt{/Examples/quadcopter\_mpc\_position\_test.slx}). The result was equivalent to that of the PID-PD controller when using a fixed reference point for all states on the prediction horizon, and can be expected to improved if using time-varying reference generated in the motion planning. As the MPC-tools solution is (i) incredibly slow, (ii) unable to handle varying references on the prediction horizon and (iii) not apt for a Python/C-realtime implementation in ROS, alternatives were investigated. The two candidates are CVXgen and QPgen, which both generate fast QP solvers in C, and can be set up to suffice (i).
 
