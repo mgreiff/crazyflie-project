@@ -62,46 +62,71 @@ persistent posvec
 if isempty(P) || t == 0
     P = param.P0;
     xhat = x;
-    posvec = nan(1,recN);
+    posvec = nan(1,recN+1);
+    posvec(end) = 0;
 end
-
-posvec(2:end) = posvec(1:end-1);
-posvec(1) = xhat(1);
 
 Nx = param.nDiscreteStates;
 
-zk = u(1:end);
-   
-% Predictor step
-xf = Ad * xhat;
-Pf = Ad * P * Ad' + Q;
+% Shifts positions
+posvec(1:end-1) = posvec(2:end);
+posvec(end) = u(1);
 
-% Corrector step
-K =  Pf * Cd' / (Cd * Pf * Cd'+ R);
-xhat = xf + K * (zk - Cd * xf);
-P = (eye(Nx) - K * Cd) * Pf;
+if isnan(posvec(1))
+    xout = x;
+    disp(t)
+else
+    disp([t,posvec(1)])
+    % Regular kalman update using at the lates data received from around
+    % the same time
+    zk = u(1:end);
+    zk(1) = posvec(1);
 
-% Computes the number of steps to predict into the future
-xout = xhat;
-Ptemp = P;
+    % Predictor step
+    xf = Ad * xhat;
+    Pf = Ad * P * Ad' + Q;
 
-aplitudeOffset = [xhat(1) - trajectory.pos(t);
-                  0];
+    % Corrector step
+    K =  Pf * Cd' / (Cd * Pf * Cd'+ R);
+    xhat = xf + K * (zk - Cd * xf);
+    P = (eye(Nx) - K * Cd) * Pf;
 
-if sendN~=0
-    for ii = 1:sendN
-        % Predictor step
-        xf = Ad * xout;
-        Pf = Ad * Ptemp * Ad' + Q;
-        zk = aplitudeOffset +[trajectory.pos(t+h*ii);trajectory.acc(t+h*ii)] + R*randn(2,1);
+    % Computes the number of steps to predict into the future
+    xout = xhat;
+    Ptemp = P;
 
-        % Corrector step
-        K =  Pf * Cd' / (Cd * Pf * Cd'+ R);
-        xout = xf + K * (zk - Cd * xf);
-        Ptemp = (eye(Nx) - K * Cd) * Pf;
+    % Update from the last common point
+    if recN~=0
+        for ii = 1:recN
+            % Predictor step
+            xf = Ad * xout;
+            Pf = Ad * Ptemp * Ad' + Q;
+            zk = [posvec(ii+1); trajectory.acc(t+h*ii-recN)] + [0;1].*(R*randn(2,1));
+
+            % Corrector step
+            K =  Pf * Cd' / (Cd * Pf * Cd'+ R);
+            xout = xf + K * (zk - Cd * xf);
+            Ptemp = (eye(Nx) - K * Cd) * Pf;
+        end
+    end
+
+    % Update from current position measurement
+    aplitudeOffset = [posvec(end) - trajectory.pos(t);
+                      0];
+    if sendN~=0
+        for ii = 1:sendN
+            % Predictor step
+            xf = Ad * xout;
+            Pf = Ad * Ptemp * Ad' + Q;
+            zk = aplitudeOffset + [trajectory.pos(t+h*ii);trajectory.acc(t+h*ii)] + R*randn(2,1);
+
+            % Corrector step
+            K =  Pf * Cd' / (Cd * Pf * Cd'+ R);
+            xout = xf + K * (zk - Cd * xf);
+            Ptemp = (eye(Nx) - K * Cd) * Pf;
+        end
     end
 end
-
 sys = xout;
 
 function sys = mdlOutputs(t,x,u)
