@@ -522,9 +522,10 @@ $ and $\mathbf y_k$ is the measured outputs. The KF and AKF are then applied to 
 \centering
 \includegraphics[width=1\textwidth]{figures/AKF-KFcomp.png}
 \rule{35em}{0.5pt}
-\caption{Demonstration of the drawbacks in using a regular Kalman compared to the EKF when estimating an unknown $\dot{\boldsymbol\eta}_k$, using (i) the same parameters in both filters (ii) having $\dot{\boldsymbol\eta}_k$ unknown and using (iii) corrupted measurements of $\boldsymbol\xi, \dot{\boldsymbol\xi}_k, \boldsymbol\eta_k$.}
+\caption{Comparison between KF and AKF using a 1D discrete triple integrator. \textit{Top left}: The measured acceleration and position as seen on the host computer, the true values have been heavily corrupted by noise and the acceleration is delayed by $t_1$. \textit{Top right}: The estimated positions using the KF and AKF as seen on the crazyflie compared to the true position. Here the positional estimates from the kalman filters have been delayed another $t_1$ before reaching the quadcopter. \textit{Bottom left}: The MA-filtered estimates (unweighted, order 10) as seen on the crazyflie compared to the true position (black). \textit{Bottom right}: The RMS error between the estimated position and true position when the data reaches the crazyflie with KF (blue) and AKF (red). }
 \label{fig:KF-AKF}
 \end{figure}
+
 
 \section{Motion planning}\label{sec:reftraj}
 In this part of the project, we consider the polynomial generation method advanced by Roy et.al. cite XX. The general method is presented to make the Matlab code coherent, using the same nomenclature as in the code. The idea is to set up a constrained QP problem and solve it using Matlab's \texttt{quadprog} to find a minimum snap trajectory. The code will later be rewritten in Python/ROS with CVXGEN, and additional constraints will be enforced to ensure that the trajectory always stay in safe convex regions of space. These regions can conceivably be computed using IRIS, but will be assumed to be known initially.
@@ -602,7 +603,9 @@ A general method of generating the $\mathbf{Q}$- and $\mathbf{A}$-matrices was i
 \label{fig:splines}
 \end{figure}
 
-\section{MPC control}
+\section{Outer control}
+TODO: write about outer loop
+\subsection{MPC}
 For the MPC control, the system dynamics is augmented with stabilising PD control in \textbf{Section \ref{sec:PD}}, and linearised around a stable point. The system was implemented in Matlab without state estimation using the MPC-tools 1.0 developed at LTH cite XX as a proof of concept (see \texttt{/Examples/quadcopter\_mpc\_position\_test.slx}). The result was equivalent to that of the PID-PD controller when using a fixed reference point for all states on the prediction horizon, and can be expected to improved if using time-varying reference generated in the motion planning. As the MPC-tools solution is (i) incredibly slow, (ii) unable to handle varying references on the prediction horizon and (iii) not apt for a Python/C-realtime implementation in ROS, alternatives were investigated. The two candidates are CVXgen and QPgen, which both generate fast QP solvers in C, and can be set up to suffice (i).
 
 The MPC-problem formulation, with a time varying reference, $\mathbf{r}_k$, and a control signal, $\mathbf{u}_k$, kept close to the angular velocity required to hover, $\mathbf{u}^s$, can be written
@@ -645,7 +648,7 @@ For these purposes, the scripts \texttt{reftraj\_compute\_example.m} and \texttt
 \item Compare the four different implementations based on speed and stability.
 \end{enumerate}
 
-\section{$\mathcal{L}_1$-control}
+\subsection{$\mathcal{L}_1$-control}
 Here we consider control of the linearized system
 The $\mathbf{\Gamma}$-projection operator for two vectors $\theta,y\in\mathbb{R}^k$ is defined as
 \begin{equation}
@@ -694,6 +697,15 @@ if $r \equiv$ constant.
 \item Simulate control.
 \end{enumerate}
 
+\newpage\section{Control system summary}
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/controlsystem.png}
+\rule{35em}{0.5pt}
+\caption{Overview of the entire system with system measurements of positions $\mathbf{r}$ (blue dashed) from the kinect and measurements from the accelerometer, magnetometer, gyroscope and pressure sensor (red dashed).}
+\label{fig:controlsystem}
+\end{figure}
+
 \section{ROS implemetation}
 Wolfgang's crazyros driver~\cite{HoenigMixedReality2015}
 
@@ -735,12 +747,6 @@ Once the angle has been computed, we are ready to detect moving objects. By subt
 \begin{equation}
 \mathbf{p} = \begin{bmatrix} \cos(\alpha)& 0 & -\sin(\alpha) \\ 0 & 1 & 0 \\ \sin(\alpha) & 0 & \cos(\alpha)\end{bmatrix} \mathbf{p}_c.
 \end{equation}
-
-\section{General TODOs}
-\begin{enumerate}
-\item Found that one of the copters were broken - sent to Bitcraze for repairs, expected to be done in early march.
-\item Tried installing IRIS in Ubuntu but ran into issues using the PODS "make" command required to get everything up and running. TODO: contact Claes or Anders to get help in finding someone experienced with PODS.
-\end{enumerate}
 
 \newpage\bibliography{bibliography}{}
 \bibliographystyle{IEEEtran}
