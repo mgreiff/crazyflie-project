@@ -1,7 +1,7 @@
 ## Directories
 
 #### /crazy_ros/*
-The project currently contains (1) the /master node which can be interacted with from the terminal, (2) the /kinectNode node which calibrates reads data from a kineckt using the openni driver [[1]], (3) various controller nodes (MPC/PID/RefGen) and (4) the /quadcopterModel node which computes the system response (in terms of the measured states) and for simulation purposes. The computation is done by first evaluating the nonlinear continuous time system matrices, and then computing the ZOH discrete equivalent to condut the time stepping. The purpose of this is to simulate the system with ROS to test different methods of control before connecting to the crazyflie. For simplicity, the control signals are published to the same topics that are used to communicate with the crazyflie using Wolfgang's crazyros driver [[2]].
+The ROS-project currently contains (1) the /master node which can be interacted with from the terminal, (2) the /kinect node node which calibrates reads data from a kinect using the openni driver [[1]], (3) various controller nodes (MPC/PID/RefGen) and (4) the /quadcopterModel node which computes the system response (in terms of the measured states) and for simulation purposes. The computation is done by first evaluating the nonlinear continuous time system matrices, and then computing the ZOH discrete equivalent to condut the time stepping. The purpose of this is to simulate the system with ROS to test different methods of control before connecting to the crazyflie. For simplicity, the control signals are published to the same topics that are used to communicate with the crazyflie using Wolfgang's crazyros driver [[2]].
 
 ![alt tag](https://github.com/mgreiff/crazyflie_project/blob/master/crazy_documentation/figures/ROSstruct.png)
 
@@ -15,7 +15,7 @@ Currently, an issue that needs to be met is the nondeterministic behavious of th
 * /example/* - The raw python file for the quadcopter dynamics, example of what a system response in harder realtime will look like.
 
 ###### Useful ROS commands
-* ``roslaunch crazy_ros crazy.launch`` - Launches the entire project in crazy_ros (package) using the crazy.launch XML file, can be run without the kinect connected by changing the boolean attribute ``useCamera'' in the kinectNode.
+* ``roslaunch crazy_ros crazy.launch useDumy:=1`` - Launches the entire project in crazy_ros (package) using the crazy.launch XML file. If no additional arguments are given, then by default, a dummy node is launched instead of openni to test and debug calibration. This can be disabled by setting ``usedDummy:=0'' when launching the project.
 * ``rosrun rqt_graph rqt_graph`` - Plots a graph of the ROS structure.
 * ``rosrun rqt_plot rqt_plot <topic>``  - Plots the values of the topic ``\system\controlsignal\data[0]`` displays the pitch reference in time.
 * ``rostopic echo <topic>`` - Prints the data sent to the topic in the terminal window.
@@ -28,6 +28,9 @@ The project documentation, will eventually include a report discussion both the 
 
 ###### Contents
 * **Report.tex** - A report in progress containing a discussion on the dynamics, filtering, motion planning, PD, MPC, L1 control and TODO's.
+
+#### /crazy_python/*
+Contains python code which has since been mergen with the ROS structure, serves little purpose and will be removed shortly.
 
 #### /crazy_trajectory/*
 Contains the scripts for motion planning (see crazy_documentation).
@@ -42,7 +45,7 @@ Contains the scripts for motion planning (see crazy_documentation).
 * trajectory taking the output of quadprog and the time array as input.
 * Various examples showing how the trajectory can be computed and evaluated in a .m format when constraining positional endpoints using 1-3 polynomials of degree 3-5 with minimum snap. Also contains examples on how it can be implemented in simulink, using either model callbacks or S-fucntions (due to the fact that structs cannot be imported directly), and how the evaluation can be set up to copute points on the predition horizon in MPC based soley on polynomial coefficients.
 
-#### /simulink/*
+#### /crazy_simulink/*
 Contains the files used in modelling of the quadcopter. Many of the files are works in progress and some cannot be run at all. The necessary paths and parameters are set up by tunning the ``simulink_init.m`` file, after which the examples in the /examples/* directory can be run. Some of these may need additional parameters, in which case an ``init_.m`` file is located in the same directory as the example subdirectory.
 
 ###### Contents - Models
@@ -79,4 +82,4 @@ Contains the files used in modelling of the quadcopter. Many of the files are wo
 * /double_integrator_filter_test/**integrator_filter_test.slx** - An example of the state esimation of a double integrator using KF, UKF and GPF simultaneously.
 * /inner_loop_filter_test/**filters_example.slx** - An example of the state esimation using varoius filters that can be switched between by clicking the state estimation model block and selecting any .slx file in the /kalman_filter/* directory. This uses the full nonlinear dynamics of the quadcopter, and an example estimation is shown below.
 
-<img src="https://github.com/mgreiff/crazyflie_project/blob/master/crazy_documentation/figures/KalmanFilterComparison.png" height="300"/>
+<img src="https://github.com/mgreiff/crazyflie_project/blob/master/crazy_documentation/figures/KalmanFilterComparison.png">
