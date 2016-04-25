@@ -34,8 +34,8 @@ class QuadcopterModel(object):
                 configfile.close()
         if param != None:
             # Sets configuration parameters
-            self.timestep = param['global']['timestep']
-            self.x_init = np.array(param['quadcopter_model']['x_init'])
+            self.timestep = param['global']['inner_loop_h']
+            self.x_init = np.array(param['quadcopter_model']['x0'])
             self.x = self.x_init
 
             self.g = param['quadcopter_model']['g']

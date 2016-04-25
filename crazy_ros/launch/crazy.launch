@@ -1,15 +1,19 @@
 <launch>
+  <arg
+    name="useDummy"
+    default="1"
+  />
   <node
     name="referenceGenerator"
     pkg="crazy_ros"
-    type="referenceGenerator.py"
+    type="referenceGeneratorNode.py"
     output="screen"
     args="$(find crazy_ros)/config/configparam.cnf"
   />
   <node
     name="quadcopterModel"
     pkg="crazy_ros"
-    type="quadcopterModel.py"
+    type="quadcopterSimNode.py"
     output="screen"
     args="$(find crazy_ros)/config/configparam.cnf"
   />
@@ -19,30 +23,32 @@
     type="kinectNode.py"
     output="screen"
   />
-  <node
-    name="dummyCamera"
-    pkg="crazy_ros"
-    type="dummyCamera.py"
-    output="screen"
-  />
+  <group if = "$(arg useDummy)">
+    <node
+      name="dummyCamera"
+      pkg="crazy_ros"
+      type="dummyCamera.py"
+      output="screen"
+    />
+  </group>
   <node
     name="MPCcontroller"
     pkg="crazy_ros"
-    type="MPCController.py"
+    type="outerMPCNode.py"
     output="screen"
     args="$(find crazy_ros)/config/configparam.cnf"
   />
   <node
     name="PIDcontroller"
     pkg="crazy_ros"
-    type="PIDController.py"
+    type="outerPIDNode.py"
     output="screen"
     args="$(find crazy_ros)/config/configparam.cnf"
   />
   <node
     name="master"
     pkg="crazy_ros"
-    type="master.py"
+    type="masterNode.py"
     output="screen"
   />
 </launch>

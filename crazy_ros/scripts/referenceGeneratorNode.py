@@ -32,7 +32,7 @@ class ReferenceGenerator(object):
                 configfile.close()
         if param != None:
             # Sets configuration parameters
-            self.timestep = param['global']['timestep']
+            self.timestep = param['global']['inner_loop_h']
             self.param = param
         else:
             print 'ERROR. Could not load configuration parameters in %s' % (str(self))

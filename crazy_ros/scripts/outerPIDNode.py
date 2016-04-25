@@ -3,16 +3,16 @@
 import rospy
 import os
 import sys
+from time import sleep
 import numpy as np
 from std_msgs.msg import String, Float64
 from crazy_ros.msg import NumpyArrayFloat64 # Can handle messages of type np.array, list and tuple
 from geometry_msgs.msg import Point
-from time import sleep
+import signal
 from math import sin, pi, sqrt
 from json import dumps, load
-import signal
 
-class MPCcontroller(object):
+class PIDcontroller(object):
 
     def __init__(self):
         # Sets up publishers and subscribers
@@ -32,7 +32,7 @@ class MPCcontroller(object):
                 configfile.close()
         if param != None:
             # Sets configuration parameters
-            self.timestep = param['global']['timestep']
+            self.timestep = param['global']['outer_loop_h']
             self.param = param
         else:
             print 'ERROR. Could not load configuration parameters in %s' % (str(self))
@@ -42,7 +42,7 @@ class MPCcontroller(object):
         # if MPC is broadcasted, but turns of the controller if anything
         # else is broadcasted and sets all conttrol signals to 0 if "q"
         # is broadcasted
-        if msg.data == 'MPC':
+        if msg.data == 'PID':
             self.status = True
         else:
             self.status = False
@@ -53,24 +53,24 @@ class MPCcontroller(object):
         self.kinect_position = point
 
     def __str__(self):
-        return 'MPC controller node'
+        return 'PID controller node'
 
 def signal_handler(signal, frame):
-    print 'Shutting down MPC node nicely!'
+    print 'Shutting down PID node nicely!'
     sys.exit(0)
 
 def main():
-    rospy.init_node('MPCcontroller')
-    MPC = MPCcontroller()
+    rospy.init_node('PIDcontroller')
+    PID = PIDcontroller()
     signal.signal(signal.SIGINT, signal_handler)
-    
+
     # Have the while loop outside of the node in order to allow
     # interruptions from the handle_status callback
     while True:
-        if MPC.status:
-            MPC.control_pub.publish(100*np.ones((4,1)))
-            sleep(MPC.timestep)
-            # TODO compute MPC control signal
+        if PID.status:
+            PID.control_pub.publish(200*np.ones((4,1)))
+            sleep(PID.timestep)
+            # TODO compute PID control signal
 
 if __name__ == '__main__':
     main()
