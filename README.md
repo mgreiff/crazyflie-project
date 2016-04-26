@@ -5,20 +5,20 @@ The ROS-project currently contains (1) the /master node which can be interacted 
 
 ![alt tag](https://github.com/mgreiff/crazyflie_project/blob/master/crazy_documentation/figures/ROSstruct.png)
 
-Currently, an issue that needs to be met is the nondeterministic behavious of the ROS publishers (see eg. \reference_executiontime), which cannot be used in critical parts of the control system. Instead, tests should be made with ZMQ and the realtime_tools C++ layer.
+Currently, an issue that needs to be met is the nondeterministic behavious of the ROS publishers (see eg. \reference_executiontime), which cannot be used in critical parts of the control system. Instead, tests should be made OROCOS or the realtime_tools C++ layer.
 
 ###### Contents
 * /scripts/* - Contains the code for generating nodes.
 * /msg/* - Contains the message definitions used.
 * /config/* - Contains a JSON configuration file for all ROS nodes.
-* /launch/* - Contains the launch XML file.
-* /example/* - The raw python file for the quadcopter dynamics, example of what a system response in harder realtime will look like.
+* /launch/* - Contains the launch XML files.
+* /modules/* - Contains the crazylib module in which various filters and c-wrappers are defined. See /modules/examples/* for examples on how to use the functions. When running the examples, make sure to include the path to the dynamic libraries (.so files) in the environment variable ``LD_LIBRARY_PATH``. This can for instance be done by executing ``export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path>``, where the the path is your path to the /modules directory.
 
-###### Useful ROS commands
+###### Useful commands
 * ``roslaunch crazy_ros crazy.launch useDumy:=1`` - Launches the entire project in crazy_ros (package) using the crazy.launch XML file. If no additional arguments are given, then by default, a dummy node is launched instead of openni to test and debug calibration. This can be disabled by setting ``usedDummy:=0'' when launching the project.
 * ``rosrun rqt_graph rqt_graph`` - Plots a graph of the ROS structure.
 * ``rosrun rqt_plot rqt_plot <topic>``  - Plots the values of the topic ``\system\controlsignal\data[0]`` displays the pitch reference in time.
-* ``rostopic echo <topic>`` - Prints the data sent to the topic in the terminal window.
+* ``cc -fPIC -shared -o foo.so foo.c`` - creates a dynamic shared library ``foo.so`` from the foo c-file.
 
 [1]: http://wiki.ros.org/openni_kinect
 [2]: http://wiki.ros.org/crazyflie
@@ -83,3 +83,4 @@ Contains the files used in modelling of the quadcopter. Many of the files are wo
 * /inner_loop_filter_test/**filters_example.slx** - An example of the state esimation using varoius filters that can be switched between by clicking the state estimation model block and selecting any .slx file in the /kalman_filter/* directory. This uses the full nonlinear dynamics of the quadcopter, and an example estimation is shown below.
 
 <img src="https://github.com/mgreiff/crazyflie_project/blob/master/crazy_documentation/figures/KalmanFilterComparison.png">
+
