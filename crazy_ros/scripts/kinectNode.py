@@ -22,7 +22,7 @@ class KinectNode(object):
         self.cal_frames = 0
         self.scatter = None
         self.plot = False
-        self.useDummy = True
+        self.useDummy = False
 
         # Camera centers and focal lengths (see /camera/depth/camera_info)
         self.f_x = 570.34
@@ -30,6 +30,10 @@ class KinectNode(object):
         self.c_x = 314.5
         self.c_y = 235.5
 
+        self.Q = np.diag(0.ksbkjasbkd1*np.ones((1,9)))
+        self.R = np.diag([])
+        self.P = np.eye(6) 
+        
         # Sets up publishers and subscribers
         if self.useDummy:
             self.disparity_sub = rospy.Subscriber('/kinect/dummy', NumpyArrayFloat64, self.handle_disparity_image)
@@ -72,7 +76,7 @@ class KinectNode(object):
                 self.calibrate_angle()
                 print '(@ kinectNode) Angle using poyfit: %f degrees' % (180/3.1415 * self.angle)
 
-                self.calibrate_angle_SVD()
+                #self.calibrate_angle_SVD()
                 print '(@ kinectNode) Angle using SVD: %f degrees' % (180/3.1415 * self.angle)
                 print '(@ kinectNode) Calibration complete!\n'
                 self.status_pub.publish('True')

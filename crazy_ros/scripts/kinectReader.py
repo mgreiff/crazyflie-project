@@ -18,7 +18,7 @@ class KinectReader(object):
         self.background = None
         self.cal_frames = 0
         self.scatter = None
-        self.plot = False
+        self.plot = True
 
         # Camera centers and focal lengths, from /camera/depth/camera_info
         self.f_x = 570.34
@@ -29,7 +29,7 @@ class KinectReader(object):
         self.angle = None 
 
         self.disparity_sub = rospy.Subscriber('/camera/depth/image_rect', Image, self.handle_disparity_image)
-        self.point_pub = rospy.Publisher('/kinect/position', Point)
+        self.point_pub = rospy.Publisher('/kinect/position', Point, queue_size = 10)
 
 
     def handle_disparity_image(self, image):
