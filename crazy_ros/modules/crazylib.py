@@ -1,32 +1,49 @@
 # -*- coding: utf-8 -*-
 import numpy as np
 from scipy.linalg import inv
-import ctypes
+from subprocess import call
+import sys, os, inspect, ctypes
+
+curdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+libdir = os.path.join(os.path.dirname(curdir),'modules')
+
+# -------------------------------------------------------------------------
 
 # Loads ctypes modules for the sum example
-sumlib = ctypes.CDLL('sum.so')
-sumlib.sum_example.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
-
-# Loads ctypes modules for the CVX solver wrapper
-cvxlib = ctypes.CDLL('solver.so')
-cvxlib.call_solver.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
-
+try:
+    sumlib = ctypes.CDLL('sum.so')
+    sumlib.sum_example.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
+except:
+    raise Exception('Error when loading dynamical library sum.so, please source init.sh '+
+                    'and\ncheck that the LD_LIBRARY_PATH contains the path to /modules, e.g. using\n'+
+                    '\n    env|grep LD_LIBRARY_PATH\n')
+    
 def c_sum(numbers):
     # A c-wrapper for calling the sum example function in sum.c
     # from python. This is the way cvxGen solver will be called.
+
     global sumlib
     num_numbers = len(numbers)
     array_type = ctypes.c_int * num_numbers
     result = sumlib.sum_example(ctypes.c_int(num_numbers), array_type(*numbers))
     return int(result)
 
+# -------------------------------------------------------------------------
+
+# Loads ctypes modules for the CVX solver wrapper
+cvxlib = ctypes.CDLL('solver.so')
+cvxlib.call_solver.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
+
 def c_cvx_solver(numbers):
     # A c-wrapper for calling the CXVgen generated solver.c
+    
     global cvxlib
     num_numbers = len(numbers)
     array_type = ctypes.c_int * num_numbers
     result = cvxlib.call_solver(ctypes.c_int(num_numbers), array_type(*numbers))
     return int(result)
+
+# -------------------------------------------------------------------------
 
 def discrete_KF_update(x, u, z, A, B, C, P, Q, R):
     # Makes a discrete kalman update and returns the new state
@@ -52,7 +69,7 @@ def discrete_KF_update(x, u, z, A, B, C, P, Q, R):
     #    Pnew - New covariance matrix at t = h*k
 
     # Kalman prediction
-    if not B:
+    if B == [] or u == []:
         xf = np.transpose(np.dot(A,x))
     else:
         xf = np.transpose(np.dot(A,x)) + np.transpose(np.dot(B,u))
@@ -66,6 +83,8 @@ def discrete_KF_update(x, u, z, A, B, C, P, Q, R):
     Pnew = np.dot((np.eye(Q.shape[0]) - np.dot(K,C)), Pf)
 
     return xhat, Pnew
+
+# -------------------------------------------------------------------------
 
 def discrete_AKF_update(x, u, z, zhist, A, B, C, P, Q, R, trajectory, t, Ts):
     # Makes an asynchronous kalman update and returns the new state

@@ -64,6 +64,13 @@ for ii in range(1,len(tt)):
     estimates[:,ii] = xhat
     measurements[:,ii] = zk
 
+print A
+print C
+print Q
+print R
+print Q
+print xm1
+print zk
 # Plot results
 plt.figure(1)
 plt.subplot(211)
