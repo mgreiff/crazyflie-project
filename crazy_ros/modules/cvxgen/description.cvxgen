@@ -1,0 +1,39 @@
+# Produced by CVXGEN, 2016-04-19 11:47:14 -0400.
+# CVXGEN is Copyright (C) 2006-2012 Jacob Mattingley, jem@cvxgen.com.
+# The code in this file is Copyright (C) 2006-2012 Jacob Mattingley.
+# CVXGEN, or solvers produced by CVXGEN, cannot be used for commercial
+# applications without prior written permission from Jacob Mattingley.
+
+# Filename: description.cvxgen.
+# Description: A description of the CVXGEN problem.
+
+dimensions
+  m = 3   # inputs.
+  n = 10  # states.
+  T = 10  # horizon.
+end
+
+parameters
+  A (n,n)               # dynamics matrix.
+  B (n,m)               # transfer matrix.
+  Q (n,n) psd           # state cost.
+  R (m,m) psd           # input cost.
+  x[0] (n)              # initial state.
+  r[t] (n), t=0..T+1    # reference.
+  u_max (m)             # control signal constraints
+  x_max nonnegative     # angular constraints
+  S_max nonnegative     # slew rate limit.
+end
+
+variables
+  x[t] (n), t=1..T+1  # state.
+  u[t] (m), t=0..T    # input.
+end
+
+minimize
+  sum[t=0..T](quad(x[t] - r[t], Q) + quad(u[t], R))
+subject to
+  x[t+1] == A*x[t] + B*u[t], t=0..T          # dynamics constraints.
+  abs(u[t]) <= u_max, t=0..T            # control signal constraints
+  norminf(u[t+1] - u[t]) <= S_max, t=0..T-1  # slew rate constraint.
+end
