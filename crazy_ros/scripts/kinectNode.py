@@ -13,6 +13,7 @@ from geometry_msgs.msg import Point
 from std_msgs.msg import String
 from crazy_ros.msg import NumpyArrayFloat64
 import os,sys,inspect
+import time
 
 # Loads the crazyflie library module from the /modules directory
 curdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -44,23 +45,25 @@ class KinectNode(object):
 
         # Kalman filter parameters
         # TODO - Load from configuration file
-        self.Q = np.diag(0.001*np.ones((1,6)))
+        self.Q = np.diag(0.01*np.ones((1,6))[0])
         self.R = np.diag([0.1,0.1,0.1])
         self.P = np.eye(6)
         self.Ts = 1./30
         self.A = np.eye(6) + np.diag(self.Ts*np.ones((1,3))[0],3)
+        self.kalmanTime = 0 # test time
+        self.kalmanLimit = 10
 
         self.C = np.zeros((3,6))
         self.C[0,0] = 1.
         self.C[1,1] = 1.   
         self.C[2,2] = 1.
 
-        self.B = np.zeros((6,3))
-        self.B[3,0] = 1.
-        self.B[4,1] = 1.
-        self.B[5,2] = 1.
-
         self.xhat = np.zeros((1,6))[0]
+
+        print self.A
+        print self.C
+        print self.Q
+        print self.R
 
         # Sets up publishers and subscribers
         if self.useDummy:
@@ -129,13 +132,15 @@ class KinectNode(object):
 
             # Kalman filter update - This currently just computes, updates and prints the position and covariance
             if self.useKalman:
-                zk = np.array([x,y,z])             # Measure positions
-                uk = 0.1 * np.random.randn(1,3)[0] # Add noise to acceleration states
-                self.xhat, self.P = cl.discrete_KF_update(self.xhat, uk, zk, self.A, self.B, self.C, self.P, self.Q, self.R)
-                print self.xhat
-                print zk
-                print uk
+                zk = np.array([x,y,z])
+                if norm(zk - self.xhat[0:3]) > self.kalmanLimit: # Treats the case when a measurement is missed
+                    zk = None
+
+                self.xhat, self.P = Pnew = cl.discrete_KF_update(self.xhat, [], zk, self.A, [], self.C, self.P, self.Q, self.R)
+
+                print 'Time: %s' % (str(time.time() - self.kalmanTime))
                 print self.P
+                self.kalmanTime = time.time()
 
             p = Point(x=x, y=y, z=z)
             self.point_pub.publish(p)
