@@ -76,12 +76,15 @@ def discrete_KF_update(x, u, z, A, B, C, P, Q, R):
     Pf = np.dot(np.dot(A,P),np.transpose(A)) + Q
     
     # Kalman update
-    Knum =  np.dot(Pf,np.transpose(C))
-    Kden = np.dot(C,np.dot(Pf,np.transpose(C))) + R
-    K = np.dot(Knum,inv(Kden))
-    xhat = xf + np.dot(K, (z - np.dot(C,xf)))
-    Pnew = np.dot((np.eye(Q.shape[0]) - np.dot(K,C)), Pf)
-
+    if z is not None:
+        Knum =  np.dot(Pf,np.transpose(C))
+        Kden = np.dot(C,np.dot(Pf,np.transpose(C))) + R
+        K = np.dot(Knum,inv(Kden))
+        xhat = xf + np.dot(K, (z - np.dot(C,xf)))
+        Pnew = np.dot((np.eye(Q.shape[0]) - np.dot(K,C)), Pf)
+    else:
+        xhat = xf
+        Pnew = Pf
     return xhat, Pnew
 
 # -------------------------------------------------------------------------
