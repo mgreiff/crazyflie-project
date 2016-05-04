@@ -13,6 +13,9 @@ class CmdVelTestPublisher(object):
     
     def start_pub(self):
         self.twist.linear.z = 40000
+        self.twist.angular.y = 0 # Pitch, degrees. Positive is "right"
+        self.twist.angular.x = 0 # Roll, degrees. Positive is "forward"
+        
         d = -4000/50
         L = 60000
         while not rospy.is_shutdown():
