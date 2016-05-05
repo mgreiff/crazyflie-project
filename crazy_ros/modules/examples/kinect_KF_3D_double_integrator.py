@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import numpy as np
-from math import cos, pi
 import matplotlib.pylab as plt
 import os,sys,inspect
 

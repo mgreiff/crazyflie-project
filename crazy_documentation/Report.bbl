@@ -35,6 +35,10 @@ T.~Luukkonen, ``Modelling and control of quadcopter,'' \emph{Independent
 T.~Glad and L.~Ljung, \emph{Control theory}.\hskip 1em plus 0.5em minus
   0.4em\relax CRC press, 2000.
 
+\bibitem{terejanu2008extended}
+G.~A. Terejanu, ``Extended kalman filter tutorial,'' \emph{Online]. Disponible:
+  http://users. ices. utexas. edu/\~{} terejanu/files/tutorialEKF. pdf}, 2008.
+
 \bibitem{wan2000unscented}
 E.~A. Wan and R.~Van Der~Merwe, ``The unscented kalman filter for nonlinear
   estimation,'' in \emph{Adaptive Systems for Signal Processing,

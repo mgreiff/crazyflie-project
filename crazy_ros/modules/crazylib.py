@@ -1,47 +1,9 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-from scipy.linalg import inv
-from subprocess import call
-import sys, os, inspect, ctypes
-
-curdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-libdir = os.path.join(os.path.dirname(curdir),'modules')
-
-# -------------------------------------------------------------------------
-
-# Loads ctypes modules for the sum example
-try:
-    sumlib = ctypes.CDLL('sum.so')
-    sumlib.sum_example.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
-except:
-    raise Exception('Error when loading dynamical library sum.so, please source init.sh '+
-                    'and\ncheck that the LD_LIBRARY_PATH contains the path to /modules, e.g. using\n'+
-                    '\n    env|grep LD_LIBRARY_PATH\n')
-    
-def c_sum(numbers):
-    # A c-wrapper for calling the sum example function in sum.c
-    # from python. This is the way cvxGen solver will be called.
-
-    global sumlib
-    num_numbers = len(numbers)
-    array_type = ctypes.c_int * num_numbers
-    result = sumlib.sum_example(ctypes.c_int(num_numbers), array_type(*numbers))
-    return int(result)
-
-# -------------------------------------------------------------------------
-
-# Loads ctypes modules for the CVX solver wrapper
-cvxlib = ctypes.CDLL('ROS_solver.so')
-cvxlib.call_solver.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
-
-def c_cvx_solver(numbers):
-    # A c-wrapper for calling the CXVgen generated solver.c
-    
-    global cvxlib
-    num_numbers = len(numbers)
-    array_type = ctypes.c_int * num_numbers
-    result = cvxlib.call_solver(ctypes.c_int(num_numbers), array_type(*numbers))
-    return int(result)
+from scipy.linalg import inv, cholesky
+import ctypes
+from math import sin, cos, sqrt
+from scipy.signal import cont2discrete
 
 # -------------------------------------------------------------------------
 
@@ -50,6 +12,8 @@ def discrete_KF_update(x, u, z, A, B, C, P, Q, R):
     # estimation and covariance matrix. Can handle empy control
     # signals and empty B. Currently no warnings are issued if
     # used improperly, which should be fixed in future iterations.
+    # If z is set to None, the update step is ignored and only prediction
+    # is used.
     #
     # N<=M and 0<K<=M are integers.
     # 
@@ -137,3 +101,271 @@ def discrete_AKF_update(x, u, z, zhist, A, B, C, P, Q, R, trajectory, t, Ts):
             xpred, Ppred = discrete_KF_update(xpred, u, zhist[ii+1], A, B, C, Ppred, Q, R)
 
     return xhat, xpred, P, zhist
+
+# -------------------------------------------------------------------------
+
+def discrete_UKF_update(x, u, z, F, H, param, P, Q, R):
+    # Makes a companion unscented kalman update and returns the new state
+    # estimation and covariance matrix. Currently no warnings are issued if
+    # used improperly, which should be fixed in future iterations.
+    # This is a very general implementation, with the limitation that noise
+    # is assumed to be zero mean. The current parameters should be outsourced
+    # to param, and are currently set to yeld good result for white gaussian
+    # noise.
+    #
+    # N<=M and 0<K<=M are integers.
+    # 
+    # ARGS:
+    #    x - np.array of shape (M,1). State estimate at t = h*(k-1)
+    #    u - np.array of shape (N,1), emty list or None. If applicable, control
+    #        signals at t = h*(k-1)
+    #    z - np.array of shape (K,1). Measurements at t = h*k.
+    #    F - function handle of type F(x,u,param). Nonlinear state equations in
+    #        discrete time. Returns an (M,1) numpy array as the first arg.
+    #    G - function handle of type H(x,param). Nonlinear measurement
+    #        equations in discrete time. Returns an (K,1) numpy array as the 
+    #        first arg.
+    #    P - np.array of shape (M,M). Covariance at the previous update.
+    #    Q - np.array of shape (M,M). Estimated covariance matrix of state
+    #        noise.
+    #    R - np.array of shape (K,K). Estimated covariance matrix of
+    #        measurement noise.
+    # RETURN:
+    #    xhat - New estimate at t = h*k
+    #    Pnew - New covariance matrix at t = h*k
+
+    # ~~~ UKF Parameters ~~~
+    L = x.shape[0]                      # Number of discrete states
+    Nu = u.shape[0]                     # Number of control signals
+    Nz = z.shape[0]                     # Number of measurement signals
+    beta = 2                            # Optimal for gaussian distributions
+    alpha = 5e-1                        # Tuning parameter (0 < alpha < 1e-4)
+    keta = 0;                           # Tuning parameter (set to 0 or 3-L)
+    lam =  alpha ** 2 * (L + keta) - L; # Scaling factor (see E. Wan for details)
+    
+    # ~~~ UKF Weights ~~~
+    # Weight for mean
+    Wm0 = np.array([lam/(L + lam)])
+    Wmi = (1/(2 * (L + lam)))*np.ones((1,2*L))[0]
+    Wm = np.append(Wm0,Wmi)
+    
+    # Weight for covariances
+    Wc0 = np.array([lam/(L + lam)+(1 - alpha ** 2 + beta)] )
+    Wci = (1/(2 * (L + lam)))*np.ones((1,2*L))[0]
+    Wc = np.append(Wc0,Wci)
+
+    # ~~~ Computes covariances and sigma points (predictive step) ~~~
+    Psqrt = sqrt(L + lam) * np.transpose(cholesky(P));
+    X = np.hstack((x, np.tile(x,(1,L))+Psqrt, np.tile(x,(1,L))-Psqrt))
+    
+    Xf = np.zeros(X.shape)
+    for ii in range(2*L+1): 
+        Xf[:,[ii]], _ = F(X[:,[ii]], u, param)
+
+    # ~~~ UT-transform of the dynamics (time update) ~~~
+    xMean = np.zeros((L,1))
+    for ii in range(2*L+1):
+        xMean += Wm[ii]*Xf[:,[ii]]        # Transformed mean (x)
+    xDev = Xf - np.tile(xMean,(1,2*L+1))  # Transformed deviations (x)
+   
+    # ~~~ UT-transform of the measurements (measurement update) ~~~
+    Yf = np.zeros((Nz,2*L+1))
+    for ii in range(2*L+1): 
+        Yf[:,[ii]] = H(Xf[:,[ii]])
+        
+    yMean = np.zeros((Nz,1))
+    for ii in range(2*L+1): 
+        yMean += Wm[ii]*Yf[:,[ii]]        # Transformed mean (y)
+    yDev = Yf - np.tile(yMean,(1,2*L+1))  # Transformed deviations (y)
+    
+    # ~~~ Compute transformed covariance matrices ~~~
+    Pxx = np.dot(np.dot(xDev,np.diag(Wc)),np.transpose(xDev)) + Q # transformed state covariance
+    Pxy = np.dot(np.dot(xDev,np.diag(Wc)),np.transpose(yDev))     # transformed cross covariance
+    Pyy = np.dot(np.dot(yDev,np.diag(Wc)),np.transpose(yDev)) + R # transformed measurement covariance
+    
+    # ~~~ Correction update ~~~
+    K = np.dot(Pxy, inv(Pyy))
+    xhat = xMean + np.dot(K, z - yMean)             # State correction
+    P = Pxx - np.dot(np.dot(K,Pyy),np.transpose(K)) # Covariance correction
+    return xhat, P
+
+# -----------------------------------------------------------------------------
+
+def quadcopter_dynamics(x, u, param):
+    # The model of the quadcopter which is used in non-linear state estimation
+    # on the host and for simulation purposes. The state is updated internally
+    # and updated on every time step with reference to the input control signal
+    # omega. The parameters defining the process and states are loaded from 
+    # a parameter dictionary on the same for as that used in the configuration
+    # file (see /config/*).
+    #
+    # ARGS:
+    #     u - np.array of shape (4,1) - control signals (omega)
+    # RETURN:
+    #     xout - np.array of shape (12,1) - state vector with on the form
+    #         [r,dr,eta,deta]^T.
+    #     yout - np.array of shape (12,1) - Measuereent vector returning 
+    #         certain states as specified in C.
+
+    # Extract angles and parameters
+    phi, theta, psi, phidot, thetadot, psidot = np.reshape(x[6:12,0:1],[1,6])[0]
+    Ts = param['global']['inner_loop_h']
+    g = param['quadcopter_model']['g']
+    m = param['quadcopter_model']['m']
+    k = param['quadcopter_model']['k']
+    A = param['quadcopter_model']['A']
+    I = param['quadcopter_model']['I']
+    l = param['quadcopter_model']['l']
+    b = param['quadcopter_model']['b']
+    
+    u = u[:,0]
+    T = k * sum(u ** 2)
+
+    # Define the C-matrix, see eq. (19)
+    Ixx, Iyy, Izz = I
+    
+    Sphi = sin(phi)
+    Stheta = sin(theta)
+    Spsi = sin(psi);
+    Cphi = cos(phi)
+    Ctheta = cos(theta)
+    Cpsi = cos(psi)
+    
+    C11 = 0.
+    C12 = ((Iyy - Izz) * (thetadot * Cphi * Sphi +
+           psidot * Sphi ** 2 *Ctheta) +
+           (Izz - Iyy) * psidot * Cphi ** 2 *Ctheta -
+           Ixx * psidot * Ctheta)
+    C13 = (Izz - Iyy) * psidot * Cphi * Sphi * Ctheta ** 2
+    C21 = ((Izz - Iyy) * (thetadot * Cphi * Sphi +
+           psidot * Sphi * Ctheta) +
+           (Iyy - Izz) * psidot * Cphi ** 2 * Ctheta -
+           Ixx * psidot * Ctheta)
+    C22 = (Izz - Iyy) * phidot * Cphi * Sphi
+    C23 = (-Ixx * psidot * Stheta * Ctheta +
+           Iyy * psidot * Sphi ** 2 * Stheta * Ctheta +
+           Izz * psidot * Cphi ** 2 * Stheta * Ctheta)
+    C31 = ((Iyy - Izz) * psidot * Ctheta ** 2 * Sphi * Cphi -
+           Ixx * thetadot * Ctheta)
+    C32 = ((Izz - Iyy) * (thetadot * Cphi * Sphi * Stheta +
+           phidot * Sphi ** 2 * Ctheta) +
+           (Iyy - Izz) * phidot * Cphi ** 2 * Ctheta +
+           Ixx * psidot * Stheta * Ctheta -
+           Iyy * psidot * Sphi ** 2 * Stheta * Ctheta -
+           Izz * psi * Cphi ** 2 * Stheta * Ctheta)
+    C33 = ((Iyy - Izz) * phidot * Cphi * Sphi * Ctheta ** 2 -
+           Iyy * thetadot * Sphi ** 2 * Ctheta * Stheta -
+           Izz * thetadot * Cphi ** 2 * Ctheta * Stheta +
+           Ixx * thetadot * Ctheta * Stheta)
+    
+    C = np.array([[C11,C12,C13],
+                  [C21,C22,C23],
+                  [C31,C32,C33]]);   
+    
+    # eq. (8) Modified from the work of lukkonen, here rotor 2 and 4 spin in
+    # the opposite directions
+    tau_phi =  l * k * (-u[1] ** 2 + u[3] ** 2)
+    tau_theta =  l * k * (-u[0] ** 2 + u[2] ** 2)
+    tau_psi =  b * (u[0] ** 2 - u[1] ** 2 +
+                    u[2] ** 2 - u[3] ** 2)
+    
+    tau_b = np.array([[tau_phi],[tau_theta],[tau_psi]])
+    
+    # eq. (16)
+    J11 = Ixx
+    J12 = 0.
+    J13 = -Ixx*Stheta
+    J21 = 0.
+    J22 = Iyy * Cphi ** 2 + Izz * Sphi ** 2
+    J23 = (Iyy - Izz) * Cphi * Sphi * Ctheta
+    J31 = -Ixx * Stheta
+    J32 = (Iyy - Izz) * Cphi * Sphi * Ctheta
+    J33 = (Ixx * Stheta ** 2 + Iyy * Sphi ** 2 * Ctheta ** 2 +
+           Izz * Cphi ** 2 * Ctheta ** 2)
+    J = np.array([[J11,J12,J13],
+                  [J21,J22,J23],
+                  [J31,J32,J33]])
+    
+    invJ = inv(J)
+
+    # Sets up continuous system
+    I3 = np.diag(np.ones([1,3])[0])
+    
+    Ac = np.zeros([12,12])
+    Ac[0:3,3:6] = I3
+    Ac[3:6,3:6] = -(1/m)*np.diag(A)
+    Ac[6:9,9:12] = I3
+    Ac[9:12,9:12] = -np.dot(invJ,C)
+    
+    Rz = (1/m) * np.array([[cos(psi) * sin(theta) * cos(phi) + sin(psi) * sin(phi)],
+                           [sin(psi) * sin(theta) * cos(phi) - cos(psi) * sin(phi)],
+                           [cos(theta) * cos(phi)]])
+    
+    Bc = np.zeros([12,4])
+    Bc[3:6,0:1] = Rz
+    Bc[9:12,1:4] = invJ
+    
+    Cc = np.zeros([7,12])
+    Cc[0:7,2:9] = np.diag(np.ones([1,7])[0]) # z,rdot,eta
+    
+    Dc = np.array([])
+    
+    discreteSystem = cont2discrete((Ac,Bc,Cc,Dc), Ts, method='zoh', alpha=None)
+    
+    Ad = discreteSystem[0]
+    Bd = discreteSystem[1]
+    Cd = discreteSystem[2]
+
+    G = np.zeros([12,1])
+    G[5,0]=-g
+    
+    # Sets up control signal
+    u = np.concatenate([[[T]],tau_b])
+    
+    xout = np.dot(Ad,x) + np.dot(Bd,u) + G*Ts
+    yout = np.dot(Cd,x)
+
+    return xout, yout
+        
+# -----------------------------------------------------------------------------
+
+# Loads ctypes modules for the sum example
+try:
+    if 1:
+        sumlib = ctypes.CDLL('sum.so')
+        sumlib.sum_example.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
+except:
+    raise Exception('Error when loading dynamical library sum.so, please source init.sh '+
+                    'and\ncheck that the LD_LIBRARY_PATH contains the path to /modules, e.g. using\n'+
+                    '\n    env|grep LD_LIBRARY_PATH\n')
+    
+def c_sum(numbers):
+    # A c-wrapper for calling the sum example function in sum.c
+    # from python. This is the way cvxGen solver will be called.
+
+    global sumlib
+    num_numbers = len(numbers)
+    array_type = ctypes.c_int * num_numbers
+    result = sumlib.sum_example(ctypes.c_int(num_numbers), array_type(*numbers))
+    return int(result)
+
+# -------------------------------------------------------------------------
+
+# Loads ctypes modules for the CVX solver wrapper
+try:
+    if 1:
+        cvxlib = ctypes.CDLL('ROS_solver.so')
+        cvxlib.call_solver.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
+except:
+    raise Exception('Error when loading dynamical library sum.so, please source init.sh '+
+                    'and\ncheck that the LD_LIBRARY_PATH contains the path to /modules, e.g. using\n'+
+                    '\n    env|grep LD_LIBRARY_PATH\n')
+                    
+def c_cvx_solver(numbers):
+    # A c-wrapper for calling the CXVgen generated solver.c
+    
+    global cvxlib
+    num_numbers = len(numbers)
+    array_type = ctypes.c_int * num_numbers
+    result = cvxlib.call_solver(ctypes.c_int(num_numbers), array_type(*numbers))
+    return int(result)

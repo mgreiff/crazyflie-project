@@ -433,51 +433,119 @@ Similarily, the problem in the outer loop is to accurately estimate the states
 \end{equation}
 given time delayed measurements of quadcopter acceleration, current measurements of position from the kinect and predict the future position and speed of the quadcopter to combat the time delay in transmitting data back to the crazyflie. Fo this purpose a regular KF is tested along with an asynchronous Kalman filter of our own design.
 
-\subsection{Regular Kalman filter (KF)}
+\subsection{Discrete Kalman filter (KF)}
+\begin{center}
+\begin{minipage}{.5\linewidth}
+\begin{algorithm}[H]
+ Initialize: $\mathbf{x}$\;
+ \textit{Prediction step}\;
+ \textit{Correction step}\;
+\caption{Rough outline of the discrete time Kalman filter update}
+\label{fig:algKF}
+\end{algorithm}
+\end{minipage}
+\end{center}
 
-\subsection{Extended kalman filter (EKF)}
-The EKF is implemented using the system representation
-\begin{flalign}
+% \For{i = 1,...,$i_{max}$}{
+%   Check convergence criterion:\\
+%   \If{$||\mathbf{r}|| < \epsilon||\mathbf{f}||$}{break\;}
+%   Compute and assemble stiffness matrix: $\mathbf{K}$\;
+%   Compute and assemble internal forces: $\mathbf{q}$\;
+%   Compute residual: $\mathbf{r} = \mathbf{f} - \mathbf{q}$\;
+%   Solve system: $\mathbf{K} = \mathbf{r} \Delta\mathbf{u}^{(i)}$\;
+%   Update displacement: $\mathbf{u} = \mathbf{u} + \Delta\mathbf{u}$\
+% }
+
+
+\subsection{Discrete extended kalman filter (EKF)}
+The EKF is implemented using the nonlinear system representation
+\begin{flalign}\label{eq:nonlindyn}
 \begin{split}
 \mathbf{x}_{k+1} =& \mathbf{F}(\mathbf{x}_k,\mathbf{u}_k,\mathbf{v}_{k+1})\\
 \mathbf{y}_{k} =& \mathbf{H}(\mathbf{x}_k,\mathbf{e}_{k+1})
 \end{split}
 \end{flalign}
-The prediction step is then
-\begin{flalign}
-\begin{split}
-\hat{\mathbf{x}}_{k}^- = & \mathbf{F}(\hat{\mathbf{x}}_{k-1},\mathbf{u}_{k-1}, \mathbf{v})\\
-\mathbf{P}_{k}^-= & \mathbf{J}^F_{k-1}\mathbf{P}_{k-1} \mathbf{J}^F_{k-1} + \mathbf{Q}
-\end{split}
-\end{flalign}
-based on the system dynamics, and a corrector step,
-\begin{flalign}
-\begin{split}
-\mathbf{K}_{k} =& \mathbf{P}_{k}^-(\mathbf{J}^H_k)^T(\mathbf{J}^H_k \mathbf{P}_{k}^-(\mathbf{J}^H_k)^T + \mathbf{R})^{-1}\\
-\hat{\mathbf{x}}_{k} =& \hat{\mathbf{x}}_{k}^- + \mathbf{K}_k(\mathbf{y_k} -\mathbf{H}(\mathbf{x}^-_k,\mathbf{e}))\\
-\mathbf{P}_k =& (\mathbb{I} - \mathbf{K}_k\mathbf{J}^H_k)\mathbf{P}_{k}^-
-\end{split}
-\end{flalign}
-where
+denoting the respective state and measurement equation Jacobians as
 \begin{equation}
 \mathbf{J}^F_k = \frac{\partial \mathbf{F}(\mathbf{x}, \mathbf{u}_k, \mathbf{v})}{\partial \mathbf{x}}\Big|_{\mathbf{x}_k}
 \qquad
-\mathbf{J}^H_k = \frac{\partial \mathbf{H}(\mathbf{x}, \mathbf{e})}{\partial \mathbf{x}}\Big|_{\mathbf{x}_k}.
+\mathbf{J}^H_k = \frac{\partial \mathbf{H}(\mathbf{x}, \mathbf{e})}{\partial \mathbf{x}}\Big|_{\mathbf{x}_k}
 \end{equation}
-In our implementation, $\mathbf{J}^F_k$ is stored as a symbolic expression and then evaluated on each iteration. The $\mathbf{H(x,e)}$ is a linear function and can therefore be replaced by $\mathbf{C}_d$ in ~\eqref{eq:continuoussys}.
-\begin{figure}[htbp]
-\centering
-\includegraphics[width=1\textwidth]{figures/KalmanFilterComparison.png}
-\includegraphics[width=1\textwidth]{figures/KalmanCompMeasurements.png}
-\rule{35em}{0.5pt}
-\caption{Demonstration of the drawbacks in using a regular Kalman compared to the EKF when estimating an unknown $\dot{\boldsymbol\eta}_k$, using (i) the same parameters in both filters (ii) having $\dot{\boldsymbol\eta}_k$ unknown and using (iii) corrupted measurements of $\boldsymbol\xi, \dot{\boldsymbol\xi}_k, \boldsymbol\eta_k$.}
-\label{fig:KF-EKF}
-\end{figure}
+and again assuming a measurement noise zeros mean gaussian noise, with
+\begin{equation}\label{eq:measnoise}
+\mathbf{v}_{k} \sim\mathcal{N}(0,\mathbf{Q})\quad\mathbf{e}_{k} \sim\mathcal{N}(0,\mathbf{R}).
+\end{equation}
+
+Commonly used in GPS systems, the EKF is situational and not an optimal filter as the Jacobians used in the covariance prediction is a first order approximation in a multivariate taylor series expansion. As such, we only get an estimated covariance and not the true covariance, which may cause the state estimation to diverge if the system is non-linear enough and enough time passes. If the system, like the quadcopter process, is badly conditioned and we force it to great extremes (i.e. flying aggressivly) the EKF may fail. For a more thorough theoretical discussion on the EKF, the reader is referred to~\cite{terejanu2008extended}. 
+
+In our implementation, the Jacobian $\mathbf{J}^F_k$ is computed offline and stored as a symbolic expression to be evaluated on each iteration (see Algortithm~\ref{fig:algEKF}). The initial covariance and  Expressing the Jacobian to a non-linear system including inverses (recall $\mathbf{J}^{-1}$ in equation~\eqref{eq:continuoussys}) could put constraints on the rate at which the estimations are made, as evaluation of the expression may take considerable time.
+
+\begin{center}
+\begin{minipage}{.6\linewidth}
+\begin{algorithm}[H]
+ Initialize: $\mathbf{x}_0$, $\mathbf{P}_0$, $\mathbf{Q}$, $\mathbf{R}$, $\mathbf{F}(\mathbf{x},\mathbf{u})$, $\mathbf{C}_d$, $\mathbf{J}^F(\mathbf{x})$\;
+ \BlankLine
+ \For{k = 1,...,$k_{max}$}{
+ \BlankLine
+ Receive $\mathbf{u}_k, \mathbf{z}_k$\;
+ \BlankLine
+ \textit{Prediction step}\\
+ $\hat{\mathbf{x}}_{k}^- = \mathbf{F}(\hat{\mathbf{x}}_{k-1},\mathbf{u}_{k-1}, \mathbf{v})$\;
+ $\mathbf{P}_{k}^-= \mathbf{J}^F_{k-1}\mathbf{P}_{k-1} \mathbf{J}^F_{k-1} + \mathbf{Q}$\;
+ \BlankLine
+ \textit{Correction step}\\
+ $\mathbf{K}_{k} = \mathbf{P}_{k}^-\mathbf{C}_d^T(\mathbf{C}_d \mathbf{P}_{k}^-\mathbf{C}_d^T + \mathbf{R})^{-1}$\;
+ $\hat{\mathbf{x}}_{k} = \hat{\mathbf{x}}_{k}^- + \mathbf{K}_k(\mathbf{y_k} -\mathbf{C}_d\mathbf{x}^-_k)$\;
+ $\mathbf{P}_k = (\mathbb{I} - \mathbf{K}_k\mathbf{C}_d)\mathbf{P}_{k}^-$\;
+ }
+ \BlankLine
+\caption{Rough outline of the discrete time extended Kalman filter (EKF)}
+\label{fig:algEKF}
+\end{algorithm}
+\end{minipage}
+\end{center}
+For the considered dynamics, the measurement function $\mathbf{H(x,e)}$ is linear and can therefore be replaced by the discrete time measurement matrix in  ~\eqref{eq:continuoussys}, such that $\mathbf{H(x,e)} = \mathbf{C}_d\mathbf{x}$, with $\mathbf{J}^H_k = \mathbf{C}_d\forall\mathbf{x}$.
 
 \subsection{Unscented kalman filter (UKF)}
-Attempted to implement the UKF (see algorithm 1 on page 4 in ~\cite{wan2000unscented}).
+The unscented Kalman filter is well described in~\cite{wan2000unscented}, where it is qualitatively compared to the EKF on the chaotic Mackey Glass time series. The interested reader is referred to~\cite{wan2000unscented} for more details, but a rough sketch of the algorithm as implemented in Python/ROS/Simulink is given (see Algorithm~\ref{fig:algUKF}) with a few cliff notes. For consistency, the same assumptions the UKF uses the same system description and assumptions defined in the previous section on the EKF, see equations~\eqref{eq:nonlindyn} to~\eqref{eq:measnoise}.
 
-TODO: Write about unscented kalman ...
+\begin{center}
+\begin{minipage}{.6\linewidth}
+\begin{algorithm}[H]
+ Initialize: $\mathbf{x}_0$, $\mathbf{P}_0$, $W^m$, $W^c$, $\mathbf{Q}$, $\mathbf{R}$, $\mathbf{F}(\mathbf{x},\mathbf{u})$, $\mathbf{H}(\mathbf{x})$\;
+ \BlankLine
+ \For{k = 1,...,$k_{max}$}{
+ \BlankLine
+ Receive $\mathbf{u}_{k-1}, \mathbf{z}_k$\;
+ \BlankLine
+ \textit{Compute weights and $\sigma$-points}\\
+ $\sqrt{\mathbf{P}} = \sqrt{L + \lambda}\cdot cholesky(\mathbf{P}_{k-1})^T$\;
+ $X_{\sigma} = [\mathbf{x}_{k-1}, \mathbf{x}_{k-1} - \sqrt{\mathbf{P}}, \mathbf{x}_{k-1} + \sqrt{\mathbf{P}}]$\;
+ \BlankLine
+ \textit{Prediction step}\\
+ \For{i = 1,...,2L+1}{
+ $X^{f}_{i} = \mathbf{F}(X_{\sigma,i},\mathbf{u}_{k-1}, \mathbf{v}_k)$\;
+ $Y^{f}_{i} = \mathbf{H}(X_{f,i}, \mathbf{e}_k)$\;
+ }
+ $\hat{\mathbf{x}}_k^- = \sum\limits_{i = 1}^{2L+1}W^m_iX^f_{i}$\;
+ $\hat{\mathbf{y}}_k^- = \sum\limits_{i = 1}^{2L+1}W^m_iY^f_{i}$\;
+ $\mathbf{P}_{xx} = \sum\limits_{i = 1}^{2L+1}W^c_i(\hat{\mathbf{x}}_k^- -X^f_{i})(\hat{\mathbf{x}}_k^- -X^f_{i})^T$\;
+ $\mathbf{P}_{xy} = \sum\limits_{i = 1}^{2L+1}W^c_i(\hat{\mathbf{x}}_k^- -X^f_{i})(\hat{\mathbf{y}}_k^- -Y^f_{i})^T$\;
+ $\mathbf{P}_{yy} = \sum\limits_{i = 1}^{2L+1}W^c_i(\hat{\mathbf{y}}_k^- -Y^f_{i})(\hat{\mathbf{y}}_k^- -Y^f_{i})^T$ \;
+ \BlankLine
+ \textit{Correction step}\\
+ $\mathbf{K}_{k} = \mathbf{P}_{xy}\mathbf{P}_{yy}^{-1}$\;
+ $\hat{\mathbf{x}}_{k} = \hat{\mathbf{x}}_{k}^- + \mathbf{K}_k(\mathbf{y} -\mathbf{C}_d\mathbf{x}^-_k)$\;
+ $\mathbf{P}_k = \mathbf{P}_{xx} - \mathbf{K}_{k}\mathbf{P}_{yy}\mathbf{K}_{k}^T$\;
+ }
+ \BlankLine
+\caption{Rough outline of the implemented discrete time unscented Kalman filter (UKF)}
+\label{fig:algUKF}
+\end{algorithm}
+\end{minipage}
+\end{center}
+
+The UKF relies on throwing points ($\sigma$-points) in the state space through the nonlinearity and then finding a weighted mean state in which the system is most likely to be. This method has the advantage of not using any approximations (in contrast to the EKF), but performance depends on the system at hand and how  the filter is tuned. For instance, if the spread of sigma points around the mean state, $\alpha$, is set too large the non-linearity may not be portrayed accurately close to the mean state. In comparison to the EKF, the UKF has the advantage of scaling nicely with the number of states, $L$, requiring $2L+2$ $\sigma$-points to be run through the non-linearity at each UKF update. This can be compared to the EKF where we would need to evaluate the symbolical expression, or use 2L function evaluations (of $\mathbf{F}$) if computing the Jacobian using a first order central difference scheme, at the cost of greater numerical error in the covariance prediction. The UKF will have to be compared to the alternatives in simulation to make a statement about which to use in the physical process.
 
 \subsection{Particle filter (GPF)}
 Attempted to implement the generic particle filter (see algorithm 3 on page 8 in ~\cite{arulampalam2002tutorial}). To combat degeneracy in the filter the systematic resampling is implemented due to it's simplicity and performance when compared to e.g. multinomial resampling~\cite{douc2005comparison}~\cite{hol2006resampling}.
@@ -487,12 +555,25 @@ TODO: Find out why the state amplitude becomes so small after resampling.
 TODO: Write out method ...
 
 \subsection{Filter comparison}
-All considered filters (KF/EKF/UKF/GPF/AKF) were implemented in Simulink as S-functions to allow the use of nestled- and external .m-functions (see *\texttt{/kalman\_filters/}). As an example, a double integrator with linear dynamics was set up to demonstrate the filters and how they are incorporated into a simulink model (see *\texttt{/Examples/double\_integrator\_filter\_test/}). All filters are initialised with an *\texttt{\_init}-file, in which a KFparam struct variable is created, defining the system and the necessary filter parameters. The code was written with the intent of being reusable in future projects, and is essentially a Simulink state estimation toolbox.
+All considered filters (KF/EKF/UKF/GPF/AKF) were implemented in Simulink as S-functions to allow the use of nestled- and external .m-functions (see *\texttt{/kalman\_filters/}). As an example, a double integrator with linear dynamics was set up to demonstrate the filters and how they are incorporated into a simulink model (see *\texttt{/Examples/double\_integrator\_filter\_test/}). All filters are initialised with an *\texttt{\_init}-file, in which a KFparam struct variable is created, defining the system and the necessary filter parameters. The code was written with the intent of being reusable in future projects, and is essentially a Simulink state estimation toolbox. 
+
+When running the Simulink examples, the state estimation model block can be set with a filter by selecting one of the models in *\texttt{/kalman\_filters/}. The system is specified in the \texttt{init\_filters\_example.m} file, and the filter parameters are set to yield good estimation of the unknown angular velocities, $\dot{\boldsymbol\eta}_k$  (see Figure~\ref{fig:KF-EKF}). Simulink is solely used for the purpose of simulating the filters, the more promising filters (KF/UKF/AKF) were then implemented in the Python \texttt{crazylib} module which can be used directly in the ROS nodes.
 
 \subsubsection{Inner loop}
 The filters (KF/EKF/UKF/GPF) were applied and tested on nonlinear quadcopter dynamics, running with an inner stabilising PD loop at 100 Hz and a PID position controller at 50 Hz in the outer loop (see *\texttt{/Examples/inner\_loop/inner\_filter\_test/}). To test performance, the measurements of $\boldsymbol\xi_k, \dot{\boldsymbol\xi}_k, \boldsymbol\eta_k$ were corrupted with gaussian zero-mean uncorrelated noise with a variance of $\approx 0.3$ [m] on the positional states ($\boldsymbol\xi_k$), a variance of $0.1$ [m/s] on the velocities ($\dot{\boldsymbol\xi}_k$) and a variance of 0.01 on the Euler angles ($\dot{\boldsymbol\xi}_k$). The angular velocities were completely omitted and the process noise was assumed to be $\mathbf{0}$ at all times.
 
-When running the example, the state estimation model block can be set with a filter by selecting one of the models in *\texttt{/kalman\_filters/}. The system is specified in the \texttt{init\_filters\_example.m} file, and the filter parameters are set to yield good estimation of the unknown angular velocities, $\dot{\boldsymbol\eta}_k$  (see Figure~\ref{fig:KF-EKF}). As can be seen, the regular KF performs badly when the system is far from the stable state, and the over all error is here visibly the largest. However, simulating the system at an inner loop sample rate of 100 Hz, the EKF is demands processing power to a point where it becomes infeasible to implement in the physical process (unless other methods of computing the Jacobian are considered). In addition, the EKF estimation becomes more unstable as the step size increases, and already at a sample period of $T_s = 0.01 s$, the estimation becomes very poor after $\approx 16 s$ and the covariance matrix requires resetting (at higher sample rates such as 500 Hz, the filter performs well for an entire simulation duration of 50 s). The UKF has to be set with a fairly high $\alpha\approx0.5$ in order to spread the sigma points enough to properly capture the non-linear dynamics. It is far more economical in terms of computational power than the EKF and follows the true values much more accurately than any of the previously tested filters. This is clear when looking at the the error metric 
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=1\textwidth]{figures/KalmanFilterComparison.png}
+\includegraphics[width=1\textwidth]{figures/KalmanCompMeasurements.png}
+\rule{35em}{0.5pt}
+\caption{Demonstration of the drawbacks in using a regular Kalman compared to the EKF when estimating an unknown $\dot{\boldsymbol\eta}_k$, using (i) the same parameters in both filters (ii) having $\dot{\boldsymbol\eta}_k$ unknown and using (iii) corrupted measurements of $\boldsymbol\xi, \dot{\boldsymbol\xi}_k, \boldsymbol\eta_k$.}
+\label{fig:KF-EKF}
+\end{figure}
+
+As can be seen, the regular KF performs badly when the system is far from the stable state, and the over all error is here visibly the largest. The EKF performs better, but when simulating the system at an inner loop sample rate of 100 Hz, the EKF is demands processing power to a point where it becomes infeasible to implement in the physical process (unless other methods of computing the Jacobian are considered). In addition, the EKF estimation becomes more unstable as the step size increases, and already at a sample period of $T_s = 0.01$ [s], the estimation becomes very poor after $\approx 16$ [s] and the covariance matrix requires resetting (at higher sample rates such as 500 Hz, the filter performs well for an entire simulation duration of 50 s). This is due to the approximations used in the covariance updates of the EKF, and it should be noted that the trajectory is very aggressive, and that the EKF may not diverge during the battery lifetime ($\approx5$ minutes) if following smother trajectories.
+
+ The UKF has to be set with a fairly high $\alpha\approx0.5$ in order to spread the sigma points enough to properly capture the non-linear dynamics. It is far more economical in terms of computational power than the EKF and follows the true values much more accurately than any of the previously tested filters. This is clear when looking at the the error metric 
 \begin{equation}
 E(\mathbf{x},\hat{\mathbf{x}}) = \sum^{3}_i\int_0^{t_s} |\dot{\boldsymbol{\eta}}_i(t) - \dot{\hat{\boldsymbol{\eta}}}_i(t)|dt
 \end{equation}
