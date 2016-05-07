@@ -23,12 +23,24 @@ simulationTime = 2. # s
 Ts = param['global']['inner_loop_h']
 numberOfTimesteps = int(np.ceil(2/Ts))
 
+# UKF parameters
+P = np.eye(12)
+Q = 0.01*np.eye(12)
+R = 0.1*np.eye(12)
+z = np.random.rand(12,1)
+x = np.random.rand(12,1)
+
+# Example of how to implement the measurement function
+H = lambda x: x[[0,1,2,3,4,5,6,7,8,9,10,11]]
+
+
 # Sorage variables for plotting purposes
 timevec = np.zeros([1,numberOfTimesteps])
 omegavec = np.zeros([4,numberOfTimesteps])
-measurements = np.zeros([7,numberOfTimesteps])
+measurements = np.zeros([12,numberOfTimesteps])
 states = np.zeros([12,numberOfTimesteps])
-
+estimates = np.zeros([12,numberOfTimesteps])
+    
 # Desgn parameter for omega referene example
 omegaAmp = 25.
 
@@ -61,29 +73,28 @@ for ii in range(numberOfTimesteps):
         omegaOscillation[2] *= -sin(t*4*pi)
         omegaOscillation[3] *= sin(t*4*pi)
 
-    omega = hover_omega*np.ones([4,1]) + omegaAmp*omegaOscillation
+    ukm1 = hover_omega*np.ones([4,1]) + omegaAmp*omegaOscillation
     if ii == 0:
-        x = np.array(param['quadcopter_model']['x0'])
+        xkm1 = np.array(param['quadcopter_model']['x0'])
+        xhatkm1 = np.array(param['quadcopter_model']['x0'])
     else:
-        x = states[0:12,ii-1:ii]
+        xkm1 = states[0:12,ii-1:ii]
+        xhatkm1 = estimates[0:12,ii-1:ii]
 
-    # Simulates the process in discrete time
-    xout, yout = quadcopter_dynamics(x, omega, param)
+    # Simulates the process in discrete time (truth values)
+    xk, yk = quadcopter_dynamics(xkm1, ukm1, param)
     
-    # Performs a UKF update
-    P = np.eye(12)
-    Q = np.eye(12)
-    R = np.eye(12)
-    z = np.random.rand(12,1)
-    x = np.random.rand(12,1)
+    # Corrups measurements
+    vk = np.dot(R, np.random.randn(12,1))
+    zk = xk + vk
+    #zk = yk + vk
     
-    # Example of how to implement the measurement function
-    H = lambda x: x[[0,1,2,3,4,5,6,7,8,9,10,11]]
-    x, P = discrete_UKF_update(x, omega, z, quadcopter_dynamics, H, param, P, Q, R)
-    
-    omegavec[0:4,ii:ii+1] = omega
-    states[0:12,ii:ii+1] = xout
-    measurements[0:7,ii:ii+1] = yout
+    xhatk, P = discrete_UKF_update(xhatkm1, ukm1, zk, quadcopter_dynamics, H, param, P, Q, R)
+
+    omegavec[0:4,ii:ii+1] = ukm1
+    states[0:12,ii:ii+1] = xk
+    measurements[0:12,ii:ii+1] = zk
+    estimates[0:12,ii:ii+1] = xhatk
 
 
 # Visualize simulation
@@ -95,7 +106,7 @@ if 1: # Omega
     plt.ylabel('Angular velocity, [rad/s]')
 
 if 1: # States
-    plt.figure(1)
+    plt.figure(2)
     f, axarr = plt.subplots(2, 2)
     axarr[0,0].step(np.transpose(timevec),np.transpose(states[0:3,:]))
     axarr[0,0].set_xlabel('Time, [s]')
@@ -116,6 +127,53 @@ if 1: # States
     axarr[1,1].set_xlabel('Time, [s]')
     axarr[1,1].set_ylabel('$\dot{\mathbf{\eta}}(t)$')
     axarr[1,1].legend(['$\dot{\phi}$','$\dot{\theta}$','$\dot{\psi}$'],loc=2,fontsize=6)
+
+if 1: # measurements
+    plt.figure(3)
+    f, axarr = plt.subplots(2, 2)
+    axarr[0,0].step(np.transpose(timevec),np.transpose(measurements[0:3,:]))
+    axarr[0,0].set_xlabel('Time, [s]')
+    axarr[0,0].set_ylabel('$\mathbf{r}(t)$')
+    axarr[0,0].legend(['x','y','z'],loc=3,fontsize=6)
+    
+    axarr[0,1].step(np.transpose(timevec),np.transpose(measurements[3:6,:]))
+    axarr[0,1].set_xlabel('Time, [s]')
+    axarr[0,1].set_ylabel('$\dot{\mathbf{r}}(t)$')
+    axarr[0,1].legend(['$\dot{x}$','$\dot{y}$','$\dot{z}$'],loc=3,fontsize=6)
+    
+    axarr[1,0].step(np.transpose(timevec),np.transpose(measurements[6:9,:]))
+    axarr[1,0].set_xlabel('Time, [s]')
+    axarr[1,0].set_ylabel('${\mathbf{\eta}}(t)$')
+    axarr[1,0].legend(['$\phi$','$\Theta$','$\psi$'],loc=2,fontsize=6)
+    
+    axarr[1,1].step(np.transpose(timevec),np.transpose(measurements[9:12,:]))
+    axarr[1,1].set_xlabel('Time, [s]')
+    axarr[1,1].set_ylabel('$\dot{\mathbf{\eta}}(t)$')
+    axarr[1,1].legend(['$\dot{\phi}$','$\dot{\theta}$','$\dot{\psi}$'],loc=2,fontsize=6)
+
+if 1: # estimates
+    plt.figure(4)
+    f, axarr = plt.subplots(2, 2)
+    axarr[0,0].step(np.transpose(timevec),np.transpose(estimates[0:3,:]))
+    axarr[0,0].set_xlabel('Time, [s]')
+    axarr[0,0].set_ylabel('$\mathbf{r}(t)$')
+    axarr[0,0].legend(['x','y','z'],loc=3,fontsize=6)
+    
+    axarr[0,1].step(np.transpose(timevec),np.transpose(estimates[3:6,:]))
+    axarr[0,1].set_xlabel('Time, [s]')
+    axarr[0,1].set_ylabel('$\dot{\mathbf{r}}(t)$')
+    axarr[0,1].legend(['$\dot{x}$','$\dot{y}$','$\dot{z}$'],loc=3,fontsize=6)
+    
+    axarr[1,0].step(np.transpose(timevec),np.transpose(estimates[6:9,:]))
+    axarr[1,0].set_xlabel('Time, [s]')
+    axarr[1,0].set_ylabel('${\mathbf{\eta}}(t)$')
+    axarr[1,0].legend(['$\phi$','$\Theta$','$\psi$'],loc=2,fontsize=6)
+    
+    axarr[1,1].step(np.transpose(timevec),np.transpose(estimates[9:12,:]))
+    axarr[1,1].set_xlabel('Time, [s]')
+    axarr[1,1].set_ylabel('$\dot{\mathbf{\eta}}(t)$')
+    axarr[1,1].legend(['$\dot{\phi}$','$\dot{\theta}$','$\dot{\psi}$'],loc=2,fontsize=6)
+
 
 plt.show()
 

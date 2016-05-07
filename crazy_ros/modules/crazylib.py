@@ -331,7 +331,7 @@ def quadcopter_dynamics(x, u, param):
 
 # Loads ctypes modules for the sum example
 try:
-    if 1:
+    if 0:
         sumlib = ctypes.CDLL('sum.so')
         sumlib.sum_example.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
 except:
@@ -353,7 +353,7 @@ def c_sum(numbers):
 
 # Loads ctypes modules for the CVX solver wrapper
 try:
-    if 1:
+    if 0:
         cvxlib = ctypes.CDLL('ROS_solver.so')
         cvxlib.call_solver.argtypes = (ctypes.c_int, ctypes.POINTER(ctypes.c_int))
 except:
