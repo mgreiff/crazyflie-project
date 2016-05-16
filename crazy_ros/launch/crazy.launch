@@ -1,8 +1,26 @@
 <launch>
   <arg
     name="useDummy"
-    default="1"
+    default="0"
   />
+  <arg name="uri" default="radio://0/80/250K" />
+  <arg name="roll_trim" default="0" />
+  <arg name="pitch_trim" default="0" />
+  
+  <include
+    file="$(find openni_launch)/launch/openni.launch"
+  />
+  
+  <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
+  </include>
+
+  <group ns="crazyflie">
+    <include file="$(find crazyflie_driver)/launch/crazyflie_add.launch">
+      <arg name="uri" value="$(arg uri)" />
+      <arg name="tf_prefix" value="crazyflie" />
+    </include>
+  </group>
+  
   <node
     name="referenceGenerator"
     pkg="crazy_ros"

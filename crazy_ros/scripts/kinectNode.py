@@ -32,7 +32,7 @@ class KinectNode(object):
 
         # Settings
         self.plot = False     # Plot the depth data in real time (may be slow)
-        self.useDummy = True  # Run node reading data from the dummy
+        self.useDummy = False  # Run node reading data from the dummy
         self.useKalman = True # Compute kalman estimate and print covariance and estimate
         if self.plot:
             plt.ion()
@@ -133,13 +133,13 @@ class KinectNode(object):
             # Kalman filter update - This currently just computes, updates and prints the position and covariance
             if self.useKalman:
                 zk = np.array([x,y,z])
-                if norm(zk - self.xhat[0:3]) > self.kalmanLimit: # Treats the case when a measurement is missed
+                if np.isnan(zk).any() or norm(zk - self.xhat[0:3]) > self.kalmanLimit: # Treats the case when a measurement is missed
                     zk = None
 
                 self.xhat, self.P = Pnew = cl.discrete_KF_update(self.xhat, [], zk, self.A, [], self.C, self.P, self.Q, self.R)
 
-                print 'Time: %s' % (str(time.time() - self.kalmanTime))
-                print self.P
+                #print 'Time: %s' % (str(time.time() - self.kalmanTime))
+                #print self.P
                 self.kalmanTime = time.time()
 
             p = Point(x=x, y=y, z=z)
