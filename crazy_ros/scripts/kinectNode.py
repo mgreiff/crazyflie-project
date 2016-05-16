@@ -77,7 +77,7 @@ class KinectNode(object):
 
     def handle_status(self, msg):
         if msg.data == 'Calibrate':
-            self.background == None
+            self.background = None
             self.cal_frames = 0
             self.angle = None
 
@@ -138,9 +138,9 @@ class KinectNode(object):
             if self.useKalman:
                 zk = np.array([x,y,z])
                 if np.isnan(zk).any() or norm(zk - self.xhat[0:3]) > self.kalmanLimit*norm(np.diag(self.P)[0:3]): # Treats the case when a measurement is missed
-                    print 'measurement error: %.3f' % norm(zk-self.xhat[0:3])
-                    print 'co-variance norm: %.3f' % norm(np.diag(self.P)[0:3])
-                    print "Throw away"
+                    #print 'measurement error: %.3f' % norm(zk-self.xhat[0:3])
+                    #print 'co-variance norm: %.3f' % norm(np.diag(self.P)[0:3])
+                    #print "Throw away"
                     zk = None
 
                 self.xhat, self.P = cl.discrete_KF_update(self.xhat, [], zk, self.A, [], self.C, self.P, self.Q, self.R)
