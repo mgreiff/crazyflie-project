@@ -84,6 +84,8 @@ def main():
                     # commands to the /controller/* generator.
                     if data[1] in ['MPC','PID','RefGen']:
                         master.status_controller.publish(data[1])
+                        if data[1] == 'PID':
+                            master.status = False
                     else:
                         error('KEYWORD', data[1])
                 else:
