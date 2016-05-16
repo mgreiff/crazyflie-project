@@ -3,6 +3,8 @@
 import rospy
 import os
 import sys
+import termios
+import contextlib
 from time import sleep
 import numpy as np
 from std_msgs.msg import String, Float64
@@ -30,11 +32,12 @@ class PIDcontroller(object):
                 with open(filename) as configfile:
                     param = load(configfile)
                 configfile.close()
-        if param != None:
-            # Sets configuration parameters
-            self.timestep = param['global']['outer_loop_h']
-            self.param = param
-        else:
+        try:
+            if param != None:
+                # Sets configuration parameters
+                self.timestep = param['global']['outer_loop_h']
+                self.param = param
+        except:
             print 'ERROR. Could not load configuration parameters in %s' % (str(self))
 
     def handle_status(self, msg):
@@ -44,6 +47,7 @@ class PIDcontroller(object):
         # is broadcasted
         if msg.data == 'PID':
             self.status = True
+            print 'Now reading keyboard data for position control, steer with a-s-d-w'
         else:
             self.status = False
             if msg.data == 'q':
@@ -59,6 +63,17 @@ def signal_handler(signal, frame):
     print 'Shutting down PID node nicely!'
     sys.exit(0)
 
+@contextlib.contextmanager
+def raw_mode(file):
+    old_attrs = termios.tcgetattr(file.fileno())
+    new_attrs = old_attrs[:]
+    new_attrs[3] = new_attrs[3] & ~(termios.ECHO | termios.ICANON)
+    try:
+        termios.tcsetattr(file.fileno(), termios.TCSADRAIN, new_attrs)
+        yield
+    finally:
+        termios.tcsetattr(file.fileno(), termios.TCSADRAIN, old_attrs)
+
 def main():
     rospy.init_node('PIDcontroller')
     PID = PIDcontroller()
@@ -67,10 +82,30 @@ def main():
     # Have the while loop outside of the node in order to allow
     # interruptions from the handle_status callback
     while True:
+        
         if PID.status:
-            PID.control_pub.publish(200*np.ones((4,1)))
-            sleep(PID.timestep)
+            with raw_mode(sys.stdin):
+                try:
+                    ch = sys.stdin.read(1)
+                    if ch == 'a':
+                        print 'left'
+                    elif ch == 'd':
+                        print 'right'
+                    elif ch == 'w':
+                        print 'up'
+                    elif ch == 's':
+                        print 'down'
+                    elif ch == 'q':
+                        print 'Exiting PID node and returning to master.'
+                    if not ch or ch == chr(4):
+                        break
+                except (KeyboardInterrupt, EOFError):
+                    pass
+
             # TODO compute PID control signal
+            PID.control_pub.publish(200*np.ones((4,1)))
+
+        sleep(PID.timestep)
 
 if __name__ == '__main__':
     main()
