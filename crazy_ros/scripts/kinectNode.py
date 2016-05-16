@@ -45,13 +45,13 @@ class KinectNode(object):
 
         # Kalman filter parameters
         # TODO - Load from configuration file
-        self.Q = np.diag(0.01*np.ones((1,6))[0])
-        self.R = np.diag([0.1,0.1,0.1])
-        self.P = np.eye(6)
+        self.Q = 2*np.diag(0.5*np.ones((1,6))[0])
+        self.R = 5*np.diag([0.1,0.1,0.1])
+        self.P = 10*np.eye(6)
         self.Ts = 1./30
         self.A = np.eye(6) + np.diag(self.Ts*np.ones((1,3))[0],3)
         self.kalmanTime = 0 # test time
-        self.kalmanLimit = 10
+        self.kalmanLimit = 0.15
 
         self.C = np.zeros((3,6))
         self.C[0,0] = 1.
@@ -72,6 +72,7 @@ class KinectNode(object):
             self.disparity_sub = rospy.Subscriber('/camera/depth/image_rect', Image, self.handle_disparity_image)
         self.status_sub = rospy.Subscriber('/system/kinect', String, self.handle_status) # Commands from the master
         self.point_pub = rospy.Publisher('/kinect/position', Point, queue_size = 10) # Publishes position
+        self.point_pub_raw = rospy.Publisher('/kinect/position_raw', Point, queue_size = 10) # Publishes position
         self.status_pub = rospy.Publisher('/system/status_master', String, queue_size = 10) # Publish to the master
 
     def handle_status(self, msg):
@@ -128,18 +129,24 @@ class KinectNode(object):
                 plt.draw()
                 plt.pause(0.01)
 
-            z, y, x = self.point_from_ij(i, j, np_image)
+            x, y, z = self.point_from_ij(i, j, np_image)
+
+            p_raw = Point(x=x, y=y, z=z)
+            self.point_pub_raw.publish(p_raw)
 
             # Kalman filter update - This currently just computes, updates and prints the position and covariance
             if self.useKalman:
                 zk = np.array([x,y,z])
-                if np.isnan(zk).any() or norm(zk - self.xhat[0:3]) > self.kalmanLimit: # Treats the case when a measurement is missed
+                if np.isnan(zk).any() or norm(zk - self.xhat[0:3]) > self.kalmanLimit*norm(np.diag(self.P)[0:3]): # Treats the case when a measurement is missed
+                    print 'measurement error: %.3f' % norm(zk-self.xhat[0:3])
+                    print 'co-variance norm: %.3f' % norm(np.diag(self.P)[0:3])
+                    print "Throw away"
                     zk = None
 
-                self.xhat, self.P = Pnew = cl.discrete_KF_update(self.xhat, [], zk, self.A, [], self.C, self.P, self.Q, self.R)
+                self.xhat, self.P = cl.discrete_KF_update(self.xhat, [], zk, self.A, [], self.C, self.P, self.Q, self.R)
+                x, y, z = self.xhat[0], self.xhat[1], self.xhat[2]
 
                 #print 'Time: %s' % (str(time.time() - self.kalmanTime))
-                #print self.P
                 self.kalmanTime = time.time()
 
             p = Point(x=x, y=y, z=z)
@@ -170,7 +177,7 @@ class KinectNode(object):
                 best_i = i
 
                 # Found roof
-                if self.angle < 0:
+                if self.angle < -0.2:
                     #print 'roof'
                     self.angle += math.pi/2
 
