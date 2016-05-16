@@ -25,6 +25,12 @@
 T.~Luukkonen, ``Modelling and control of quadcopter,'' \emph{Independent
   research project in applied mathematics, Espoo}, 2011.
 
+\bibitem{antonssonRPM2015}
+\BIBentryALTinterwordspacing
+T.~Antonsson, ``{Measuring propeller RPM - Part 3}.'' [Online]. Available:
+  \url{https://www.bitcraze.io/2015/02/measuring-propeller-rpm-part-3/}
+\BIBentrySTDinterwordspacing
+
 \bibitem{dikmen2009attitude}
 {\.I}.~Dikmen, A.~Ar{\=\i}soy, and H.~Temelta{\c{s}}, ``Attitude control of a
   quadrotor,'' in \emph{Recent Advances in Space Technologies, 2009. RAST'09.
