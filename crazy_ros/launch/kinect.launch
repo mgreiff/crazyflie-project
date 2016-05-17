@@ -1,8 +1,0 @@
-<launch>
-  <node
-    name="kinectReader"
-    pkg="crazy_ros"
-    type="kinectReader.py"
-    output="screen"
-  />
-</launch>

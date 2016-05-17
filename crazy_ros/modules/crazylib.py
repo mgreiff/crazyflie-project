@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import numpy as np
+import sys
 from scipy.linalg import inv, cholesky
 import ctypes
 from math import sin, cos, sqrt
@@ -369,3 +370,22 @@ def c_cvx_solver(numbers):
     array_type = ctypes.c_int * num_numbers
     result = cvxlib.call_solver(ctypes.c_int(num_numbers), array_type(*numbers))
     return int(result)
+
+# -------------------------------------------------------------------------
+
+def print_progress (iteration, total, prefix = '', suffix = '', decimals = 2, barLength = 30):
+    # Prints progress bar in terminal window
+    # ARGS:
+    #    iteration - positive integer. The current iteration.
+    #    total - positive integer > iteration. The total number of iterations before completion.
+    #    prefix - string. Empty by default, specifies text before the progress bar.
+    #    suffix - string. Empty by default, specifies text after the progress bar.
+    #    decimals - positive integer. number of decimals in the percentage calculation.
+    #    barLength - positive, non-zero integer. Set to 30 # by default.
+    filledLength = int(round(barLength * iteration / float(total)))
+    percents = round(100.00 * (iteration / float(total)), decimals)
+    bar = '#' * filledLength + '-' * (barLength - filledLength)
+    sys.stdout.write('%s [%s] %s%s %s\r' % (prefix, bar, percents, '%', suffix)),
+    sys.stdout.flush()
+    if iteration == total:
+        print("\n")

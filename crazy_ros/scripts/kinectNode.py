@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import rospy
 import ros_numpy
 import math
@@ -22,18 +21,28 @@ sys.path.insert(1,libdir)
 import crazylib as cl
 
 class KinectNode(object):
-
+    # Defines the class for reading and filtering the kinect data. When run, this class
+    # reads relevant parameters from the configuration.cnf file, adjusts the read topics
+    # according to the arguments passed in the launch XML and establishes commnication
+    # the master process. On initiating the kinectNode, the background is calibrated
+    # automatically with one of two methods (SVD or polyfit presented in /crazy_documentation).
+    # The camera background can be recalibrated with either method by seting self.cal_frames
+    # to 0, and the angle can be re-calibrated by calling calibrate_angle_SVD() or calibrate_angle().
+    # When in an idle state, the note continuously takes data from the openni driver, filters it
+    # using the crazylib module defined in /modules and publishes an estimated position of the
+    # crazyflie to the topic /kinect/position. The process uses the signal module to terminate
+    # nicely on ctrl+C.
     def __init__(self):
-        self.background = None
-        self.angle = None     # The calibration angle of 
-        self.cal_frames = 0   # Counter used in the calibration of the background, which startes if < 30
-        self.scatter = None   # Figure handle for scatter plot 
-        self.ims = None       # Figure handle for plotting
+        self.background = None # Initial background is set to none
+        self.angle = None      # The calibration angle of 
+        self.cal_frames = 0    # Counter used in the calibration of the background, which startes if < 30
+        self.scatter = None    # Figure handle for scatter plot 
+        self.ims = None        # Figure handle for plotting
 
         # Settings
-        self.plot = False     # Plot the depth data in real time (may be slow)
-        self.useDummy = False  # Run node reading data from the dummy
+        self.useDummy = True  # Run node reading data from the dummy
         self.useKalman = True # Compute kalman estimate and print covariance and estimate
+        self.plot = False     # Plot the depth data in real time (slows down the script greatly)
         if self.plot:
             plt.ion()
 
@@ -44,7 +53,6 @@ class KinectNode(object):
         self.c_y = 235.5
 
         # Kalman filter parameters
-        # TODO - Load from configuration file
         self.Q = 2*np.diag(0.5*np.ones((1,6))[0])
         self.R = 5*np.diag([0.1,0.1,0.1])
         self.P = 10*np.eye(6)
@@ -60,11 +68,6 @@ class KinectNode(object):
 
         self.xhat = np.zeros((1,6))[0]
 
-        print self.A
-        print self.C
-        print self.Q
-        print self.R
-
         # Sets up publishers and subscribers
         if self.useDummy:
             self.disparity_sub = rospy.Subscriber('/kinect/dummy', NumpyArrayFloat64, self.handle_disparity_image)
@@ -76,23 +79,26 @@ class KinectNode(object):
         self.status_pub = rospy.Publisher('/system/status_master', String, queue_size = 10) # Publish to the master
 
     def handle_status(self, msg):
+        # Callback for the /system/kinect subscriber. Initializes calibration
+        # of both background and angle on the next cycle.
         if msg.data == 'Calibrate':
             self.background = None
             self.cal_frames = 0
             self.angle = None
 
     def handle_disparity_image(self, image):
-
         if self.useDummy:
             np_image = np.reshape(image.data, (480,640))
         else:
             np_image = ros_numpy.numpify(image)
         np_image_rel = np_image
-
+        
         if self.cal_frames < 30:
             # Calibrates background
             if not self.cal_frames:
-                print '\n(@ kinectNode) Calibrating background...'
+                print '\n(@ kinectNode) Calibrating background'
+            cl.print_progress(self.cal_frames, 30-1,prefix="Progress:", suffix = 'Complete', barLength = 50)
+
             if self.background is None:
                 self.background = np.zeros(np_image.shape)
             self.background += np_image / 30.0
@@ -103,14 +109,15 @@ class KinectNode(object):
             # Calibrates angle
             np_image_rel = self.background - np_image
             if self.angle is None:
-                print '(@ kinectNode) Calibrating angle...'
+                print '(@ kinectNode) Calibrating angle'
 
                 self.calibrate_angle_SVD()
-                print '(@ kinectNode) Angle using SVD: %f degrees' % (180/3.1415 * self.angle)
+                print 'Using SVD: %f degrees' % (180/3.1415 * self.angle)
 
                 self.calibrate_angle()
-                print '(@ kinectNode) Angle using poyfit: %f degrees' % (180/3.1415 * self.angle)
+                print 'Using poyfit: %f degrees\n' % (180/3.1415 * self.angle)
                 print '(@ kinectNode) Calibration complete!\n'
+
                 self.status_pub.publish('True')
 
             # Runs in regular mode, publishing the position in the global coordinate system
@@ -198,7 +205,9 @@ class KinectNode(object):
 
     def calibrate_angle_SVD(self):
         # Approximates a 3D-plane to the set of points and computes the angle.
-        # See the /crazy_documentation for the mathematics involved.
+        # See the /crazy_documentation for the mathematics involved. Uses
+        # measured background (self.background) and the scipy svd function
+        # updating the self.angle attribute with a new calibrated angle.
 
         # Samples background matrix, finds S
         nZ = nY = 11

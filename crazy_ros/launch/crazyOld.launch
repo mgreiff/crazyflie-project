@@ -1,42 +1,8 @@
 <launch>
-  <!-- Default startup settings -->
   <arg
     name="useDummy"
-    default="1"
-  />
-  <arg
-    name="useOpenni"
     default="0"
   />
-  <arg
-    name="useCrazyflie"
-    default="0"
-  />
-
-  <!-- Launches the openni driver if applicable -->
-  <group if = "$(arg useOpenni)">
-    <include
-    file="$(find openni_launch)/launch/openni.launch"
-    />
-  </group>
-
-  <!-- Launches the crazyROS driver if applicable -->
-  <group if = "$(arg useCrazyflie)">
-    <arg name="uri" default="radio://0/80/250K" />
-    <arg name="roll_trim" default="0" />
-    <arg name="pitch_trim" default="0" />
-
-    <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
-    </include>
-
-    <group ns="crazyflie">
-      <include file="$(find crazyflie_driver)/launch/crazyflie_add.launch">
-        <arg name="uri" value="$(arg uri)" />
-        <arg name="tf_prefix" value="crazyflie" />
-      </include>
-    </group>
-  </group>
-
   <node
     name="referenceGenerator"
     pkg="crazy_ros"
@@ -57,8 +23,6 @@
     type="kinectNode.py"
     output="screen"
   />
-
-  <!-- Launched the dummy node if applicable -->
   <group if = "$(arg useDummy)">
     <node
       name="dummyCamera"
@@ -67,8 +31,6 @@
       output="screen"
     />
   </group>
-
-  <!-- Controller and master nodes, required regardless of startup mode -->
   <node
     name="MPCcontroller"
     pkg="crazy_ros"
