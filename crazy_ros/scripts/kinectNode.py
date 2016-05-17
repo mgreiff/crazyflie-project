@@ -4,6 +4,8 @@ import ros_numpy
 import math
 import numpy as np
 import matplotlib.pyplot as plt
+import os,sys,inspect
+import time
 from scipy.linalg import svd, norm, solve, inv
 from math import acos, pi
 from sensor_msgs.msg import Image
@@ -11,8 +13,7 @@ from rospy.numpy_msg import numpy_msg
 from geometry_msgs.msg import Point
 from std_msgs.msg import String
 from crazy_ros.msg import NumpyArrayFloat64
-import os,sys,inspect
-import time
+from json import load
 
 # Loads the crazyflie library module from the /modules directory
 curdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
@@ -40,7 +41,7 @@ class KinectNode(object):
         self.ims = None        # Figure handle for plotting
 
         # Settings
-        self.useDummy = True  # Run node reading data from the dummy
+        self.useDummy = False  # Run node reading data from the dummy
         self.useKalman = True # Compute kalman estimate and print covariance and estimate
         self.plot = False     # Plot the depth data in real time (slows down the script greatly)
         if self.plot:
@@ -52,21 +53,31 @@ class KinectNode(object):
         self.c_x = 314.5
         self.c_y = 235.5
 
-        # Kalman filter parameters
-        self.Q = 2*np.diag(0.5*np.ones((1,6))[0])
-        self.R = 5*np.diag([0.1,0.1,0.1])
-        self.P = 10*np.eye(6)
-        self.Ts = 1./30
-        self.A = np.eye(6) + np.diag(self.Ts*np.ones((1,3))[0],3)
-        self.kalmanTime = 0 # test time
-        self.kalmanLimit = 0.15
+        # Loads configuration parameters and sets the useDummy attribute
+        for arg in rospy.myargv(argv=sys.argv):
+            if os.path.basename(arg) == 'configparam.cnf':
+                with open(arg) as configfile:
+                    param = load(configfile)
+                configfile.close()
+            if arg[0:8]=='useDummy':
+                if str(arg[9]):
+                    self.useDummy = True
+        try:
+            self.Q = np.diag(param['kinect']['Q'])
+            self.R = np.diag(param['kinect']['R'])
+            self.P = np.diag(param['kinect']['P0'])
+            self.xhat = np.array(param['kinect']['x0'])
+            self.Ts = param['global']['kinect_loop_h']
+            self.kalmanLimit = param['kinect']['lim']
+        except:
+            print 'ERROR. Could not load configuration parameters in %s' % (str(self))
 
+        # 3D double integrator discrete dynamics
+        self.A = np.eye(6) + np.diag(self.Ts*np.ones((1,3))[0],3)
         self.C = np.zeros((3,6))
         self.C[0,0] = 1.
         self.C[1,1] = 1.   
         self.C[2,2] = 1.
-
-        self.xhat = np.zeros((1,6))[0]
 
         # Sets up publishers and subscribers
         if self.useDummy:
@@ -153,9 +164,6 @@ class KinectNode(object):
                 self.xhat, self.P = cl.discrete_KF_update(self.xhat, [], zk, self.A, [], self.C, self.P, self.Q, self.R)
                 x, y, z = self.xhat[0], self.xhat[1], self.xhat[2]
 
-                #print 'Time: %s' % (str(time.time() - self.kalmanTime))
-                self.kalmanTime = time.time()
-
             p = Point(x=x, y=y, z=z)
             self.point_pub.publish(p)
 
@@ -234,6 +242,9 @@ class KinectNode(object):
         self.angle = (N[0]/abs(N[0]))*acos(N[0]/norm(XZnormal))
         if abs(self.angle) > pi/2 and abs(self.angle) < 3*pi/2:
             self.angle=pi-self.angle
+
+    def __str__(self):
+        return 'kinect node'
 
 if __name__ == '__main__':
     rospy.init_node('kinectNode')

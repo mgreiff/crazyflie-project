@@ -56,6 +56,7 @@
     pkg="crazy_ros"
     type="kinectNode.py"
     output="screen"
+    args="$(find crazy_ros)/config/configparam.cnf useDummy=$(arg useDummy)"
   />
 
   <!-- Launched the dummy node if applicable -->
