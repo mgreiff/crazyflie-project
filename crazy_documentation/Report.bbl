@@ -21,6 +21,12 @@
 \providecommand{\BIBdecl}{\relax}
 \BIBdecl
 
+\bibitem{gglr2015}
+F.~Augugliaro, E.~Zarfati, A.~Mirjan, and R.~D'Andrea, ``{K}not-tying with
+  {F}lying {M}achines for {A}erial {C}onstruction,'' in \emph{2015 IEEE/RSJ
+  International Conference on Intelligent Robots and Systems (IROS)}.\hskip 1em
+  plus 0.5em minus 0.4em\relax Piscataway, NJ: IEEE, 2015, pp. 5917--5922.
+
 \bibitem{luukkonen2011modelling}
 T.~Luukkonen, ``Modelling and control of quadcopter,'' \emph{Independent
   research project in applied mathematics, Espoo}, 2011.
@@ -69,22 +75,43 @@ J.~D. Hol, T.~B. Schon, and F.~Gustafsson, ``On resampling algorithms for
   Workshop, 2006 IEEE}.\hskip 1em plus 0.5em minus 0.4em\relax IEEE, 2006, pp.
   79--82.
 
-\bibitem{Bouffard:EECS-2012-241}
+\bibitem{richter2013polynomial}
+C.~Richter, A.~Bry, and N.~Roy, ``Polynomial trajectory planning for aggressive
+  quadrotor flight in dense indoor environments,'' in \emph{Proceedings of the
+  International Symposium on Robotics Research (ISRR)}, 2013.
+
+\bibitem{landryaggressive}
+B.~Landry, R.~Deits, P.~R. Florence, and R.~Tedrake, ``Aggressive quadrotor
+  flight through cluttered environments using mixed integer programming.''
+
+\bibitem{deits2015computing}
+R.~Deits and R.~Tedrake, ``Computing large convex regions of obstacle-free
+  space through semidefinite programming,'' in \emph{Algorithmic Foundations of
+  Robotics XI}.\hskip 1em plus 0.5em minus 0.4em\relax Springer, 2015, pp.
+  109--124.
+
+\bibitem{IRISMIT}
 \BIBentryALTinterwordspacing
-P.~Bouffard, ``On-board model predictive control of a quadrotor helicopter:
-  Design, implementation, and experiments,'' Master's thesis, EECS Department,
-  University of California, Berkeley, Dec 2012. [Online]. Available:
-  \url{http://www.eecs.berkeley.edu/Pubs/TechRpts/2012/EECS-2012-241.html}
+R.~Tedrake, ``Iterative regional inflational semidefinite programming.''
+  [Online]. Available: \url{https://github.com/rdeits/iris-distro}
 \BIBentrySTDinterwordspacing
 
-\bibitem{mattingley2012cvxgen}
-J.~Mattingley and S.~Boyd, ``Cvxgen: A code generator for embedded convex
-  optimization,'' \emph{Optimization and Engineering}, vol.~13, no.~1, pp.
-  1--27, 2012.
+\bibitem{MPCtoolsLTH}
+\BIBentryALTinterwordspacing
+J.~Åkesson, ``Mpctools 1.0.'' [Online]. Available:
+  \url{http://www.control.lth.se/Research/tools/mpctools.html}
+\BIBentrySTDinterwordspacing
 
-\bibitem{lavretsky2011projection}
-E.~Lavretsky, T.~E. Gibson, and A.~M. Annaswamy, ``Projection operator in
-  adaptive systems,'' 2011.
+\bibitem{CVXgen2016}
+\BIBentryALTinterwordspacing
+CVXGEN, ``Cvxgen: Code generation for convex optimization.'' [Online].
+  Available: \url{http://cvxgen.com/docs/index.html}
+\BIBentrySTDinterwordspacing
+
+\bibitem{giselsson2014diagonal}
+P.~Giselsson and S.~Boyd, ``Diagonal scaling in douglas-rachford splitting and
+  admm,'' in \emph{Decision and Control (CDC), 2014 IEEE 53rd Annual Conference
+  on}.\hskip 1em plus 0.5em minus 0.4em\relax IEEE, 2014, pp. 5033--5039.
 
 \bibitem{cao2006design}
 C.~Cao and N.~Hovakimyan, ``Design and analysis of a novel l1 adaptive
@@ -97,6 +124,10 @@ C.~Cao and N.~Hovakimyan, ``Design and analysis of a novel l1 adaptive
 N.~Hovakimyan, ``L1 tutorial.'' [Online]. Available:
   \url{http://naira-hovakimyan.mechse.illinois.edu/l1-adaptive-control-tutorials/}
 \BIBentrySTDinterwordspacing
+
+\bibitem{lavretsky2011projection}
+E.~Lavretsky, T.~E. Gibson, and A.~M. Annaswamy, ``Projection operator in
+  adaptive systems,'' 2011.
 
 \bibitem{huynh20141}
 M.~Q. Huynh, W.~Zhao, and L.~Xie, ``L 1 adaptive control for quadcopter: Design
