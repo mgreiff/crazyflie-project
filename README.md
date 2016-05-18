@@ -1,3 +1,12 @@
+## Installation
+The project can currently be run on a Ubuntu 14.04 (Trusy) with a ROS Indigo installation. In addition, the following needs to be installed
+
+* Openni driver - For publishing raw data from the kinect [[1]].
+* Ros_numpy - For data conversion related to the disparity images of the kinect [[2]].
+* Crazyflie driver - For communicating with the crazyflie [[3]].
+
+The references refer to the ROS  wiki where installation instructions are provided, a more detailed step by step guide will be included shortly.
+
 ## Directories
 
 #### /crazy_ros/*
@@ -12,25 +21,24 @@ Currently, an issue that needs to be met is the nondeterministic behavious of th
 * /msg/* - Contains the message definitions used.
 * /config/* - Contains a JSON configuration file for all ROS nodes.
 * /launch/* - Contains the launch XML files.
-* /modules/* - Contains the crazylib module in which various filters and c-wrappers are defined. See /modules/examples/* for examples on how to use the functions. When running the examples, make sure to include the path to the dynamic libraries (.so files) in the environment variable ``LD_LIBRARY_PATH``. This can for instance be done by executing ``export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path>``, where the the path is your path to the /modules directory.
+* /modules/* - Contains the crazylib module in which various filters and c-wrappers are defined. See /modules/examples/* for examples on how to use the functions. When running the examples, make sure to include the path to the dynamic libraries (.so files) in the environment variable ``LD_LIBRARY_PATH``. This can for instance be done by executing ``export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:<path>``, where the the path is your path to the /modules directory (this is can also be done by executing the init.sh script in crazy_ros).
 
 ###### Useful commands
-* ``roslaunch crazy_ros crazy.launch useDumy:=1`` - Launches the entire project in crazy_ros (package) using the crazy.launch XML file. If no additional arguments are given, then by default, a dummy node is launched instead of openni to test and debug calibration. This can be disabled by setting ``usedDummy:=0'' when launching the project.
+* ``roslaunch crazy_ros crazy.launch useDumy:=1 useKinect:=0 useOpenni:=0`` - Launches the entire project in crazy_ros (package) using the crazy.launch XML file. If no additional arguments are given, then by default, a dummy node is launched instead of openni to test and debug calibration. Before executing this command, the environment needs to be set up by sourcing the setup.* file in /catkin/devel/* (``source ~/catkin/devel/setup.bash``) and then running the init file in crazy_ros to set up paths for the crazylib.py module (``./crazy_ros/init.sh``).
 * ``rosrun rqt_graph rqt_graph`` - Plots a graph of the ROS structure.
 * ``rosrun rqt_plot rqt_plot <topic>``  - Plots the values of the topic ``\system\controlsignal\data[0]`` displays the pitch reference in time.
 * ``cc -fPIC -shared -o foo.so foo.c`` - creates a dynamic shared library ``foo.so`` from the foo c-file.
 
 [1]: http://wiki.ros.org/openni_kinect
-[2]: http://wiki.ros.org/crazyflie
+[2]: http://wiki.ros.org/ros_numpy
+[3]: http://wiki.ros.org/crazyflie
+
 
 #### /crazy_documentation/*
 The project documentation, will eventually include a report discussion both the theory and implementation of the project. 
 
 ###### Contents
 * **Report.tex** - A report in progress containing a discussion on the dynamics, filtering, motion planning, PD, MPC, L1 control and TODO's.
-
-#### /crazy_python/*
-Contains python code which has since been mergen with the ROS structure, serves little purpose and will be removed shortly.
 
 #### /crazy_trajectory/*
 Contains the scripts for motion planning (see crazy_documentation).
