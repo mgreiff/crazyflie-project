@@ -42,6 +42,9 @@ class PIDcontroller(object):
         self.thrust_offset = 40000
         self.takeoff_time = 20
         self.takeoff_thrust = 55000
+
+        self.thrust_min = 35000
+        self.thrust_max = 60000
         
         self.ref = [0, 0.0, 0]
 
@@ -66,10 +69,18 @@ class PIDcontroller(object):
         self.twist.angular.z = yaw_rate
         
         self.cmd_vel_pub.publish(self.twist)
+
     
     def get_thrust(self):
         if self.kinect_position is None:
-            return 25000
+            return self.thrust_min
+
+        if self.setup:
+            return 0
+
+        if self.landing:
+            return self.thrust_min
+
         yr = self.ref[1]
         y = self.kinect_position.y
         e = yr - y
@@ -82,7 +93,17 @@ class PIDcontroller(object):
         thrust = self.K * e + self.I + self.KD * (e - self.e_old) / h
         
         self.e_old = e
-        return thrust + self.thrust_offset
+
+        thrust += self.thrust_offset
+
+        if thrust > self.thrust_max:
+            self.I -= thrust - self.thrust_max
+            thrust = self.thrust_max
+        elif thrust < self.thrust_min:
+            self.I += self.thrust_min - thrust
+            thrust = self.thrust_min
+
+        return thrust
 
     def handle_status(self, msg):
         # Callback for commands from master which generates a trajectory
@@ -91,6 +112,7 @@ class PIDcontroller(object):
         # is broadcasted
         if msg.data == 'PID':
             self.status = True
+            self.setup = True
             self.landing = False
             self.time = rospy.get_time()
             self.takeoff_frames = self.takeoff_time
@@ -200,8 +222,7 @@ def main():
                             PID.status_master.publish('True')
 
                         elif ch == 'g' and not PID.landing:
-                            print 'Landing and exiting'
-                            thrust = 30000
+                            print 'Landing'
                             PID.landing = True
                         elif ch == 'g' and PID.landing:
                             print 'Abort landing'
@@ -220,14 +241,10 @@ def main():
             # TODO compute PID control signal
             PID.control_pub.publish(200*np.ones((4,1)))
             
-            if not PID.landing:
-                thrust = PID.get_thrust()
+            thrust = PID.get_thrust()
             
             if PID.takeoff_frames > 0:
                 thrust = PID.takeoff_thrust
-                pitch = 0
-                roll = 0
-                yaw_rate = 0
                 PID.takeoff_frames -= 1
             if PID.takeoff_frames == 0:
                 print 'Takeoff finished'
@@ -245,10 +262,10 @@ def main():
                 yaw_rate = 200
             elif yaw_rate < -200:
                 yaw_rate = -200
-            if thrust > 60000:
-                thrust = 60000
-            elif thrust < 10000:
-                thrust = 10000
+            #if thrust > 60000:
+                #thrust = 60000
+            #elif thrust < 10000:
+                #thrust = 10000
             
             print 'Thrust: %.1f, Pitch: %.1f, Roll: %.1f, Yawrate: %.1f, y_ref: %.1f' % (thrust, pitch, roll, yaw_rate, PID.ref[1])
             print 'K: %.1f, Ki: %.1f, Kd: %.1f, e: %.3f' % (PID.K, PID.Ki, PID.KD, PID.e_old)
