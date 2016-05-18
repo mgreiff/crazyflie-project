@@ -2,15 +2,15 @@
   <!-- Default startup settings -->
   <arg
     name="useDummy"
-    default="1"
+    default="0"
   />
   <arg
     name="useOpenni"
-    default="0"
+    default="1"
   />
   <arg
     name="useCrazyflie"
-    default="0"
+    default="1"
   />
 
   <!-- Launches the openni driver if applicable -->
@@ -56,7 +56,7 @@
     pkg="crazy_ros"
     type="kinectNode.py"
     output="screen"
-    args="$(find crazy_ros)/config/configparam.cnf useDummy=$(arg useDummy)"
+    args="$(find crazy_ros)/config/configparam.cnf"
   />
 
   <!-- Launched the dummy node if applicable -->

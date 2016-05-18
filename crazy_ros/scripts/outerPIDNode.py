@@ -23,6 +23,7 @@ class PIDcontroller(object):
         self.status_sub = rospy.Subscriber('/system/status_controller', String, self.handle_status)
         self.kinect_sub = rospy.Subscriber('/kinect/position', Point, self.handle_kinect_position)
         self.control_pub = rospy.Publisher('/system/control_signal', NumpyArrayFloat64, queue_size = 10)
+        self.error_pub = rospy.Publisher('/system/error', Point, queue_size = 10)
         self.cmd_vel_pub = rospy.Publisher('crazyflie/cmd_vel', Twist, queue_size = 10)
         self.status_master = rospy.Publisher('/system/status_master', String, queue_size = 10)
         
@@ -33,14 +34,16 @@ class PIDcontroller(object):
         self.kinect_position = None
         params = None
         
-        self.K = 20000
-        self.Ki = 0
-        self.KD = 0
+        self.K = 28000
+        self.Ki = 6000
+        self.KD = 4000
         self.I = 0
         self.e_old = 0
+        self.thrust_offset = 40000
+        self.takeoff_time = 20
+        self.takeoff_thrust = 55000
         
-        self.ref = [0, 0.5, 0]
-        self.time = rospy.get_time()
+        self.ref = [0, 0.0, 0]
 
         # Loads configuration parameters
         for filename in rospy.myargv(argv=sys.argv):
@@ -58,15 +61,15 @@ class PIDcontroller(object):
     
     def pub_cmd_vel(self, thrust, pitch, roll, yaw_rate = 0):
         self.twist.linear.z = thrust
-        self.twist.angular.y = roll # Roll, degrees. Positive moves "left"
-        self.twist.angular.x = pitch # Pitch, degrees. Positive moves "forward"
+        self.twist.linear.y = roll # Roll, degrees. Positive moves "right"
+        self.twist.linear.x = pitch # Pitch, degrees. Positive moves "forward"
         self.twist.angular.z = yaw_rate
         
         self.cmd_vel_pub.publish(self.twist)
     
     def get_thrust(self):
         if self.kinect_position is None:
-            return 0
+            return 25000
         yr = self.ref[1]
         y = self.kinect_position.y
         e = yr - y
@@ -79,7 +82,7 @@ class PIDcontroller(object):
         thrust = self.K * e + self.I + self.KD * (e - self.e_old) / h
         
         self.e_old = e
-        return thrust
+        return thrust + self.thrust_offset
 
     def handle_status(self, msg):
         # Callback for commands from master which generates a trajectory
@@ -88,6 +91,9 @@ class PIDcontroller(object):
         # is broadcasted
         if msg.data == 'PID':
             self.status = True
+            self.landing = False
+            self.time = rospy.get_time()
+            self.takeoff_frames = self.takeoff_time
             print 'Now reading keyboard data for position control, steer with a-s-d-w'
         else:
             self.status = False
@@ -128,8 +134,8 @@ def main():
     yaw_rate = 0
     
     thrust_d = 1000
-    pitch_d = 5
-    roll_d = 5
+    pitch_d = 1
+    roll_d = 1
     yaw_rate_d = 5
     yr_d = 0.1
     
@@ -143,10 +149,10 @@ def main():
                     if rlist:
                         ch = sys.stdin.read(1)
                         if ch == 'a':
-                            roll += roll_d
+                            roll -= roll_d
                             print 'left'
                         elif ch == 'd':
-                            roll -= roll_d
+                            roll += roll_d
                             print 'right'
                         elif ch == 'w':
                             print 'forward'
@@ -189,8 +195,18 @@ def main():
                             pitch = 0
                             yaw_rate = 0
                             PID.status = False
+                            PID.landing = False
                             PID.pub_cmd_vel(0, 0, 0, 0)
                             PID.status_master.publish('True')
+
+                        elif ch == 'g' and not PID.landing:
+                            print 'Landing and exiting'
+                            thrust = 30000
+                            PID.landing = True
+                        elif ch == 'g' and PID.landing:
+                            print 'Abort landing'
+                            PID.landing = False
+
                         if not ch or ch == chr(4):
                             break
                     else:
@@ -204,8 +220,19 @@ def main():
             # TODO compute PID control signal
             PID.control_pub.publish(200*np.ones((4,1)))
             
-            thrust = PID.get_thrust()
+            if not PID.landing:
+                thrust = PID.get_thrust()
             
+            if PID.takeoff_frames > 0:
+                thrust = PID.takeoff_thrust
+                pitch = 0
+                roll = 0
+                yaw_rate = 0
+                PID.takeoff_frames -= 1
+            if PID.takeoff_frames == 0:
+                print 'Takeoff finished'
+                PID.takeoff_frames = -1
+
             if pitch > 30:
                 pitch = 30
             elif pitch < -30:
@@ -225,6 +252,7 @@ def main():
             
             print 'Thrust: %.1f, Pitch: %.1f, Roll: %.1f, Yawrate: %.1f, y_ref: %.1f' % (thrust, pitch, roll, yaw_rate, PID.ref[1])
             print 'K: %.1f, Ki: %.1f, Kd: %.1f, e: %.3f' % (PID.K, PID.Ki, PID.KD, PID.e_old)
+            PID.error_pub.publish(Point(x=0, y=PID.e_old, z=0))
             PID.pub_cmd_vel(thrust, pitch, roll, yaw_rate)
         else:
             PID.pub_cmd_vel(0, 0, 0, 0)
