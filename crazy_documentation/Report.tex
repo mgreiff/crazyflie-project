@@ -95,7 +95,7 @@ We consider an extension of the non-linear quadcopter dynamics as derived by Luk
 where $\boldsymbol{\xi}$ [m] denotes the position of the centre of mass in a global cartesian coordinate system, $\boldsymbol{\eta}$ [rad] is the euler-angles in the body coordinate system and $\omega_i$ [rad/s] is the angular speed of the rotor $i$. For future reference, the basis vectors in the cartesian coordinate system are written $\hat{\mathbf{\cdot}}$, and the subindexing $\mathbf{\cdot}_B$ refers to the vector of matrix defined in the body coordinate system.
 
 The translation from the global- to the body coordinate system is done by the orthogonal rotation matrix
-\begin{equation}
+\begin{equation}\label{eq:transform}
 \mathbf{R} = 
 \begin{bmatrix}
 \cos(\psi)\cos(\phi) & \cos(\psi)\sin(\theta)\sin(\phi)- \sin(\psi)\cos(\phi) & \cos(\psi)\sin(\theta)\cos(\phi)+ \sin(\psi)\sin(\phi)\\
@@ -424,7 +424,7 @@ x_{min}\qquad x < x_{min}\end{cases}
 \end{equation}
 Using this effectively disablines integral action when any motor is in a saturated state, and has the added benefit of being very predictable. When setting up the state space model for use in MPC, we would in practice only have to define two different linearised state space models (the LQR when in saturation and the LQRi otherwise). The only downside is the additional four states, which greatly increase the complexity of the optimisation problem in MPC.
 
-The three stabilising controllers were simulated using the parameters described in the work of Lukkonen~\cite{luukkonen2011modelling} (for which the above PD regulator was developed and tuned) and at an inner loop rate of 100 Hz (note that the original stabilising controller on the crazyflie runs at 500 Hz). The generated reference trajectory lowpass filtered unit steps the amplitudes $z\in[0,30]$ [m] and $\phi,\theta,\psi \in[-0.3,0.3]$  [rad], which is far more aggressive than anything that will be run on the real process (see Figure~\ref{fig:LQR-PD-comp}). The LQG regulators were tuned to give reasonable trajectory following in terms of Euler angles, with more pronunciation of yaw and elevation (as the yaw will later be assumed to be 0 in the external loop). As expected the LQG-controller performs well, but also yields the predicted steady state errors. In the depicted simulation, the stationary error were to be of magnitude 7 cm at $t\approx 37$ s, which is unacceptable precise indoor flying. As a contrast, both the PD and LQRi (with AW) yield errors of $\approx 0.1$ cm less than 10 seconds after a reference change, with the error still decreasing. We also note that the reference following in elevation is much more precise with the LQRi compared to the PD alternative, and that it is only outperformed by the PD in terms of overshoot when making large reference changes in angular positions. However, an acceptable angular error of $<0.005$ [rad] is reached around the same time with both regulators. In conclusion, the PD and LQRi perform almost en par, with a slight edge to the LQRi in terms of altitude changes and in less aggressive trajectories. Both should be implemented and tested on the physical process.
+The three stabilising controllers were simulated using the parameters described in the work of Lukkonen~\cite{luukkonen2011modelling} (for which the above PD regulator was developed and tuned) and at an inner loop rate of 100 Hz (note that the original stabilising controller on the crazyflie runs at 500 Hz). The generated reference trajectory lowpass filtered unit steps the amplitudes $z\in[0,30]$ [m] and $\phi,\theta,\psi \in[-0.3,0.3]$  [rad], which is far more aggressive than anything that will be run on the real process (see Figure~\ref{fig:LQR-PD-comp}). The LQR regulators were tuned to give reasonable trajectory following in terms of Euler angles, with more pronunciation of yaw and elevation (as the yaw will later be assumed to be 0 in the external loop). As expected the LQG-controller performs well, but also yields the predicted steady state errors. In the depicted simulation, the stationary error were to be of magnitude 7 cm at $t\approx 37$ s, which is unacceptable precise indoor flying. As a contrast, both the PD and LQRi (with AW) yield errors of $\approx 0.1$ cm less than 10 seconds after a reference change, with the error still decreasing. We also note that the reference following in elevation is much more precise with the LQRi compared to the PD alternative, and that it is only outperformed by the PD in terms of overshoot when making large reference changes in angular positions. However, an acceptable angular error of $<0.005$ [rad] is reached around the same time with both regulators. In conclusion, the PD and LQRi perform almost en par, with a slight edge to the LQRi in terms of altitude changes and in less aggressive trajectories. Both should be implemented and tested on the physical process.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/innerLoopStates.png}
@@ -435,22 +435,60 @@ The three stabilising controllers were simulated using the parameters described 
 \end{figure}
 
 \clearpage\section{State estimation}
-To estimate the states properly, many approaches are considered and compared in simulation before making a real time implementation. As we know from previous sections, the positions and velocities in the x- and y-directions are unobservable in the considered non-linear dynamics. Since these four states are not needed in stabilising the quadcopter, our approach will be to estimate the remaining eight states on the quadcopter and run this in conjunction with a stabilising inner controller (discussed above). This inner loop will be run at $\approx 100$ Hz and can be completely independent of external control and estimation. In order to estimate the four unobservable states, a kinect 1 camera will be run on the host computer, yielding positional measurements at $\approx 30$ Hz. These measurements will not be good enough to accurately determine the $x$- and $y$-velocities, for which the acceleration data is required. However, this data will be delayed when sent to the host computer from the crazyflie via bluetooth, and likewise, the estimated positions and speeds will suffer from a time delay when transmitted back to the crazyflie.
+To estimate the states properly, many approaches are considered and compared in simulation before making a real time implementation. As we know from previous sections, the positions and velocities in the x- and y-directions are unobservable in the considered non-linear dynamics. Since these four states are not needed in stabilising the quadcopter, our approach will be to estimate the remaining eight states on the quadcopter and run this in conjunction with a stabilising inner controller (discussed above). This inner loop will be run at $\approx 500-100$ Hz and would preferably run completely independent of external control and estimation. In order to estimate the four unobservable states, some means of motion capture will be run on the host computer. In the current implementation, a Kinect 1 camera is used, yielding positional measurements at $\approx 30$ Hz. If the external measurements prove to bad to accurately determine the unobservable states, the Inertial Measurement Unit (IMU) data could be used in the outer loop as well while running a complementary filter on the crazyflie. However, all data will be delayed when sent to the host computer from the crazyflie via bluetooth, and likewise, the estimated positions and speeds will suffer from a time delay when transmitted back to the crazyflie.
 
 The problem in the inner loop is to accurately estimate the eight states
 \begin{equation}
 \hat{\mathbf{x}}^{(inner)}=\begin{bmatrix} z &\phi &\theta &\psi&\dot z &\dot\phi &\dot\theta &\dot\psi\end{bmatrix}^T
 \end{equation}
-given the torques and thrusts or the rotor angular speeds, subject to constraints in computational power and the highly non-linear dynamics of the crazyflie. To achieve this, a regular Kalman filter (KF) is tested, using the dynamics linearised around the stable hovering state to compute the filter gain ~\cite{glad2000control}. In addition the extended kalman filter (EKF) is tested. The EKF effectively linearises the system around the previous state estimate on each time step, which is done by computing an expression for the Jacobian offline and then evaluating it on-line. As the dynamics matrix contains inverses, this puts great constraints on how fast the inner loop can be run. Finally, the unscented Kalman filter (UKF) and generic particle filter (GPF) are implemented and tested on the non-linear dynamics.
+given the torques and thrusts or the rotor angular speeds, subject to CPU constraints and the highly non-linear dynamics of the crazyflie. To achieve this, a regular Kalman filter (KF) is tested, using the dynamics linearised around the stable hovering state to compute the filter gain ~\cite{glad2000control}. In addition the extended Kalman filter (EKF) is tested. The EKF effectively linearises the system around the previous state estimate on each time step, which is done by computing an expression for the Jacobian offline and then evaluating it on-line. However, as the dynamics contain non-linear matrix inverses, this puts great constraints on how fast the inner loop can be run. Two other model based approaches, the unscented Kalman filter (UKF) and generic particle filter (GPF), are implemented and tested on the non-linear dynamics. If the CPU is too restrictive to use any of the above mentioned filters, one could consider running the heavy estimation on the host computer and simply use a complementary filter on the quadcopter.
 
-Similarily, the problem in the outer loop is to accurately estimate the states
+The problem in the outer loop is to accurately estimate the states
 \begin{equation}
 \hat{\mathbf{x}}^{(outer)}=\begin{bmatrix} x & y & z  & \dot x & \dot y & \dot z  \end{bmatrix}^T
 \end{equation}
 given time delayed measurements of quadcopter acceleration, current measurements of position from the kinect and predict the future position and speed of the quadcopter to combat the time delay in transmitting data back to the crazyflie. Fo this purpose a regular KF is tested along with an asynchronous Kalman filter of our own design.
 
+\subsection{Complementary filter (CF)}
+In the light weight model independent complementary filter, IMU data from the crazyflie is used to estimate the position of the rotorcraft in the body frame. The basic idea consists of combining LP-filtered accelerometer measurements with HP-filtered and integrated gyroscope data to find an angular position. By denoting a general LP-filter as $G_{LP}(s)$ in the Laplace domain, and correspondingly the HP-filter as $G_{HP}(s)$, the filtered 1D-signal can be written
+\begin{equation}\label{eq:compfilt}
+\hat{X}(s) = G_{LP}(s)X_{acc}(s) + G_{HP}(s)X_{gyro}(s)
+\end{equation}
+where $X_{acc}$ are measurements from the accelerometer, and $X_{gyro}$ is the numerically integrated angular speed as measured by the gyroscope. Clearly, a condition for making the filter feasible is that
+\begin{equation}\label{eq:compfiltcond}
+1 = G_{LP}(s) + G_{HP}(s) \quad\forall s.
+\end{equation}
+As the complementary filter is to be used when there is very little CPU to work with, the lightest form of the filter is created by simply using a first order LP-filter. When sampled using ZOH at a time step $h$, the corresponding pulse transfer function can be written
+\begin{equation}\label{eq:conpfiltLP}
+G_{LP}(s) = \frac{a}{s + a} \xrightarrow{ZOH} H_{LP}(z)=\frac{1-e^{-ah}}{z-e^{-ah}}
+\end{equation}
+in the discrete $\mathcal{Z}$-domain, with $z$ being the forward shift operator. By~\eqref{eq:compfiltcond}, which holds in the discrete domain as well, the corresponding HP-filter becomes
+\begin{equation}\label{eq:conpfiltHP}
+H_{HP}(z) =1-H_{LP}(z) = \frac{z-1}{z-e^{-ah}}.
+\end{equation}
+Writing out the difference equation resulting from using ~\eqref{eq:conpfiltLP} and ~\eqref{eq:conpfiltHP} in equation~\eqref{eq:compfilt}, yields the difference equation
+\begin{equation}
+\hat{x}(k+1) = e^{-ah}\hat{x}(k) + (1-e^{-ah})x_{acc}(k) + x_{gyro}(k+1) - x_{gyro}(k).
+\end{equation}
+Despite the equation being non-causal, it can be used as $x_{gyro}(k+1)$ is computed by integrating the gyroscope measurements.
+Alternatively, using an $n$-th order lowpass filter,
+\begin{equation}
+G^{(n)}_{LP}(s) = \frac{a^n}{(s+a)^n}
+\end{equation}
+improves the estimation slightly at the cost of more computational power.
+
+The first order filter was implemented in Python using a forward difference (FD) scheme for numerical integration of the gyroscope data (see Figure~\ref{fig:CompFiltTest}). Here the complementary filter was tuned with the cutoff frequency, $\omega_c$, of the LP/HP filters slightly higher the spectral content of the dynamics (where $\max{\omega}\lesssim$ 0.8 [rad/s] in this example). Note how the true position is followed nicely, despite the drift in the FD-integrated position and the noisy accelerometer data. In conclusion, the complementary filter could be useful in estimating the angular states of the quadcopter for positional control, as the transformation matrix $\mathbf{R}(\phi,\theta,\psi)$ can then be defined (see~\eqref{eq:transform}). However, this will only be done if the crazyflie CPU is too restrictive to make the Kalman or particle feasible.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.6\textwidth]{figures/ComplementaryFilter.png}
+\rule{35em}{0.5pt}
+\caption{A simulated true positional state as a function of time (black) with the CF estimation (red) based solely on the accelerometer data (blue) and integrated data from the gyroscope (green).}
+\label{fig:CompFiltTest}
+\end{figure}
+
 \subsection{Discrete extended kalman filter (EKF)}
-The regular discrete Kalman filter (KF) is omitted for brevity, but the EKF is implemented using the nonlinear system representation
+The regular discrete Kalman filter (KF) is omitted for brevity, but the EKF was implemented using the nonlinear system representation
 \begin{flalign}\label{eq:nonlindyn}
 \begin{split}
 \mathbf{x}_{k+1} =& \mathbf{F}(\mathbf{x}_k,\mathbf{u}_k,\mathbf{v}_{k+1})\\
@@ -913,7 +951,7 @@ The project has come a long way and many milestones have been met, but it has ha
 \item  \textit{Almost Complete}. Three inner stabilising controllers (PD/LQR/LQRiAW) have been derived, simulated and briefly compared with regards to angular- and elevation response (implemented in Simulink). These have not yet been tested on the physical process (in C).
 \item \textit{Almost Complete}. Two controllers (MPC/PD) have been implemented in Simulink, and the $\mathcal{L}_1$-controller will hopefully be done soon (the central operators have been tested and validated). The MPCtools 1.0 is currently use for the purpose of solving the QP-problem in simulink, but much work has been done on the S-function implementing the CVXgen solver, and a Cython C-wrapper has been added to \texttt{crazylib.py} enabling the calling of the CVXgen C-solver from ROS nodes through Python.
 \item \textit{Almost Complete}. Various filters have been investigated in Simulink (KF/EKF/UKF/AKF/GPF), both for inner and outer loop state estimation. This work has amounted to a Simulink state estimation toolbox which can be used in future projects as well. The KF/UKF/AKF filters have been included in the \texttt{crazylib.py} module and are currently used in the realtime implementation.
-\item \textit{Complete}. We have successfully implemented a kinect 1 camera in ROS complete with state estimation algorithms. This can be used to track the quadcopter in a $\sim$2x2x2 cube of space, and even captures it's position while grounded. This has been combined with the inner PID controller in ROS for manual control for the demo, but it is difficult to control accurately.
+\item \textit{Complete}. We have successfully implemented a kinect 1 camera in ROS complete with state estimation algorithms. This can be used to track the quadcopter in a $\sim$1x1x2 cuboid of space, and even captures it's position while grounded. This has been combined with the inner PID controller in ROS for manual control for the demo, but it is difficult to control accurately.
 \item \textit{Almost Complete}. An algorithm has been implemented for finding a polynomial splines constituting a minimum snap trajectory through safe regions in space, and another algorithm for finding safe regions. Theer are still some issues with the derivative continuity in points where splines interconnect, but otherwise the algorithm behaves as expected.
 \item \textit{Incomplete}. Work on the algorithms for handling and decoding the A1-sensor data have not yet begun.
 \end{enumerate} 
@@ -923,7 +961,7 @@ The project has come a long way and many milestones have been met, but it has ha
 \bibliographystyle{IEEEtran}
 
 \clearpage\section{Appendix}\label{sec:appendix}
-\subsection{CVXgen code used to define in MPC}
+\subsection{CVXgen code used to define the MPC solver}
 \begin{lstlisting}[language=Python]
 dimensions
   m = 3   # inputs.
