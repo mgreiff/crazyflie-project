@@ -66,22 +66,22 @@
 \newpage
 
 \section{Introduction}
-The control and development of small autonomous aircraft is a very interesting problem with myriad applications. In previous research, small rotorcraft have been used to build temporary rope bridges between gorges, with the mindset of eventually aiding aid fire brigades and rescue workers~\cite{gglr2015}. Other interesting but slightly less useful examples include a quadcopters which detect the trajectories of a thrown balls to bounce it back to the tosser. When it comes to potential applications the sky is quite literally the limit.
+The control and development of small autonomous aircraft is a very interesting problem with a myriad of applications. In previous research, small rotorcraft have been used to build temporary rope bridges between gorges, with the mindset of eventually aiding aid fire brigades and rescue workers~\cite{gglr2015}. Other interesting but slightly less useful examples include quadcopters that detect the trajectories of thrown balls to bounce it back to the tosser. When it comes to potential applications the sky is quite literally the limit.
 
-In this project we aspire to develop new and better methods of control of the matchbox-sized crazyflie 2.0 quadcopter. The goal is to have a final product can both find and follow trajectories in space through cluttered environments, implemented in the robot operating system (ROS) and developed in Matlab/Simulink. The chief interests in the project are from the side of Bitcraze AB, developers of the crazyflie rotorcraft, who are keen to improve the control system and also to migrate to a platform using the ROS. However, if everything goes well and the final product operates as intended, Acconner AB are very interested in using it as a demo for their new short distance radar sensor, the A1 prototype, which is currently being integrated with the existing hardware at Bitcraze. The A1 sensor holds great promise in it's ability to accurately measure short distances, it's low power consumption and the possibility detection materials with different properties. For instance, the sensor can distinguish between animate tissue and a wall, potentially enabling the crazyflie to interact safely with humans. This is quite an undertaking given the four week scope of the Realtime Systems course. However, it is but the start of the project which will hopefully continue throughout the summer. As such, this report is not in it's final state, and some sections will have to be explained more thoroughly. All statements that we did not have time to support with citations, simulations and experiments have been removed in this draft.
+In this project we aspire to develop new and better methods of control of the matchbox-sized Crazyflie 2.0 quadcopter. The goal is to have a final product that can both find and follow trajectories in space through cluttered environments, implemented in the robot operating system (ROS) and developed in Matlab/Simulink. The chief interests in the project are from the side of Bitcraze AB, developers of the crazyflie rotorcraft, who are keen to improve the control system and also to migrate to a platform using the ROS. However, if everything goes well and the final product operates as intended, Acconner AB are very interested in using it as a demo for their new short distance radar sensor, the A1 prototype, which is currently being integrated with the existing hardware at Bitcraze. The A1 sensor holds great promise in it's ability to accurately measure short distances, it's low power consumption and the possibility of detecting materials with different properties. For instance, the sensor can distinguish between animate tissue and a wall, potentially enabling the Crazyflie to interact safely with humans. This is quite an undertaking given the four week scope of the Realtime Systems course. However, it is but the start of the project which will hopefully continue throughout the summer. As such, this report is not in it's final state, and some sections will have to be explained more thoroughly. All statements that we did not have time to support with citations, simulations and experiments have been removed in this draft.
 
-All code is available and up to date on \texttt{https://github.com/mgreiff/crazyflie\_project}, complete with examples for testing and a README.md for installation and dependency requirements. Every plot can be reproduced from data and/or examples in the Github repository.
+All code is available and up to date on \texttt{https://github.com/mgreiff/crazyflie\_project}, complete with examples for testing and a README.md for installation and dependency requirements. Every plot in the report can be reproduced from data and using example scripts in the Github repository.
 
 \subsection{Goals}\label{sec:goals}
-With this brief background, the major goals and milestones of the can be summarised in the following seven points:
+With this brief background, the major goals and milestones can be summarised in the following seven points:
 \begin{enumerate}
 \item Derive and implement a discrete time model of the quadcopter dynamics, complete with system identification (written in ROS/Python/Simulink/Matlab)
-\item Derive and implement and inner controller to be run on the crazyflie at high frequencies for the purpose of stabilising the rotorcraft (written in C).
-\item Derive and implement and inner controller to be run on the host computer at lower frequencies to follow reference trajectory, written in (ROS/Python).
+\item Derive and implement an inner controller to be run on the Crazyflie at high frequencies for the purpose of stabilising the rotorcraft (written in C).
+\item Derive and implement an outer controller to be run on the host computer at lower frequencies to follow reference trajectory, written in (ROS/Python).
 \item Investigate and implement methods of state estimation for both the inner and outer loop based on available sensors (gyroscope/accelerometer/magnetometer/pressure sensor).
-\item Find and implement good ways of external motion capture if needed (written in ROS).
+\item Two of the positional states of the quadcopter are unobservable in the considered dynamics. Consequently, a good method of measuring these states will need to be implemented (possibly using a Kinect 1 camera) in order to achieve good positional control (written in ROS/Python).
 \item Implement an algorithm for finding a polynomial splines constituting a minimum snap trajectory through safe regions in space, and another algorithm for finding safe regions.
-\item Work on the algorithms for decoding the A1-sensor data complement the control system A1-altitude measurements  (written in C).  
+\item Work on the algorithms for decoding the A1-sensor data to complement the control system A1-altitude measurements  (written in C).  
 \end{enumerate} 
 
 Much of these goals have already been met, and the current state of the project in relation to these goals is presented in the project summary (see \textbf{Section~\ref{sec:goalsandmilestones}}). 
@@ -92,7 +92,7 @@ We consider an extension of the non-linear quadcopter dynamics as derived by Luk
 \boldsymbol{\eta}= \begin{bmatrix}\phi\\\theta\\\psi\end{bmatrix},\quad
 \boldsymbol{\omega}=\begin{bmatrix}\omega_1\\\omega_2\\\omega_3\\\omega_4\end{bmatrix},
 \end{equation}
-where $\boldsymbol{\xi}$ [m] denotes the position of the centre of mass in a global cartesian coordinate system, $\boldsymbol{\eta}$ [rad] is the euler-angles in the body coordinate system and $\omega_i$ [rad/s] is the angular speed of the rotor $i$. For future reference, the basis vectors in the cartesian coordinate system are written $\hat{\mathbf{\cdot}}$, and the subindexing $\mathbf{\cdot}_B$ refers to the vector of matrix defined in the body coordinate system.
+where $\boldsymbol{\xi}$ [m] denotes the position of the centre of mass in a global Cartesian coordinate system, $\boldsymbol{\eta}$ [rad] is the Euler-angles of the body coordinate system and $\omega_i$ [rad/s] is the angular speed of the rotor $i$. For future reference, the basis vectors in the cartesian coordinate system are written $\hat{\mathbf{\cdot}}$, and the subindexing $\mathbf{\cdot}_B$ refers to the vector of matrix defined in the body coordinate system.
 
 The translation from the global- to the body coordinate system is done by the orthogonal rotation matrix
 \begin{equation}\label{eq:transform}
@@ -153,7 +153,7 @@ where $D_{11}=D_{22} < D_{33}$, and the coefficients remain to be estimated. Wit
 \ddot{\boldsymbol{\eta}}=\mathbf{J}^{-1}(\boldsymbol{\eta})(\boldsymbol{\tau}_B-\mathbf{C}(\boldsymbol{\eta},\dot{\boldsymbol{\eta}})\dot{\boldsymbol{\eta}}),
 \end{cases}
 \end{equation}
-A brief description of $\mathbf{J}$ and $\mathbf{C}$ matrices can be found in \textbf{Section~\ref{sec:appendix}}, but the interested reader is referred to~\cite{luukkonen2011modelling} for a more thorough derivation of the Newton-Lagrange equations. In the work of Lukkonen, this system was simulated in continuous time, and here we will take an alternate approach in order to implement the dynamics as a discrete time ROS node in Python.
+where $\mathbf{G} = -g\hat{\mathbf{z}}$ denotes the gravitational acceleration in the global coordinate system. A brief description of $\mathbf{J}$ and $\mathbf{C}$ matrices can be found in \textbf{Section~\ref{sec:appendix}}, but the interested reader is referred to~\cite{luukkonen2011modelling} for a more thorough derivation of the Newton-Lagrange equations. In the work of Lukkonen, this system was simulated in continuous time, and here we will take an alternate approach in order to implement the dynamics as a discrete time ROS node in Python.
 
 \subsection{Non-linear model}
 By defining the states and control signals as
@@ -178,37 +178,74 @@ T\\
 respectively, the full non-linear system can then be written
 \begin{flalign}\label{eq:contsys}
 \begin{split}
-\dot{\mathbf{x}}(t) =&\mathbf{A}_c\mathbf{x}(t)+\mathbf{B}_c\mathbf{u}(t)+\mathbf{G}_c\\
-\mathbf{y}(t) =& \mathbf{C}_c\mathbf{x}(t)
+\dot{\mathbf{x}}(t) =&\mathbf{A}^c\mathbf{x}(t)+\mathbf{B}^c\mathbf{u}(t)+\mathbf{G}_c\\
+\mathbf{y}(t) =& \mathbf{C}^c\mathbf{x}(t)
 \end{split}
 \end{flalign}
 with 
 \begin{equation}\label{eq:continuoussys}
-\mathbf{A}_c=\begin{bmatrix}
+\mathbf{A}^c=\begin{bmatrix}
 \mathbf{0} & \mathbb{I}_{3\times 3} & \mathbf{0} & \mathbf{0} \\
 \mathbf{0} & -\frac{1}{m}\mathbf{D} & \mathbf{0} & \mathbf{0} \\
 \mathbf{0} & \mathbf{0} & \mathbf{0} &\mathbb{I}_{3\times 3} & \\
 \mathbf{0} & \mathbf{0} & \mathbf{0} &-\mathbf{J}^{-1}(\boldsymbol{\eta})\mathbf{C}(\boldsymbol{\eta},\dot{\boldsymbol{\eta}}) 
 \end{bmatrix},
-\mathbf{B}_c=\begin{bmatrix}
+\mathbf{B}^c=\begin{bmatrix}
 \mathbf{0} &\mathbf{0}\\
 \frac{1}{m}\mathbf{R}\hat{\mathbf{z}} & \mathbf{0}\\
 \mathbf{0} &\mathbf{0}\\
 \mathbf{0} & \mathbf{J}(\boldsymbol{\eta})^{-1}\\
 \end{bmatrix},
-\mathbf{G}_c\begin{bmatrix}
+\mathbf{G}^c=\begin{bmatrix}
 \mathbf{0}\\
 \mathbf{G}\\
 \mathbf{0}\\
 \mathbf{0}\\
-\end{bmatrix},
-\mathbf{C}_c=\begin{bmatrix}
- \mathbf{0}_{7\times 2} & \mathbb{I}_{7\times7} & \mathbf{0}_{7\times 2}
 \end{bmatrix}
 \end{equation}
-The $\mathbf{C}_c$ matrix was chosen to reflect the available sensory information. The height $z$ is measured by a pressure sensor, the angles $\boldsymbol{\eta}$ are retrieved from a gyroscope aboard the quadcopter and the velocities $\dot{\boldsymbol{\xi}}$ are integrated from readings of the combined sensory feedback from the accelerometer and magnetometer. In order to simulate the dynamics, the continuous time system~\eqref{eq:contsys} was implemented in Simulink (see \texttt{quadcopter\_model.m}, \textbf{Section~\ref{sec:appendix}}), and validated by comparison to the results in~\cite{luukkonen2011modelling}.
+The $\mathbf{C}^c$ matrix is chosen to reflect the available sensory information with $M$ available state measurements on the form
+\begin{equation}
+\mathbf{C}^c = \begin{bmatrix}\label{eq:CmatEq}
+\mathbf{c}_1,...,\mathbf{c}_M
+\end{bmatrix}^T \in\mathbb{R}^{M\times 12},
+\end{equation}
+where each vector $\mathbf{c}_i\in\mathbb{R}^{12\times 1}$ is zero separate (set to 1) at one index $j\in S$ corresponding to the measured state $x_j$ in the state vector $\mathbf{x}$.
 
-The motors in the physical process are incredibly responsive, going from $||{\boldsymbol\omega}||_{\infty} \approx 0$ to $||{\boldsymbol\omega}||_{\infty} \approx 2.5\cdot 10^4$ in $< 180$ [ms]~\cite{\cite{antonssonRPM2015}}. We have access to RPM measurements and can therefore construct a very fast PID loop for each motor to keep $\boldsymbol\omega^2$ at a desired value. Consequently, it could be an idea to investigate methods of control when using rotor speeds as control signals. If we make the assumption that the PID loops are very fast, and that the copter will be operating close to a hovering position with bounds on the control signals, it might be feasible to assume a 1:1 relashionship between desired rotor speed and actual rotor speed and not include the PID dynamics in the system matrix. The main reason for this is that including the 12 additional states will make the problem too big to solve efficiently with the MPC formulation. To accomplish this, we define a mapping from rotor speeds to thrust and torques,
+If implementing simple Inertial Measurement Unit (IMU) sensor fusion by means of a complementary filter, the accelerometer data can be combined with the gyroscope data to effectively measure the $\boldsymbol{\eta}$ and $\dot{\boldsymbol{\eta}}$ (see \textbf{Section~\ref{sec:compFilt}}). The z-measurement can also be measured directly using the pressure sensor (which is very bad), where the z-velocity is considered unknown but observable in the dynamics. In this case, where the inner loop operates completely without information from any external motion capture, the measurement matrix takes the form $M = 7$ and $S=\begin{Bmatrix} 3,7,8,9,10,11,12\end{Bmatrix}$ in~\eqref{eq:CmatEq}.
+
+Another scheme which will be considered is the case when the pressure sensor is completely ignored, and time delayed measurements of $z$ and $\dot{z}$ for the outer loop is used in the inner control scheme. In this case, $M = 8$ and $J=\begin{Bmatrix} 3,6,7,8,9,10,11,12\end{Bmatrix}$.
+
+When simulating this model, the shape of the C-matrix is irrelevant in the dynamical response. Consequently, a general continuous time system~\eqref{eq:contsys} was implemented in Simulink (see \texttt{quadcopter\_model.m}, \textbf{Section~\ref{sec:appendix}}), and validated by comparison to the results in~\cite{luukkonen2011modelling}.
+
+The motors in the physical process are incredibly responsive, going from $||{\boldsymbol\omega}||_{\infty} \approx 0$ to $||{\boldsymbol\omega}||_{\infty} \approx 2.5\cdot 10^4$ [rpm] in $< 180$ [ms]~\cite{antonssonRPM2015}. The transfer function from motor current to rotational velocity [rpm] is nonlinear, and the parameters vary in time, as the maximum velocity decreases with battery charge. For modelling purposes, a simple system composed of two linear transfer functions
+\begin{equation}\label{eq:transfMotor}
+H_{I\rightarrow\dot{\omega}}(s) = b\frac{a}{s + a}
+\end{equation}
+is used, where the scaling gain $b\approx 2.5\cdot 10^4$ and the motor inertia, $a$, depends on the rotational acceleration, $\ddot{\omega}$, such that
+\begin{equation}
+\begin{cases}
+a = a^+ \approx 10, \qquad \ddot{\omega}>0\\
+a = a^- \approx 2, \qquad \ddot{\omega}<=0
+\end{cases}
+\end{equation}
+Comparing this to the system identification conducted by Bitcraze, we note that some non-linear aspects of the motor (such as the fluctuations at $t\approx 0.5$ and the overshoot) are not quite captured by the model (see Figure~\ref{fig:SysIDMotor}). Currently, we can only make a graphical comparison between the model and reality, as the raw data from the experiment conducted in~\cite{antonssonRPM2015} does not exist.
+
+\begin{figure}[htbp]
+\centering
+\includegraphics[width=0.4\textwidth]{figures/M1-step-response.png}%
+\includegraphics[width=0.4\textwidth]{figures/MotorSysId.png}
+\rule{35em}{0.5pt}
+\caption{\textit{Left:} The system response subject to a pulse where the motor duty cycle is set to 100\% over two seconds as illustrated in~\cite{antonssonRPM2015} (used here with permission). \textit{Right:} The corresponding system response in the non-linear motor model~\eqref{eq:transfMotor}, generated in Simulink using an input signal similar to the experiment in~\cite{antonssonRPM2015}.}
+\label{fig:SysIDMotor}
+\end{figure}
+
+However, this model is currently only used for simulation purposes where it is deemed good enough. A better system identification will be conducted where the coefficients $a^+$, $a^-$ and $b$ will be examined for smaller reference changes and different battery time, but so far, there hasn't been time.
+
+The idea is to get around this problem by constructing construct a very fast PID loop for each motor to keep $\boldsymbol\omega^2$ at a desired value (recalling that $\boldsymbol\omega^2$ has an approximately linear relationship with the torques and thrust used as input signals to the dynamical system). Consequently, it could be an idea to investigate methods of cascade control when using rotor speeds as control signals, or possibly a self tuning PID regulator (STUPID) as the motor dynamics vary slowly with battery charge.
+
+Regardless of the approach, if we make the assumption that the motor control loops are very fast, and that the copter will be operating close to a hovering position with bounds on the control signals, it could be feasible to assume a 1:1 relationship between desired rotor speed squared and actual rotor speed squared and not include the PID dynamics in the system matrix. The main reason for this is that including the 12 additional states will make the problem too big to solve efficiently with the MPC formulation.
+
+To accomplish this, we define a mapping from rotor speeds to thrust and torques,
 \begin{equation}\label{eq:tomegamapping}
 \begin{bmatrix}
 T\\
@@ -245,8 +282,8 @@ as derived from equation~\eqref{eq:torque}. The updated continuous system, with 
 
 No matter which continuous system is used (linear or non-linear), the discrete time system is computed using zero-order hold at a time step $h$, with the discrete state space representation
 \begin{flalign}
-x(t_k + h) =& \mathbf{A}_dx(t_k) + \mathbf{B}_d\mathbf{u}(t_k) + \mathbf{G}_d\\
-y(t_k) =& \mathbf{C}_dx(t_k)\\
+x(t_k + h) =& \mathbf{A}^dx(t_k) + \mathbf{B}^d\mathbf{u}(t_k) + \mathbf{G}d\\
+y(t_k) =& \mathbf{C}^dx(t_k)\\
 \end{flalign}
 where
 \begin{equation}
@@ -259,22 +296,22 @@ As the final implementation of the control system is to be done in ROS (Python/C
 
 \begin{figure}[htbp]
 \centering
-\includegraphics[width=0.5\textwidth]{figures/ROSPythonOmega.png}%
-\includegraphics[width=0.5\textwidth]{figures/ROSPythonStates.png}
+\includegraphics[width=0.8\textwidth]{figures/ROSPythonOmega.png}
+\includegraphics[width=0.8\textwidth]{figures/ROSPythonStates.png}
 \rule{35em}{0.5pt}
-\caption{Simulation of the discrete time quadcopter dynamics using the crazylib module implemented in ROS. \textit{Left:} Control signals in motor rotor speed similar to those used by Lukkonen to test the continuous time model. \textit{Right:} The system response with the quadcopter position and velocity in the global frame top ($\mathbf{r}$ and $\dot{\mathbf{r}}$) and the Euler angles in the body coordinate system bottom ($\boldsymbol\eta$ and $\dot{\boldsymbol\eta}$).}
+\caption{Simulation of the discrete time quadcopter dynamics (assuming a 1:1 relashionship between desired and actual motor angular velocity $\boldsymbol\omega$) using the crazylib module implemented in ROS. \textit{Left:} Control signals in motor rotor speed similar to those used by Lukkonen to test the continuous time model. \textit{Right:} The system response with the quadcopter position and velocity in the global frame top ($\mathbf{r}$ and $\dot{\mathbf{r}}$) and the Euler angles in the body coordinate system bottom ($\boldsymbol\eta$ and $\dot{\boldsymbol\eta}$).}
 \label{fig:ROSPython}
 \end{figure}
 
 The result was generated by feeding similar control signals similar to those used by~\cite{luukkonen2011modelling} to the /quadcopterModel node in ROS, and plotting the system response. Setting the same parameters as Lukkonen, the response should be very similar to the continuous time simulated response but in discrete time, which certainly is the case (compare with~\cite{luukkonen2011modelling}), thus validating the implementation of the discrete time dynamics in relation to previous work.
 
-\newpage\subsection{Linearised dynamics}\label{sec:linearized}
+\subsection{Linearised dynamics}\label{sec:linearized}
 Consider the continuous time system with input signal $\mathbf{u}=\boldsymbol\omega^2$, it is clear then that the non-linear part of the state-space matrices only concern the $\boldsymbol\eta,\dot{\boldsymbol\eta}$-states and the input signal. By defining the linearisation point of the euler angles around the stable point $\boldsymbol\eta_{p}=\dot{\boldsymbol\eta}_{p}=0$, and the rotor velocities around the rotor speed required to hover $\boldsymbol\omega_{p} = \sqrt{\frac{gm}{4k}}[1,1,1,1]^T$, such that the deviation from the linearisation points become
 \begin{flalign}
 \begin{split}
 \Delta\boldsymbol\eta =& \boldsymbol\eta - \boldsymbol\eta_{p}\\
 \Delta\dot{\boldsymbol\eta} =& \dot{\boldsymbol\eta} - \dot{\boldsymbol\eta}_{p}\\
-\Delta\boldsymbol\omega =& \boldsymbol\omega - \boldsymbol\omega_{p}
+\Delta\boldsymbol\omega =& \boldsymbol\omega - \boldsymbol\omega_{p}.
 \end{split}
 \end{flalign}
 Close to this point, the non-linear component of the $\mathbf{A}_c$-matrix $(\mathbf{J}^{-1}\mathbf{C}\dot{\boldsymbol\eta})$ can be linearised as
@@ -338,10 +375,10 @@ the number of observable and controllable states are
 \text{rank}\Big(\begin{bmatrix} \mathbf{C}_c^T& \cdots &(\mathbf{C}_c\tilde{\mathbf{A}}_{\Delta\omega}^{n-1})^T\end{bmatrix}^T\Big) = 8 \neq 12
 \end{cases}
 \end{equation}
-respectively. Closer investigation shows that we have a pole-zero cancellation of the positional $x,y$-states and their derivarives, implying that we need to have external motion capture of these states in order to use Kalman filters for state estimation (requiring full observability) or linear quadratic gaussian regulator for reference tracking (requiring full controllability). This could in theory be done by integrating measurements from the accelerometer twice and introducing a complementary filter to decrease positional drift in stationarity, but the approach is infeasible in reality and a better option is to use external of motion capture.
+respectively. Closer investigation shows that we have a pole-zero cancellation of the positional $x,y$-states and their derivatives, implying that we need to have external motion capture of these states in order to use Kalman filters for state estimation (requiring full observability) or linear quadratic gaussian regulator for reference tracking (requiring full controllability). This could in theory be done by integrating measurements from the accelerometer twice and introducing a complementary filter to decrease positional drift in stationarity, but the approach is infeasible in reality and a better option is to use external motion capture.
 
 \subsection{Inner stabilising controller}\label{sec:PD}
-The system is inherently unstable as the only truly stable position is when the copter hovers at a certain point in space, i.e. $\dot{\boldsymbol\xi}=\boldsymbol\eta=\dot{\boldsymbol\eta}=0$. In addition, we know that the x- and y-positions are unobservable and uncontrollable (as shown in \textbf{Section~\ref{sec:linearized}}), meaning the we cannot have any sort of positional control using designs based solely on ~\eqref{eq:contsys}. However, the elevation is observable and before we tackle positional control, system stability needs to be established. This stabilising controller can be run on the crazyflie at very high frequencies (currently, the loop on the crazyflie is run at 500 Hz) and could if written correctly increase overall performance of the final implementation. In this section, we define three such controllers controllers with the control signal 
+The system is inherently unstable as the only truly stable position is when the copter hovers at a certain point in space, i.e. $\dot{\boldsymbol\xi}=\boldsymbol\eta=\dot{\boldsymbol\eta}=0$. In addition, we know that the x- and y-positions are unobservable and uncontrollable (as shown in \textbf{Section~\ref{sec:linearized}}), meaning the we cannot have any sort of positional control using designs based solely on ~\eqref{eq:contsys}. However, the elevation is observable and before we tackle positional control, system stability needs to be established. This stabilising controller can be run on the crazyflie at very high frequencies (currently, the loop on the crazyflie is run at 500 Hz) and could if written correctly increase overall performance of the final implementation. In this section, we define three such controllers with the control signal 
 \begin{equation}
 \mathbf{u} = 
 \begin{bmatrix}
@@ -355,7 +392,7 @@ z_{ref}&
 \dot{\psi}_{ref}&
 \end{bmatrix}^T\in\mathbb{R}^{8\times 1},
 \end{equation}
-with subindices $(\cdot)_{ref}$ denotes reference values for the respective state.
+with subindices $(\cdot)_{ref}$ denoting reference values for the respective state.
 
 A common way of accomplishing the goal is by using a non-model based design, and implementing a PD-controller. Such a controller was derived in e.g.~\cite{luukkonen2011modelling}~\cite{dikmen2009attitude}, and can be summarised in the scheme
 \begin{flalign}
@@ -368,11 +405,25 @@ T=&(g + K_{D,z}(\dot{z}_{ref} - \dot{z})) + K_{P,z}(z_{ref} - z))\frac{m}{\cos(\
 \end{flalign}
 In using this controller, setting all references to 0 results in a stable hovering system (in the eight controllable states) assuming the state estimation is good. In our implementations, we also include the mapping of thrusts and torques to references in rotor speeds, given by~\eqref{eq:tomegamapping}. Note that the controller is non-linear in terms of thrust, and using the PD augmented system for model based outer loop control (such as MPC) does not capture the full PD controller dynamics.
 
-As an alternative, a fully linear LQR-controller is proposed for the same purpose, using the linearised model~\eqref{eq:linprocess} and only including the controllable modes of~\eqref{eq:contsys}. By the standard approach presented in~\cite{glad2000control}, the cost function is defined as
+As an alternative, a fully linear LQR-controller is proposed for the same purpose, using the linearised model~\eqref{eq:linprocess} and only including the controllable modes of~\eqref{eq:contsys}. To clarify, in this section we consider a truncated state space
+\begin{flalign}
+\begin{split}
+\dot{\mathbf{x}} =& \mathbf{A}\mathbf{x} + \mathbf{B}\mathbf{u}\\
+\dot{\mathbf{y}} =& \mathbf{C}\mathbf{x}
+\end{split}
+\end{flalign}
+with
+\begin{equation}
+\mathbf{x} = 
+\begin{bmatrix}
+z&\phi&\theta&\psi&\dot{z}&\dot{\phi}&\dot{\theta}&\dot{\psi}&\end{bmatrix}^T\in\mathbb{R}^{8\times 1}.
+\end{equation}
+having removed the $x,y,\dot{x},\dot{y}$-states from the original linearised state space~\eqref{eq:contsys}. 
+By the standard approach presented in~\cite{glad2000control}, the cost function is defined as
 \begin{equation}
 J = \int_0^{\infty} \mathbf{x}^T(t)\mathbf{Q}\mathbf{x}(t) + \mathbf{u}^T(t)\mathbf{R}\mathbf{u}(t)dt
 \end{equation}
-where $\mathbf{Q},\mathbf{R} > \mathbf{0}$ determines the costs of certain states and control signals respectively. The  optimal linear feedback law is then
+where $\mathbf{Q},\mathbf{R} > \mathbf{0}$ determine the costs of certain states and control signals respectively. The  optimal linear feedback law is then
 \begin{equation}
 \mathbf{u}= -\underbrace{\mathbf{R}^{-1}\mathbf{B}^T\mathbf{S} }_{\mathbf{K}}\mathbf{x}
 \end{equation}
@@ -400,8 +451,8 @@ The extended state space model becomes
 with the extended state vector $\mathbf{x}_e = \begin{bmatrix} \mathbf{x} & \mathbf{x}_i \end{bmatrix}^T \in \mathbb{R}^{12\times 1}$ and
 \begin{align}
 \begin{split} \;\;
-\mathbf{A}_e = \begin{bmatrix} \mathbf{A}_c & \mathbf{0}_{8\times4} \\ \mathbf{C} & -\mathbb{I}_{4\times 4} \end{bmatrix} \in\mathbb{R}^{12\times 12}, \;\;
-\mathbf{B}_e =  \begin{bmatrix} \mathbf{B}_c \\ \mathbf{0}_{4\times 4} \end{bmatrix} \in \mathbb{R}^{12\times 4}, \;\;
+\mathbf{A}_e = \begin{bmatrix} \mathbf{A} & \mathbf{0}_{8\times4} \\ \mathbf{C} & -\mathbb{I}_{4\times 4} \end{bmatrix} \in\mathbb{R}^{12\times 12}, \;\;
+\mathbf{B}_e =  \begin{bmatrix} \mathbf{B} \\ \mathbf{0}_{4\times 4} \end{bmatrix} \in \mathbb{R}^{12\times 4}, \;\;
 \mathbf{C}_e \in \mathbb{R}^{N\times 12},  \;\;
 \mathbf{G}_e \in \mathbb{R}^{12\times 1}
 \end{split}
@@ -422,9 +473,9 @@ x_{max} \qquad x_{max} < x\\
 x \qquad\quad\; \;x_{min}\leq x \leq x_{max}\\
 x_{min}\qquad x < x_{min}\end{cases}
 \end{equation}
-Using this effectively disablines integral action when any motor is in a saturated state, and has the added benefit of being very predictable. When setting up the state space model for use in MPC, we would in practice only have to define two different linearised state space models (the LQR when in saturation and the LQRi otherwise). The only downside is the additional four states, which greatly increase the complexity of the optimisation problem in MPC.
+Using this effectively disables integral action when any motor is in a saturated state, and has the added benefit of being very predictable. When setting up the state space model for use in MPC, we would in practice only have to define two different linearised state space models (the LQR when in saturation and the LQRi otherwise). The only downside is the additional four states, which greatly increases the complexity of the optimisation problem in MPC.
 
-The three stabilising controllers were simulated using the parameters described in the work of Lukkonen~\cite{luukkonen2011modelling} (for which the above PD regulator was developed and tuned) and at an inner loop rate of 100 Hz (note that the original stabilising controller on the crazyflie runs at 500 Hz). The generated reference trajectory lowpass filtered unit steps the amplitudes $z\in[0,30]$ [m] and $\phi,\theta,\psi \in[-0.3,0.3]$  [rad], which is far more aggressive than anything that will be run on the real process (see Figure~\ref{fig:LQR-PD-comp}). The LQR regulators were tuned to give reasonable trajectory following in terms of Euler angles, with more pronunciation of yaw and elevation (as the yaw will later be assumed to be 0 in the external loop). As expected the LQG-controller performs well, but also yields the predicted steady state errors. In the depicted simulation, the stationary error were to be of magnitude 7 cm at $t\approx 37$ s, which is unacceptable precise indoor flying. As a contrast, both the PD and LQRi (with AW) yield errors of $\approx 0.1$ cm less than 10 seconds after a reference change, with the error still decreasing. We also note that the reference following in elevation is much more precise with the LQRi compared to the PD alternative, and that it is only outperformed by the PD in terms of overshoot when making large reference changes in angular positions. However, an acceptable angular error of $<0.005$ [rad] is reached around the same time with both regulators. In conclusion, the PD and LQRi perform almost en par, with a slight edge to the LQRi in terms of altitude changes and in less aggressive trajectories. Both should be implemented and tested on the physical process.
+The three stabilising controllers were simulated using the parameters described in the work of Lukkonen~\cite{luukkonen2011modelling} (for which the above PD regulator was developed and tuned) and at an inner loop rate of 100 Hz (note that the original stabilising controller on the crazyflie runs at 500 Hz). The reference trajectory in this example is simply lowpass filtered unit steps the amplitudes $z_{ref}\in[0,15]$ [m] and $\phi_{ref},\theta_{ref},\psi_{ref} \in[-0.3,0.3]$  [rad], which is far more aggressive than anything that will be run on the real process (see Figure~\ref{fig:LQR-PD-comp}). The LQR regulators were tuned to give reasonable trajectory following in terms of Euler angles, with more pronunciation of yaw and elevation (as the yaw will later be assumed to be 0 in the external loop). As expected the LQG-controller performs well, but also yields the predicted steady state errors. In the depicted simulation, the stationary error were to be of magnitude 7 cm at $t\approx 37$ s, which is unacceptable precise indoor flying. As a contrast, both the PD and LQRi (with AW) yield errors of $\approx 0.1$ cm less than 10 seconds after a reference change, with the error still decreasing. We also note that the reference following in elevation is much more precise with the LQRi compared to the PD alternative, and that it is only outperformed by the PD in terms of overshoot when making large reference changes in angular positions. However, an acceptable angular error of $<0.005$ [rad] is reached around the same time with both regulators. In conclusion, the PD and LQRi perform almost en par, with a slight edge to the LQRi in terms of altitude changes and in less aggressive trajectories. Both should be implemented and tested on the physical process.
 \begin{figure}[htbp]
 \centering
 \includegraphics[width=\textwidth]{figures/innerLoopStates.png}
@@ -435,21 +486,21 @@ The three stabilising controllers were simulated using the parameters described 
 \end{figure}
 
 \clearpage\section{State estimation}
-To estimate the states properly, many approaches are considered and compared in simulation before making a real time implementation. As we know from previous sections, the positions and velocities in the x- and y-directions are unobservable in the considered non-linear dynamics. Since these four states are not needed in stabilising the quadcopter, our approach will be to estimate the remaining eight states on the quadcopter and run this in conjunction with a stabilising inner controller (discussed above). This inner loop will be run at $\approx 500-100$ Hz and would preferably run completely independent of external control and estimation. In order to estimate the four unobservable states, some means of motion capture will be run on the host computer. In the current implementation, a Kinect 1 camera is used, yielding positional measurements at $\approx 30$ Hz. If the external measurements prove to bad to accurately determine the unobservable states, the Inertial Measurement Unit (IMU) data could be used in the outer loop as well while running a complementary filter on the crazyflie. However, all data will be delayed when sent to the host computer from the crazyflie via bluetooth, and likewise, the estimated positions and speeds will suffer from a time delay when transmitted back to the crazyflie.
+To estimate the states properly, many approaches are considered and compared in simulation before making a real time implementation. As we know from previous sections, the positions and velocities in the x- and y-directions are unobservable in the considered non-linear dynamics. Since these four states are not needed in stabilising the quadcopter with respect to elevation and angular states, our approach will be to estimate states on the quadcopter and run this in conjunction with a stabilising inner controller (discussed above). This inner loop will be run at $\approx 500-100$ Hz and would preferably run completely independent of external control and state estimation. In order to estimate the four unobservable states, some means of motion capture will be run on the host computer. In the current implementation, an old ASUS Kinect Xtion PRO camera is used, yielding positional measurements at $\approx 30$ Hz~\cite{kinect2016}. The measured filtered states in the outer loop could be used to achieve a better state estimation in the inner loop. However, all data will be delayed when sent between the host computer and Crazyflie via bluetooth, and the time delay between the two loops needs to be taken into account in the implementation.
 
 The problem in the inner loop is to accurately estimate the eight states
 \begin{equation}
 \hat{\mathbf{x}}^{(inner)}=\begin{bmatrix} z &\phi &\theta &\psi&\dot z &\dot\phi &\dot\theta &\dot\psi\end{bmatrix}^T
 \end{equation}
-given the torques and thrusts or the rotor angular speeds, subject to CPU constraints and the highly non-linear dynamics of the crazyflie. To achieve this, a regular Kalman filter (KF) is tested, using the dynamics linearised around the stable hovering state to compute the filter gain ~\cite{glad2000control}. In addition the extended Kalman filter (EKF) is tested. The EKF effectively linearises the system around the previous state estimate on each time step, which is done by computing an expression for the Jacobian offline and then evaluating it on-line. However, as the dynamics contain non-linear matrix inverses, this puts great constraints on how fast the inner loop can be run. Two other model based approaches, the unscented Kalman filter (UKF) and generic particle filter (GPF), are implemented and tested on the non-linear dynamics. If the CPU is too restrictive to use any of the above mentioned filters, one could consider running the heavy estimation on the host computer and simply use a complementary filter on the quadcopter.
+given the torques and thrusts or the rotor angular speeds, subject to CPU constraints and the highly non-linear dynamics of the crazyflie given the available sensory measurements. To achieve this, a regular Kalman filter (KF) is tested, using the dynamics linearised around the stable hovering state to compute the filter gain ~\cite{glad2000control}. In addition the extended Kalman filter (EKF) is tested. The EKF effectively linearises the system around the previous state estimate on each time step, which is done by computing an expression for the Jacobian offline and then evaluating it on-line. However, as the dynamics contain non-linear matrix inverses, this puts great constraints on how fast the inner loop can be run. Two other model based approaches, the unscented Kalman filter (UKF) and generic particle filter (GPF), are implemented and tested on the non-linear dynamics. If the CPU is too restrictive to use any of the above mentioned filters, one could consider running more accurate and computationally heavy estimation on the host computer and simply use a complementary filter on the quadcopter.
 
 The problem in the outer loop is to accurately estimate the states
 \begin{equation}
 \hat{\mathbf{x}}^{(outer)}=\begin{bmatrix} x & y & z  & \dot x & \dot y & \dot z  \end{bmatrix}^T
 \end{equation}
-given time delayed measurements of quadcopter acceleration, current measurements of position from the kinect and predict the future position and speed of the quadcopter to combat the time delay in transmitting data back to the crazyflie. Fo this purpose a regular KF is tested along with an asynchronous Kalman filter of our own design.
+given time delayed measurements of quadcopter acceleration (if applicable), current measurements of position from the kinect and predict the future position and speed of the quadcopter to combat the time delay in transmitting data back to the crazyflie. Fo this purpose a regular KF is tested along with an asynchronous Kalman filter of our own design.
 
-\subsection{Complementary filter (CF)}
+\subsection{Complementary filter (CF)}\label{sec:compFilt}
 In the light weight model independent complementary filter, IMU data from the crazyflie is used to estimate the position of the rotorcraft in the body frame. The basic idea consists of combining LP-filtered accelerometer measurements with HP-filtered and integrated gyroscope data to find an angular position. By denoting a general LP-filter as $G_{LP}(s)$ in the Laplace domain, and correspondingly the HP-filter as $G_{HP}(s)$, the filtered 1D-signal can be written
 \begin{equation}\label{eq:compfilt}
 \hat{X}(s) = G_{LP}(s)X_{acc}(s) + G_{HP}(s)X_{gyro}(s)
@@ -492,7 +543,7 @@ The regular discrete Kalman filter (KF) is omitted for brevity, but the EKF was 
 \begin{flalign}\label{eq:nonlindyn}
 \begin{split}
 \mathbf{x}_{k+1} =& \mathbf{F}(\mathbf{x}_k,\mathbf{u}_k,\mathbf{v}_{k+1})\\
-\mathbf{y}_{k} =& \mathbf{H}(\mathbf{x}_k,\mathbf{e}_{k+1})
+\mathbf{z}_{k} =& \mathbf{H}(\mathbf{x}_k,\mathbf{e}_{k+1})
 \end{split}
 \end{flalign}
 denoting the respective state and measurement equation Jacobians as
@@ -521,7 +572,7 @@ In our implementation, the Jacobian $\mathbf{J}^F_k$ is computed offline and sto
  \BlankLine
  \textit{Prediction step}\\
  $\hat{\mathbf{x}}_{k}^- = \mathbf{F}(\hat{\mathbf{x}}_{k-1},\mathbf{u}_{k-1}, \mathbf{v})$\;
- $\mathbf{P}_{k}^-= \mathbf{J}^F_{k-1}\mathbf{P}_{k-1} \mathbf{J}^F_{k-1} + \mathbf{Q}$\;
+ $\mathbf{P}_{k}^-= \mathbf{J}^F_{k-1}\mathbf{P}_{k-1} (\mathbf{J}^F_{k-1})^T + \mathbf{Q}$\;
  \BlankLine
  \textit{Correction step}\\
  $\mathbf{K}_{k} = \mathbf{P}_{k}^-\mathbf{C}_d^T(\mathbf{C}_d \mathbf{P}_{k}^-\mathbf{C}_d^T + \mathbf{R})^{-1}$\;
@@ -534,9 +585,9 @@ In our implementation, the Jacobian $\mathbf{J}^F_k$ is computed offline and sto
 \end{algorithm}
 \end{minipage}
 \end{center}
-For the considered dynamics, the measurement function $\mathbf{H(x,e)}$ is linear and can therefore be replaced by the discrete time measurement matrix in  ~\eqref{eq:continuoussys}, such that $\mathbf{H(x,e)} = \mathbf{C}_d\mathbf{x}$, with $\mathbf{J}^H_k = \mathbf{C}_d\forall\mathbf{x}$.
+For the considered dynamics, the measurement function $\mathbf{H(x,e)}$ is linear and can therefore be replaced by the discrete time measurement matrix in  ~\eqref{eq:continuoussys}, such that $\mathbf{H(x,e)} = \mathbf{C}_d\mathbf{x}$, with $\mathbf{J}^H_k = \mathbf{C}_d, \forall\mathbf{x}$.
 
-\subsection{Unscented kalman filter (UKF)}
+\subsection{Unscented Kalman filter (UKF)}
 The unscented Kalman filter is well described in~\cite{wan2000unscented}, where it is qualitatively compared to the EKF on the chaotic Mackey Glass time series. The interested reader is referred to~\cite{wan2000unscented} for more details, but a rough sketch of the algorithm as implemented in Python/ROS/Simulink is given (see Algorithm~\ref{fig:algUKF}) with a few cliff notes. For consistency, the UKF uses the same system description and assumptions defined in the previous section on the EKF, see equations~\eqref{eq:nonlindyn} to~\eqref{eq:measnoise}.
 
 \begin{center}
@@ -575,10 +626,10 @@ The unscented Kalman filter is well described in~\cite{wan2000unscented}, where 
 \end{minipage}
 \end{center}
 
-The UKF relies on throwing points ($\sigma$-points) in the state space through the nonlinearity and then finding a weighted mean state in which the system is most likely to be. Weights for the mean, $W^m$, and for the covariance, $W^c$, are computed in when initialising and remain the same throughout the simulation, and the covariance matrix is here factorized with the cholesky decomposition for numerical stability. The UKF has the advantage of not using any approximations (in contrast to the EKF), but performance depends on the system at hand and how  the filter is tuned. For instance, if the spread of sigma points around the mean state, $\alpha$, (used to compute $\lambda$) is set too large the non-linearity may not be portrayed accurately close to the mean state. In comparison to the EKF, the UKF has the advantage of scaling nicely with the number of states, $L$, requiring $2L+2$ $\sigma$-points to be run through the non-linearity at each UKF update. This can be compared to the EKF where we would need to evaluate the symbolical expression, or use 2L function evaluations (of $\mathbf{F}$) if computing the Jacobian using a first order central difference scheme, at the cost of greater numerical error in the covariance prediction. The UKF will have to be compared to the alternatives in simulation to make a statement about which to use in the physical process.
+The UKF relies on throwing points ($\sigma$-points) in the state space through the nonlinearity and then finding a weighted mean state in which the system is most likely to be. Weights for the mean, $W^m$, and for the covariance, $W^c$, are computed when initialising and remain the same throughout the simulation, and the covariance matrix is here factorized with the cholesky decomposition for numerical stability. The UKF has the advantage of not using any approximations (in contrast to the EKF), but performance depends on the system at hand and how  the filter is tuned. For instance, if the spread of sigma points around the mean state, $\alpha$, (used to compute $\lambda$) is set too large the non-linearity may not be portrayed accurately close to the mean state. In comparison to the EKF, the UKF has the advantage of scaling nicely with the number of states, $L$, requiring $2L+2$ $\sigma$-points to be run through the non-linearity at each UKF update. This can be compared to the EKF where we would need to evaluate the symbolical expression, or use 2L function evaluations (of $\mathbf{F}$) if computing the Jacobian using a first order central difference scheme, at the cost of greater numerical error in the covariance prediction. The UKF will have to be compared to the alternatives in simulation to make a statement about which to use in the physical process.
 
 \subsection{Particle filter (GPF)}
-The generic particle filter was implemented and tested  (see algorithm 3 on page 8 in ~\cite{arulampalam2002tutorial}). To combat degeneracy in the filter the systematic resampling is implemented due to it's simplicity and performance when compared to e.g. multinomial resampling~\cite{douc2005comparison}~\cite{hol2006resampling}. The filter was implemented as described in ~\ref{fig:algGPF}, where $\mathbf{p}_k^{(i)}\in\mathbb{R}^{1\times 12}$ and $\mathbf{w}_k^{(i)}$ denote the respective states and weight of particle $i$ at a time step $k$. Here $\sigma_0$ is the standard deviation of the point cluster from the initial mean $\mathbf{x}_0$, and $C\in [0,1]$ denotes a tolerance for degeneracy, where $C = 0$ implies that we never resample. A more detailed explanation of pros and cons in comparison to the other filters will be given in the next iteration of the report.
+The generic particle filter was implemented and tested  (see algorithm 3 on page 8 in ~\cite{arulampalam2002tutorial}). To combat degeneracy in the filter the systematic resampling is implemented due to it's simplicity and performance when compared to e.g. multinomial resampling~\cite{douc2005comparison}~\cite{hol2006resampling}. The filter was implemented as described in Algorithm~\ref{fig:algGPF}, where $\mathbf{p}_k^{(i)}\in\mathbb{R}^{1\times 12}$ and $\mathbf{w}_k^{(i)}$ denote the respective states and weight of particle $i$ at a time step $k$. Here $\sigma_0$ is the standard deviation of the point cluster from the initial mean $\mathbf{x}_0$, and $C\in [0,1]$ denotes a tolerance for degeneracy, where $C = 0$ implies that we never resample. A more detailed explanation of pros and cons in comparison to the other filters will be given in the next iteration of the report.
 
 \begin{center}
 \begin{minipage}{.7\linewidth}
@@ -605,14 +656,14 @@ The generic particle filter was implemented and tested  (see algorithm 3 on page
  }
  }
  \BlankLine
-\caption{Rough outline of the implemented discrete time generic particle filter (GPF), here the sample function represents a systematic resampling weight update.}
+\caption{Rough outline of the implemented discrete time generic particle filter (GPF), here the resample function represents a systematic resampling weight update.}
 \label{fig:algGPF}
 \end{algorithm}
 \end{minipage}
 \end{center}
 
 \subsection{Asynchronous Kalman filter (AKF)}
-The complete algorithm is omitter for brevity, but the basic idea is to have multiple channells of sensory information with various known time delays. The last point in time at which the system was described by all channels, $t_{branch}$, is used in a complete discrete KF update, returning the covariance matrix at this point in time. From $t_{branch}$ until the present time, $t_{present}$, plus one additional time step, $h$, the current state is predicted by performing a series of KF updates using available sensory data on $t \in [t_{branch},t_{present}]$ and completing unknown data with white gaussian with a variance matching that of the $\mathbf{R}$ matrix. When the algorithm terminates, it returns the covariance matrix and estimate at $t_{branch}+h$, and also the predicted state at $t_{present}+h$. Naturally, complexity increases greatly with the time delay and inversely with $h$ given the sheer number of arithmetic operations required per time step, but the performance is greatly improved in doing so, as will be seen in the next section.
+The complete algorithm is omitted for brevity, but the basic idea is to have multiple channells of sensory information with various known time delays. The last point in time at which the system was described by all channels, $t_{branch}$, is used in a complete discrete KF update, returning the covariance matrix at this point in time. From $t_{branch}$ until the present time, $t_{present}$, plus one additional time step, $h$, the current state is predicted by performing a series of KF prediction updates using available sensory data on $t \in [t_{branch},t_{present}]$ and completing unknown data with white gaussian noise using a variance matching that of the $\mathbf{R}$ matrix. When the algorithm terminates, it returns the covariance matrix and estimate at $t_{branch}+h$, and also the predicted state at $t_{present}+h$. Naturally, complexity increases greatly with the time delay and inversely with $h$ given the sheer number of arithmetic operations required per time step, but the performance is greatly improved in doing so, as will be seen in the next section.
 
 \subsection{Filter comparison}
 All considered filters (KF/EKF/UKF/GPF/AKF) were implemented in Simulink as S-functions to allow the use of nestled- and external .m-functions (see *\texttt{/kalman\_filters/}). As an example, a double integrator with linear dynamics was set up to demonstrate the filters and how they are incorporated into a simulink model (see *\texttt{/Examples/double\_integrator\_filter\_test/}). All filters are initialised with an *\texttt{\_init}-file, in which a KFparam struct variable is created, defining the system and the necessary filter parameters. The code was written with the intent of being reusable in future projects, and is essentially a Simulink state estimation toolbox. 
@@ -620,7 +671,7 @@ All considered filters (KF/EKF/UKF/GPF/AKF) were implemented in Simulink as S-fu
 When running the Simulink examples, the state estimation model block can be set with a filter by selecting one of the models in *\texttt{/kalman\_filters/}. The system is specified in the \texttt{init\_filters\_example.m} file, and the filter parameters are set to yield good estimation of the unknown angular velocities, $\dot{\boldsymbol\eta}_k$  (see Figure~\ref{fig:KF-EKF}). Simulink is solely used for the purpose of simulating the filters, the more promising filters (KF/UKF/AKF) were then implemented in the Python \texttt{crazylib} module which can be used directly in the ROS nodes.
 
 \subsubsection{Inner loop}
-The filters (KF/EKF/UKF/GPF) were applied and tested on nonlinear quadcopter dynamics, running with an inner stabilising PD loop at 100 Hz and a PID position controller at 50 Hz in the outer loop (see *\texttt{/Examples/inner\_loop/inner\_filter\_test/}). To test performance, the measurements of $\boldsymbol\xi_k, \dot{\boldsymbol\xi}_k, \boldsymbol\eta_k$ were corrupted with gaussian zero-mean uncorrelated noise with a variance of $\approx 0.3$ [m] on the positional states ($\boldsymbol\xi_k$), a variance of $0.1$ [m/s] on the velocities ($\dot{\boldsymbol\xi}_k$) and a variance of 0.01 on the Euler angles ($\dot{\boldsymbol\xi}_k$). The angular velocities were completely omitted and the process noise was assumed to be $\mathbf{0}$ at all times.
+The filters (KF/EKF/UKF/GPF) were applied and tested on nonlinear quadcopter dynamics, running with an inner stabilising PD loop at 100 Hz and a PID position controller at 50 Hz in the outer loop (see *\texttt{/Examples/inner\_loop/inner\_filter\_test/}). To test performance, the measurements of $\boldsymbol\xi_k, \dot{\boldsymbol\xi}_k, \boldsymbol\eta_k$ were corrupted with gaussian zero-mean white uncorrelated noise with a variance of $\approx 0.3$ [m] on the positional states ($\boldsymbol\xi_k$), a variance of $0.1$ [m/s] on the velocities ($\dot{\boldsymbol\xi}_k$) and a variance of 0.01 on the Euler angles ($\dot{\boldsymbol\xi}_k$). The angular velocities were completely omitted and the process noise was assumed to be $\mathbf{0}$ at all times.
 
 \begin{figure}[htbp]
 \centering
@@ -631,13 +682,13 @@ The filters (KF/EKF/UKF/GPF) were applied and tested on nonlinear quadcopter dyn
 \label{fig:KF-EKF}
 \end{figure}
 
-As can be seen, the regular KF performs badly when the system is far from the stable state, and the over all error is here visibly the largest. The EKF performs better, but when simulating the system at an inner loop sample rate of 100 Hz, the EKF is demands processing power to a point where it becomes infeasible to implement in the physical process (unless other methods of computing the Jacobian are considered). In addition, the EKF estimation becomes more unstable as the step size increases, and already at a sample period of $T_s = 0.01$ [s], the estimation becomes very poor after $\approx 16$ [s] and the covariance matrix requires resetting (at higher sample rates such as 500 Hz, the filter performs well for an entire simulation duration of 50 s). This is due to the approximations used in the covariance updates of the EKF, and it should be noted that the trajectory is very aggressive, and that the EKF may not diverge during the battery lifetime ($\approx5$ minutes) if following smother trajectories.
+As can be seen, the regular KF performs badly when the system is far from the stable state, and the over all error is here visibly the largest. The EKF performs better, but when simulating the system at an inner loop sample rate of 100 Hz, the EKF demands processing power to a point where it becomes infeasible to implement in the physical process (unless other methods of computing the Jacobian are considered). In addition, the EKF estimation becomes more unstable as the step size increases, and already at a sample period of $T_s = 0.01$ [s], the estimation becomes very poor after $\approx 16$ [s] and the covariance matrix requires resetting (at higher sample rates such as 500 Hz, the filter performs well for an entire simulation duration of 50 s). This is due to the approximations used in the covariance updates of the EKF, and it should be noted that the trajectory is very aggressive, and that the EKF may not diverge during the battery lifetime ($\approx5$ minutes) if following smother trajectories.
 
  The UKF has to be set with a fairly high $\alpha\approx0.5$ in order to spread the sigma points enough to properly capture the non-linear dynamics. It is far more economical in terms of computational power than the EKF and follows the true values much more accurately than any of the previously tested filters. This is clear when looking at the the error metric 
 \begin{equation}\label{eq:errormetric}
 E(\mathbf{x},\hat{\mathbf{x}}) = \sum^{3}_i\int_0^{t_s} |\dot{\boldsymbol{\eta}}_i(t) - \dot{\hat{\boldsymbol{\eta}}}_i(t)|dt
 \end{equation}
-for the the estimation of the unknown states during a simulation time $t_s = 17$ [s]. Here, $E_{KF} \approx 4.2768$, $E_{EKF} \approx2.4781$, $E_{UKF} \approx0.1990$ showing that for this specific problem, the UKF the the better alternative in terms of accuracy and computational power (compared to the EKF). In conclusion, the only viable option is to run the UKF in the inner loop, but the GPF has yet to be tested.
+for the the estimation of the unknown states during a simulation time $t_s = 17$ [s]. Here, $E_{KF} \approx 4.2$, $E_{EKF} \approx2.5$, $E_{UKF} \approx0.2$ showing that for this specific problem, the UKF the the better alternative in terms of accuracy and computational power (compared to the EKF). In conclusion, the only viable option is to run the UKF in the inner loop, but the GPF has yet to be tested.
 
 \subsubsection{Outer loop}
 As we are using a linear model, the Kalman Filter will yield optimal estimations assuming the measurement noise is zero mean and gaussian. Consequently, the KF and an asynchronous variation of it was tested to cope with the delays when sending data to and from the crazyflie. To achieve this, two basic methods are considered. The first is to ignore the time delayed accelerometer data, and simply consider a 3-dimensional discrete time double integrator
@@ -681,7 +732,7 @@ where
 \mathbf{x}_k = \begin{bmatrix} x & y & z  & \dot x & \dot y & \dot z  & \ddot{x} & \ddot{y} & \ddot{z}  \end{bmatrix}^T.
 \end{equation}
 
-The KF and AKF are then applied to the measurements as seen on the host computer, i.e. the noisy positions (no delay) and, if applicable, vey noisy acceleration measurements delayed by some time $t_1\sim\mathcal{N}(0.03,0.002)$ [s], where the variance captures non-deterministic behaviour of the ROS publishers and subscribers. The estimated outputs of the filters are then delayed by $t_1$ again (to simulate being sent back to the crazyflie), and are then compared to the true values. As a simple test, a reasonably aggressive one dimensional acceleration and the corresponding position were used as ground truth values, and the filter was run at 30 Hz corresponds roughly to how fast data is generated by the kinect 1 camera. The estimated states were then moving average filtered (unweighted MA of order 10) which has a negligible phase lag at the frequencies of 0.4 Hz (see Figure~\ref{fig:KF-AKF}). Note that neither method is dependent of complete system dynamics, and won't require too much bandwidth in the communication between the host and the crazyflie.
+The KF and AKF are then applied to the measurements as seen on the host computer, i.e. the noisy positions (no delay) and, if applicable, very noisy acceleration measurements delayed by some time $t_1\sim\mathcal{N}(0.03,0.002)$ [s], where the variance captures non-deterministic behaviour of the ROS publishers and subscribers. The estimated outputs of the filters are then delayed by $t_1$ again (to simulate being sent back to the crazyflie), and are then compared to the true values. As a simple test, a reasonably aggressive one dimensional acceleration and the corresponding position were used as ground truth values, and the filter was run at 30 Hz corresponds roughly to how fast data is generated by the kinect 1 camera. The estimated states were then moving average filtered (unweighted MA of order 10) which has a negligible phase lag at the frequencies of 0.4 Hz (see Figure~\ref{fig:KF-AKF}). Note that neither method is dependent of complete system dynamics, and won't require too much bandwidth in the communication between the host and the crazyflie.
 
 \begin{figure}[htbp]
 \centering
@@ -693,7 +744,7 @@ The KF and AKF are then applied to the measurements as seen on the host computer
 
 
 \section{Motion planning}\label{sec:reftraj}
-In this part of the project, we consider the polynomial generation method advanced by Roy et.al.~\cite{richter2013polynomial}\cite{landryaggressive}. The general method is presented to make the Matlab code coherent, using the same nomenclature as in the code, but the interested reader is referred to ~\cite{richter2013polynomial} where the method is qualitatively compared with the Rapidly exploring Random Tree algorithms (RRT*) and a more numerically stable method is defined. The general idea is to set up a constrained QP problem and solve it (here using Matlab's \texttt{quadprog}) to find a minimum snap trajectory in space and time. The code will later be rewritten in Python/ROS with CVXGEN, and additional constraints will be enforced to ensure that the trajectory always stay in safe convex regions of space. These regions can conceivably be computed using the Iterative Regional Inflation by Semidefinite programming algorithm (IRIS) developed at MIT~\cite{deits2015computing}~\cite{IRISMIT}, but initially we assume assumed these regions to be known.
+In this part of the project, we consider the polynomial generation method advanced by Roy et.al.~\cite{richter2013polynomial}\cite{landryaggressive}. The general method is presented to make the Matlab code coherent, using the same nomenclature as in the code, but the interested reader is referred to ~\cite{richter2013polynomial} where the method is qualitatively compared with the Rapidly exploring Random Tree algorithms (RRT*) and a more numerically stable method is defined. The general idea is to set up a constrained QP problem and solve it (here using Matlab's \texttt{quadprog}) to find a minimum snap trajectory in space and time. The code will later be rewritten in Python/ROS with CVXGEN, and additional constraints will be enforced to ensure that the trajectory always stays in safe convex regions of space. These regions can conceivably be computed using the Iterative Regional Inflation by Semidefinite programming algorithm (IRIS) developed at MIT~\cite{deits2015computing}~\cite{IRISMIT}, but initially we assume these regions to be known.
 
 Let the trajectory be composed of $n$ polynomials $P_{1}(t),...,P_{n}(t)$, where
 \begin{equation}
@@ -703,13 +754,13 @@ with a maximum degree of $\deg(P_{k})=N$, and a corresponding coefficient vector
 \begin{equation}
 J(T_k) = \int_0^{T_k} c_0P_{k}(t)^2 +  c_1P^{\prime}_k(t)^2  + ... + c_NP^{(N)}_{k}(t)^2 dt = \mathbf{p}_{(k)}^T\mathbf{Q}_{(k)}\mathbf{p}_k
 \end{equation}
-such that continuity is preserved and boundary conditions are enforced. In cite XX, the hessian matrix corresponding to a polynomial was derived by differentiating the term in the cost function containing the $r^{th}$ derivative of $P_{(k)}(t)$ with regards to the polynomial coefficients $p_i$, i.e. finding
+such that continuity is preserved and boundary conditions are enforced. The hessian matrix corresponding to a polynomial was derived by differentiating the term in the cost function containing the $r^{th}$ derivative of $P_{(k)}(t)$ with regards to the polynomial coefficients $p_i$, i.e. finding
 \begin{equation}
 \mathbf{Q}_{r,(k)}= \frac{\partial^2}{\partial p_i\partial p_j} \int_0^{T_k} P_{k}^{(r)}(t)^2dt
 \end{equation}
 and constructing the matrix
 \begin{equation}
-\mathbf{Q}_{(k)}=\mathbf{Q}_{(k)} = \sum\limits_{r = 0}^N c_r\mathbf{Q}_{r,(k)}\in \mathbb{R}^{(N+1)\times (N+1)}
+\mathbf{Q}_{(k)} = \sum\limits_{r = 0}^N c_r\mathbf{Q}_{r,(k)}\in \mathbb{R}^{(N+1)\times (N+1)}
 \end{equation}
 The complete constrained QP-formulation, including all $n$ polynomials is then
 \begin{equation}

@@ -47,6 +47,12 @@ T.~Antonsson, ``{Measuring propeller RPM - Part 3}.'' [Online]. Available:
 T.~Glad and L.~Ljung, \emph{Control theory}.\hskip 1em plus 0.5em minus
   0.4em\relax CRC press, 2000.
 
+\bibitem{kinect2016}
+\BIBentryALTinterwordspacing
+ASUS, ``Kinect xtion pro specifications.'' [Online]. Available:
+  \url{https://www.asus.com/3D-Sensor/Xtion_PRO/specifications/}
+\BIBentrySTDinterwordspacing
+
 \bibitem{terejanu2008extended}
 G.~A. Terejanu, ``Extended kalman filter tutorial,'' \emph{Online]. Disponible:
   http://users. ices. utexas. edu/\~{} terejanu/files/tutorialEKF. pdf}, 2008.
