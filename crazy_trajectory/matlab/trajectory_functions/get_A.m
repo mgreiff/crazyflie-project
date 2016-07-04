@@ -17,12 +17,10 @@ function [ A0 , AT ] = get_A( N , T )
                      A0(row, col) = A0(row, col)*(r - m);
                 end
             end
-            if n >= r
-                AT(row, col) = T^(n-r);
+            if n >= r-1
+                AT(row, col) = T^(n - r);
                 for m = 0:r-1
-                    disp(AT(row, col))
-                    disp([r,m])
-                    AT(row, col) = AT(row, col)*(r - m);
+                    AT(row, col) = AT(row, col)*(n - m);
                 end
             end
         end
