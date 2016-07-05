@@ -11,5 +11,5 @@ times = [0,4];
 P = compute_splines( points , times , N , cost );
 
 %% Plots the results in a single graph
-plot_splines( P , times , {'position', 'velocity', 'acceleration', 'jerk'})
+plot_splines( P , points, times, {'position', 'velocity'})
 grid on;

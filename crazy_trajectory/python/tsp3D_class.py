@@ -9,7 +9,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 class Tsp3D(object):
     
-    def __init__(self, x, y, z, populationSize=100, iterationLim=1000):
+    def __init__(self, x, y, z, populationSize=100, iterationLim=40):
         """
         Create a solver object for generating and visualizing a close to
         optimal solution to the 3D TSP problem.

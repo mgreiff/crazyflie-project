@@ -53,68 +53,51 @@ function [ P ] = compute_splines( points , times , N , cost )
                    ' the indices ', num2str(find(T <=0))];
     end
     if msgtext ~= 0
-        throw(MException(msgID, msgtext))
+        %throw(MException(msgID, msgtext))
     end
 
-    % Constructs the hessian
+    %% Constructs the hessian
     Q = zeros((N+1)*nS,(N+1)*nS);
     for ii = 1:nS
         Qhat = get_Q( N , T(ii) , cost);
         index = (N+1)*(ii-1)+1:(N+1)*ii;
         Q(index,index) = Qhat;
     end
-    Abound = [];
-    bbound = [];
-    AfreeL = [];
-    AfreeH = [];
+
+    %% Constructs the full constraint matrices
+    Abound = zeros((N + 1) * (nS + 1), (N + 1) * nS);
+    Afree = zeros((N + 1) * (nS - 1), (N + 1) * nS);
 
     for ii = 1:nS
+        [ A0 , AT ] = get_A( N, T(ii));
 
-        [ A0 , AT ] = get_A( N , T(ii) );
-        
-        % Iterates over the end point conditions in the starting point
-        % (there is no need to) look at the terminal point assuming the
-        % input data passes the consistency checks
-        for jj = 1:N+1
-            % Treats end point conditions in the starting point
-            epc = points(jj,ii);
-            if ~isnan(epc)
-                if ~isinf(epc)
-                    % Bound end point conditions
-                    disp(['bound', num2str(epc)])
-                    Abound = [Abound; A0(jj,:)];
-                    bbound = [bbound; epc];
-                elseif ii ~= nS
-                    % Free end point conditions
-                    AfreeL = [AfreeL; A0(jj,:)]; 
-                    disp(['free', num2str(jj)])
-                end
-            end
-            
-            % Treats end point conditions in the terminal point
-            epc = points(jj,ii+1);
-            if ~isnan(epc) && ii == nS
-                if ~isinf(epc)
-                    % Bound end point conditions in terminal point
-                    disp(['bound', num2str(epc)])
-                    Abound = [Abound; AT(jj,:)];
-                    bbound = [bbound; epc];
-                elseif ii ~= 1
-                    % Free end point conditions
-                    AfreeH = [AfreeH; AT(jj,:)]; 
-                    disp(['free', num2str(jj)])
-                end
-            end
+        % Sets up a large matrix of free and bound constraints
+        dind = (ii - 1)*(N + 1) + 1;
+        Abound(dind:dind+N,dind:dind+N) = A0;
+        disp(dind)
+        if ii == nS && nS > 1
+            Abound(dind+N+1:dind+2*N+1,dind:dind+N) = AT;
+            Afree(dind-N-1:dind-1,dind:dind+N) = -A0;
+        elseif ii == 1 && nS > 1
+            Afree(dind:dind+N,dind:dind+N) = AT;
+        elseif nS > 1
+            Afree(dind-N-1:dind-1,dind:dind+N) = -A0;
+            Afree(dind:dind+N,dind:dind+N) = AT;
         end
     end
-
-    % Sets terminal point conditions of the last spline
-    Afree = [AfreeL, -AfreeH];
-    if isempty(Afree)
-        bfree = [];
-    else
-        bfree = zeros(size(Afree,1),1);
-    end
+    
+    ap = reshape(points, numel(points), 1);
+    indices = isinf(ap) | isnan(ap);
+    bbound = ap(~isinf(ap) & ~isnan(ap));
+    Abound(indices,:) = [];
+    
+    interiorpoints = points(:,2:end-1);
+    interiorpoints(1,:) = inf;
+    interiorpoints(2,:) = inf;
+    ip = reshape(interiorpoints, numel(interiorpoints), 1);
+    indices = ~isinf(ip);
+    Afree(indices, :) = [];
+    bfree = zeros(size(Afree,1),1);
     
     A = [Abound; Afree];
     b = [bbound; bfree];
@@ -123,8 +106,7 @@ function [ P ] = compute_splines( points , times , N , cost )
     options.TolCon = 1e-12;
     options.TolFun = 1e-12;
     options.Diagnostics = 'off';
-    %options.Algorithm = 'active-set';
     options.Algorithm = 'interior-point-convex';
-    [P, ~, EXITFLAG, OUTPUT, LAMBDA] = quadprog(Q,zeros(length(Q),1),[],[],A,b,[],[],[],options);
+    [P, ~, ~, ~, ~] = quadprog(Q,zeros(length(Q),1),[],[],A,b,[],[],[],options);
 end
 

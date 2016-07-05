@@ -8,10 +8,10 @@ import random as random
 if __name__ == '__main__':
     # Example implementation of the genetic TSP algorithm
     if 1:
-        N = 30
+        N = 15
         x = np.array([random.randint(0,N) for ii in range(N)])
         y = np.array([random.randint(0,N) for ii in range(N)])
         z = np.array([random.randint(0,N) for ii in range(N)])
-        tsp = Tsp3D(x, y, z, iterationLim=N*10)
+        tsp = Tsp3D(x, y, z, iterationLim=100)
         tsp()
         tsp.plot()
