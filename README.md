@@ -1,3 +1,14 @@
+## Status - 13/0/2016
+The code and report in this repository has not been updated since over the past three months. Howver, work has been progressing steadily and the repository will soon be updated with the following additions as soon as they are allowed to be made public.
+
+* An improved quadcopter model supporting flight beyond previous dynamical singularities. This allows extremely aggressive model based control (including looping and proximity flights).
+* Several improved outer controllers including finite time TVLQRi and non-linear tube-MPC with lyapunov theory.
+* Several adaptive schemes introduced and examined such as MRAC and APPC.
+* A fully functional state trajectory algorithm using the previous QP algorithm augmented to ensure obstacle avoidance.
+* A Genetical algorithm allowing the quadcopter to make decisions regarsing robs.
+* Firmware for flying the crazyflie with the LOCO LPS radar using the UKF.
+* Support for the kinect (now cleaned up and located in the kinect_vision repo) and the optitrack camera system.
+
 ## Installation
 The project can currently be run on a Ubuntu 14.04 (Trusy) with a ROS Indigo installation. In addition, the following needs to be installed
 

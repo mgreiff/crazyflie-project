@@ -1,0 +1,1 @@
+Due to compyright reasons, the cvx solvers have been removed. Instead, to run the solver for MPC simply sign up to CVXgen and generate the sover according to the specifications in "description.cvxgen"
