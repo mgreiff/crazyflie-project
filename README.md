@@ -1,5 +1,5 @@
 ## Status - 13/0/2016
-The code and report in this repository has not been updated since over the past three months. However, work has been progressing steadily and, as soon as the changes are allowed to be made public, the repository will be updated with the following additions. This will be done within three weeks.
+The code and report in this repository has not been updated since over the past three months but the work has been progressing steadily. As soon as the changes are allowed to be made public (~3 weeks), the repository will be updated with the following additions.
 
 * An improved quadcopter model supporting flight beyond previous dynamical singularities. This allows extremely aggressive model based control (including looping and proximity flights).
 * Several improved outer controllers including finite time TVLQRi and non-linear tube-MPC with lyapunov theory.
