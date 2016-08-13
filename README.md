@@ -5,7 +5,7 @@ The code and report in this repository has not been updated since over the past 
 * Several improved outer controllers including finite time TVLQRi and non-linear tube-MPC with lyapunov theory.
 * Several adaptive schemes introduced and examined such as MRAC and APPC.
 * A fully functional state trajectory algorithm using the previous QP algorithm augmented to ensure obstacle avoidance.
-* A Genetical algorithm allowing the quadcopter to make decisions regarsing robs.
+* A Genetical algorithm allowing the quadcopter to autonomously make decisions regarding how to execute a set of jobs in time and space.
 * Firmware for flying the crazyflie with the LOCO LPS radar using the UKF.
 * Support for the kinect (now cleaned up and located in the kinect_vision repo) and the optitrack camera system.
 
