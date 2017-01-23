@@ -1,4 +1,5 @@
-This repository contains the necessary code to run the simulations presented in the thesis. The complete project will be uploaded shortly, but due to interest
+# The Crazyflie Project
+This repository contains the necessary code to run the simulations presented in the thesis. The complete project will be uploaded shortly, but due to interest, the relevant Matlab/Simulink codes are provided.
 
 ## Directories
 
@@ -8,7 +9,7 @@ To be included shortly when the M.Sc. thesis is published, and unofficial report
 #### /crazy_simulink/*
 This directory contains enough code to explore the general quad-rotor dynamics in a Simulink/Matlab environment. A special case study of the Crazyflie is included, and the project can be navigated by running `init_project -h`.
 
-All controllers and estimators outlined in the report can be simulated in this directory, and new methods of control can be explored in well tested dynamics. Discrete time implementations of the differential flatness equations are included, as well as RLS/ctRLS parameter estimators, KF/UKF/EKF/GPF/AHRS state-estimators, PID/MRAC/MOPC/LQR/SE(3) controllers. The details of all the mentioned algorithms with references can be found in the crazyflie_documentation.tiff.
+All controllers and estimators outlined in the report can be simulated in this directory, and new methods of control can be explored in well tested dynamics. Discrete time implementations of the differential flatness equations are included, as well as RLS/ctRLS parameter estimators, KF/UKF/EKF/GPF/AHRS state-estimators, PID/MRAC/MOPC/LQR/SE(3) controllers. The details of all the mentioned algorithms with references can be found in the /crazy_documentation/*.
 
 #### /crazy_trajectory/*
 This directory contains a stripped down version of the standard polynomial motion planning technique used in the real time application (see for instance Mellinger and Landry). Initialise by running the `init.m` file and proceed with any given example.
