@@ -1,0 +1,9 @@
+%% State estimation
+FILTERparam.Adp = Adp;
+FILTERparam.Adm = Adp;
+FILTERparam.Bd = Bd;
+FILTERparam.Cd = [0,1];
+FILTERparam.P0 = 10^5.*[1,0;0,1];
+FILTERparam.R = 100;
+FILTERparam.Q = [10,0;0,1];
+FILTERparam.h = timestep;

@@ -1,0 +1,1 @@
+run('example_rotor_identification.m')
