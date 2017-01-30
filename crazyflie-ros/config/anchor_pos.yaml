@@ -1,0 +1,7 @@
+n_anchors: 6
+anchor0_pos: [0.00, 3.38, 2.20]
+anchor1_pos: [2.88, 3.38, 0.00]
+anchor2_pos: [5.73, 3.38, 2.20]
+anchor3_pos: [5.73, 0.00, 0.00]
+anchor4_pos: [2.88, 0.00, 2.20]
+anchor5_pos: [0.00, 0.00, 0.00]

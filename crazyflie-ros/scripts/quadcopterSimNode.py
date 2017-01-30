@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-from std_msgs.msg import String, Float64
+from std_msgs.msg import String, Float64, Header
 from crazy_ros.msg import NumpyArrayFloat64
+from geometry_msgs.msg import Twist, PointStamped
 import numpy as np
 import scipy.linalg as spl
 from scipy.signal import cont2discrete
@@ -11,20 +12,23 @@ import os
 import sys
 from json import dumps, load
 import time
+import rospy
 
 class QuadcopterModel(object):
 
     def __init__(self):
-        # Sets up subscribers
-        self.reference_sub = rospy.Subscriber('/system/control_signal',
-                                              NumpyArrayFloat64,
-                                              self.handle_reference_data)
 
-        # Sets up publishers
+        self.reference_sub = rospy.Subscriber('/crazyflie/cmd_vel',
+                                              Twist,
+                                              self.handle_reference_data)
         self.measured_states_pub = rospy.Publisher('measured_states',
                                                    NumpyArrayFloat64,
                                                    queue_size = 10)
-
+        # Visualisation topics
+        self.viz_pos_pub = rospy.Publisher('/system/viz_sim_pos',
+                                            PointStamped,
+                                            queue_size = 10)
+        
         params = None
         # Loads configuration parameters
         for filename in rospy.myargv(argv=sys.argv):
@@ -50,8 +54,13 @@ class QuadcopterModel(object):
             raise Exception(errmsg)
 
     def handle_reference_data(self, msg):
-        # TODO include discretised quadcopter dynamics and publish measurements
-        omega = np.array(msg.data)
+        # TODO Include stabiising controller and/or PWM mappings
+        T = msg.linear.z            # Thrust [N]
+        tau_phi =  msg.angular.x    # Pitch  [degrees].
+        tau_theta =  msg.angular.y  # Roll   [degrees].
+        tau_psi =  msg.angular.z    # Yaw    [degrees].
+        tau_b = np.array([[tau_phi],[tau_theta],[tau_psi]])
+        
         x = self.x
         Ts = self.timestep
         g = self.g
@@ -109,15 +118,6 @@ class QuadcopterModel(object):
         C = np.array([[C11,C12,C13],
                       [C21,C22,C23],
                       [C31,C32,C33]]);   
-        
-        # eq. (8) Modified from the work of lukkonen, here rotor 2 and 4 spin in
-        # the opposite directions
-        tau_phi =  l * k * (-omega[1] ** 2 + omega[3] ** 2)
-        tau_theta =  l * k * (-omega[0] ** 2 + omega[2] ** 2)
-        tau_psi =  b * (omega[0] ** 2 - omega[1] ** 2 +
-                        omega[2] ** 2 - omega[3] ** 2)
-        
-        tau_b = np.array([[tau_phi],[tau_theta],[tau_psi]])
         
         # eq. (16)
         J11 = Ixx
@@ -180,6 +180,13 @@ class QuadcopterModel(object):
         
         self.x = xout
         self.measured_states_pub.publish(xout)
+
+        my_header = Header(stamp=rospy.Time.now(), frame_id="map")
+        my_point = Point(xout[0,0], xout[1,0], xout[2,0])
+        p = PointStamped(header=my_header, point=my_point)
+        print p
+        print '----'
+        self.viz_pos_pub.publish(p)
 
     def __str__(self):
         return 'quadcopter model node'

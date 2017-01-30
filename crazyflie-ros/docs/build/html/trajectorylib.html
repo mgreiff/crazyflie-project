@@ -1,0 +1,324 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The Trajectory Module &mdash; Crazy Trajectories 1.0.0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '1.0.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Crazy Trajectories 1.0.0 documentation" href="index.html" />
+    <link rel="prev" title="The Crazylib Module" href="crazylib.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body role="document">
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-trajectorylib">
+<span id="the-trajectory-module"></span><h1>The Trajectory Module<a class="headerlink" href="#module-trajectorylib" title="Permalink to this headline">¶</a></h1>
+<p>This module contains all functions concerning the trajectories and motion planning
+of the crzyflie.</p>
+<dl class="class">
+<dt id="trajectorylib.GraphicsObject">
+<em class="property">class </em><code class="descclassname">trajectorylib.</code><code class="descname">GraphicsObject</code><span class="sig-paren">(</span><em>artists</em>, <em>tolerance=5</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.GraphicsObject" title="Permalink to this definition">¶</a></dt>
+<dd><p>The graphics object is used to enable interactive plotting in the
+visualization and generation of trajectories.</p>
+<dl class="method">
+<dt id="trajectorylib.GraphicsObject.on_motion">
+<code class="descname">on_motion</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.GraphicsObject.on_motion" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback for a motion event in the interactive mode, when moving an
+artist.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.GraphicsObject.on_pick">
+<code class="descname">on_pick</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.GraphicsObject.on_pick" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback for a pick event in the interactive mode, when picking and
+artist.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.GraphicsObject.on_press">
+<code class="descname">on_press</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.GraphicsObject.on_press" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback for a mouse click event in the interactive mode</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.GraphicsObject.on_release">
+<code class="descname">on_release</code><span class="sig-paren">(</span><em>event</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.GraphicsObject.on_release" title="Permalink to this definition">¶</a></dt>
+<dd><p>Callback for a release event in the interactive mode</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="trajectorylib.Spline">
+<em class="property">class </em><code class="descclassname">trajectorylib.</code><code class="descname">Spline</code><span class="sig-paren">(</span><em>time</em>, <em>data</em>, <em>identifier</em>, <em>index</em>, <em>dimension</em>, <em>trajectory</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Spline" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Spline class is used to manipulate, communicate and evaluate splines
+before transmission to the Crazyflie UAV. The transmission can be done by
+real-time evaluation or preloading of entire trajectories.</p>
+<p>There are two different kinds of trajectories which may be used to creating 
+applications, the dynamical splines in the flat output space, and the event
+based splines defining when to for instance start, land and capture frames.</p>
+<p><strong>Dynamical splines</strong>
+The dynamical splines specify movement in flat output space with four
+common methods of parametrizing trajectories, each referred to by an
+integer identifier. In order to use the property of differential flatness
+the trajectories need to specify non-singular derivtives up tothe fourth
+order in x, y, and z (translation) and the second derivative of yaw
+(rotation) about the body z-axis. The data field specifies a trajectory
+which is to be followed during a time specified by the time field.</p>
+<ul class="simple">
+<li>0 - Linear trajectory, data = [p0,. ,. ,. ,. ,. ] with x(t) = p0* heta(t)</li>
+<li>1 - Polynomial trajectory, data = [p0,p1,p2,p3,p4,p5] with x(t) = sumlimits_{i=0}^5 p_i*t^i</li>
+<li>2 - Sinusoid trajectory, data = [A ,B ,w ,p ,. ,. ] with x(t) = sumlimits_{i=0}^5 p_i*t^i</li>
+<li>3 - Bezier trajectory, data = [b0,b1,b2,b3,. ,. ] with x(t) = sumlimits_{i=0}^5 p_i*t^i</li>
+</ul>
+<p><strong>Event splines</strong>
+The event splines are also referred to with an integer identifier. The data
+field specifies a trajectory which is to be followed during a time
+specified by the time field.</p>
+<ul class="simple">
+<li>4 - Event trajectory, data = [s1,s2,s3,s4,s5,s6]</li>
+</ul>
+<dl class="method">
+<dt id="trajectorylib.Spline.evaluate">
+<code class="descname">evaluate</code><span class="sig-paren">(</span><em>time</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Spline.evaluate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the spline at a specified time</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.Spline.packet">
+<code class="descname">packet</code><span class="sig-paren">(</span><em>number</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Spline.packet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a packet from the spline which may be used for storing the
+spline object or sending the data to the Crazyflie UAV</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>dimension</strong> (<em>int</em>) &#8211; The dimension of the spline (x=0, y=1, z=2, yaw=3, event=4)</li>
+<li><strong>index</strong> (<em>int</em>) &#8211; Index of the spline in the complete trajectory along the specified dimension</li>
+<li><strong>number</strong> (<em>int</em>) &#8211; The total number of splines in the specified dimension</li>
+</ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">packet</p>
+</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><p class="first last">dictionary</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.Spline.represent">
+<code class="descname">represent</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Spline.represent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Represents the entire spline internally using the evaluate function
+for plotting purposes</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.Spline.update_graphics">
+<code class="descname">update_graphics</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Spline.update_graphics" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update graphics based on the current data in the object</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="trajectorylib.Trajectory">
+<em class="property">class </em><code class="descclassname">trajectorylib.</code><code class="descname">Trajectory</code><span class="sig-paren">(</span><em>directory</em>, <em>filename</em>, <em>fileformat</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Trajectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>The Trajecory class is used to host, manipulate, communicate and
+evaluate trajectories for evaluation in the Crazyflie UAV.</p>
+<p>The trajectories are represented in terms of individual splines, each
+stored as a spline object which may be converted to a packet and sent
+to the UAV. The trajectory</p>
+<dl class="method">
+<dt id="trajectorylib.Trajectory.assert_complete">
+<code class="descname">assert_complete</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Trajectory.assert_complete" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the consistency of all trajectories in terms of each flat
+output dimension containing non None entries</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.Trajectory.assert_consistency">
+<code class="descname">assert_consistency</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Trajectory.assert_consistency" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the consistency of all trajectories in terms of continuity
+in position and first derivative.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.Trajectory.assert_feasibility">
+<code class="descname">assert_feasibility</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Trajectory.assert_feasibility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the dynamical feasibility of all trajectories</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.Trajectory.evaluate_trajectory">
+<code class="descname">evaluate_trajectory</code><span class="sig-paren">(</span><em>time</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Trajectory.evaluate_trajectory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluates the trajectory at a specific point in time, and lets the
+reference remain constant if the desired time does not exist in the
+interval on which the trajectory is defined.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>time</strong> (<em>float</em>) &#8211; The time at which the trajectory is to be evaluated</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">x, y, z, yaw</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">np.array, np.array, np.array, np.array</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.Trajectory.load">
+<code class="descname">load</code><span class="sig-paren">(</span><em>filename</em>, <em>fileformat</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Trajectory.load" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads a trajectory for use in outer control and visualization</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>filename</strong> (<em>string</em>) &#8211; Name of the file to load</li>
+<li><strong>fileformat</strong> (<em>string</em>) &#8211; Format of the file to load (json, csv or mat)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.Trajectory.save">
+<code class="descname">save</code><span class="sig-paren">(</span><em>filename</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Trajectory.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>Saves the current trajectory to a JSON and writes it to filename
+in the previously defined trajectory file directory.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.Trajectory.set_directory">
+<code class="descname">set_directory</code><span class="sig-paren">(</span><em>directory</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Trajectory.set_directory" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the directory of the trajectory object</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>directory</strong> (<em>string</em>) &#8211; Directory to which files are stored and loaded</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.Trajectory.visualize_fixed">
+<code class="descname">visualize_fixed</code><span class="sig-paren">(</span><em>dimension</em>, <em>projection</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Trajectory.visualize_fixed" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualizes trajectory as it is currently set, evaluating the complete
+trajectory across all dimensions based on the dimensions specified by
+the user. The evaluation of flatness is costly and requires synchronous
+evaluation across all dimensions, hence the distinguishing between
+interactive and fixed visualization.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="trajectorylib.Trajectory.visualize_interactive">
+<code class="descname">visualize_interactive</code><span class="sig-paren">(</span><em>dimension</em><span class="sig-paren">)</span><a class="headerlink" href="#trajectorylib.Trajectory.visualize_interactive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Visualizes trajectory as it is currently set, using the pre-evaluated
+splines to enable interaction with the plots. This effectively allows
+the solving of the polynomial spline QP-problem and setting of
+bezier curves interatively.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="project.html">Project</a></li>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Examples</a></li>
+<li class="toctree-l1"><a class="reference internal" href="crazylib.html">The Crazylib Module</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">The Trajectory Module</a></li>
+</ul>
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="crazylib.html" title="previous chapter">The Crazylib Module</a></li>
+  </ul></li>
+</ul>
+</div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/trajectorylib.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Marcus Greiff.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.4.1</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="_sources/trajectorylib.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -6,8 +6,8 @@ param = {
         'inner_loop_h': 0.01,    # Time discretisation in the inner loop (only used for simulation)
         'outer_loop_h': 0.1,     # Time discretisation in the inner loop (can be set < 10 Hz in PID)
         'kinect_loop_h': 0.0333, # Roughly the time between data updates from the openni
-        'time_lag_receive': 0.03,# The time it takes for data sent by the quadcopter to be received at host
-        'time_lag_send': 0.03    # The time it takes for data sent by the host to be received at quadcopter
+        'time_lag_receive': 0.03,# The time it takes for data sent by the quadcopter to be received
+        'time_lag_send': 0.03    # The time it takes for data sent by the host to be received
     },
     'quadcopter_model': {
         'A': [0.25, 0.25, 0.25],
@@ -20,20 +20,82 @@ param = {
         'm': 0.468,
         'x0': [[0.],[0.],[0.],[0.],[0.],[0.],[0.],[0.],[0.],[0.],[0.],[0.]]
     },
-    'outer_PID':{
-        'K': [[2.5], [1.75], [1.75], [1.75]],
-        'D': [[1.5], [6.], [6.], [6.]]
+    'PD':{
+        'z':{
+            'Kp':1,
+            'Kd':1,
+            'N':20,
+            'maxlim':0.8,
+            'minlim':-0.8
+        }
     },
-    'outer_MPC':{
-        'Q': [[2.5], [1.75], [1.75], [1.75]],
-        'R': [[1.5], [6.], [6.], [6.]]
+    'PID':{
+        'x':{
+            'Kp':1,
+            'Ki':1,
+            'Kd':1,
+            'N':20,
+            'beta':1,
+            'gamma':1,
+            'maxlim':0.8,
+            'minlim':-0.8,
+        },
+        'y':{
+            'Kp':1,
+            'Ki':1,
+            'Kd':1,
+            'N':20,
+            'beta':1,
+            'gamma':1,
+            'maxlim':0.8,
+            'minlim':-0.8,
+        },
+        'h': 0.01
     },
-    'kinect':{
-        'Q': [1.,1.,1.,1.,1.,1.],               # Diagonal of the Q matrix
-        'R': [.5,.5,.5],                        # Diagonal of the R matrix
-        'P0': [10.,10.,10.,10.,10.,10.],        # Diagonal of the initial covariance matrix
-        'x0': [0.,0.,0.,0.,0.,0.],              # Initial condition for state estimation
-        'lim': 0.15
+    'TIMPC':{
+        'Q': [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+        'R': [1, 1, 1, 1],
+        'predN': 10
+    },
+    'TVMPC':{
+        'Q': [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+        'R': [1, 1, 1, 1],
+        'predN': 10
+    },
+    'MPC':{
+        'Q': [10, 10, 10, 10, 10, 10, 10, 10, 10, 10],
+        'R': [1, 1, 1, 1],
+        'predN': 10
+    },
+    'TILQR':{
+        'Kdim': (4,12),
+        'K': [[0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0., 0.],
+              [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0., 0.],
+              [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0., 0.],
+              [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0., 0.]],
+        'h': 0.1
+    },
+    'TVLQR':{
+        'Kdim': (4,12),
+        'K': [[0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0., 0.],
+              [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0., 0.],
+              [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0., 0.],
+              [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0., 0.]],
+        'h': 0.1
+    },
+    'LQR':{
+        'Kdim': (4,12),
+        'K': [[0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0., 0.],
+              [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0., 0.],
+              [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0., 0.],
+              [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0., 0.]],
+        'h': 0.1
+    },
+    'MAN':{
+        'thrust_d': 1000,
+        'pitch_d': 1,
+        'roll_d': 1,
+        'yaw_d': 5
     }
 }
 

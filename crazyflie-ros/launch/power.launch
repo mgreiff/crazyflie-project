@@ -40,50 +40,11 @@
       <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
         <param name="uri" value="$(arg uri)" />
         <param name="tf_prefix" value="crazyflie" />
-        <!-- For debugging kalman matrix-->
-        <!--rosparam>
-          genericLogTopics: ["log_kalman"]
-          genericLogTopicFrequencies: [10]
-          genericLogTopic_log_kalman_Variables: ["kalman.stateX", "kalman.stateY", "kalman.stateZ"]
-        </rosparam-->
-        <!-- For debugging the laser ranging-->
-        <!--rosparam>
-          genericLogTopics: ["log_range","log_kalman"]
-          genericLogTopicFrequencies: [10, 10]
-          genericLogTopic_log_range_Variables: ["range.range"]
-          genericLogTopic_log_kalman_Variables: ["kalman.stateX", "kalman.stateY", "kalman.stateZ"]
-        </rosparam-->
-        <!-- For debugging the Sequence generator-->
-        <!--rosparam>
-          genericLogTopics: ["log_range", "log_pos","log_cacheA","log_cacheB"]
-          genericLogTopicFrequencies: [10, 10, 10, 10]
-          genericLogTopic_log_ref_Variables: ["reference.x", "reference.y", "reference.z", "reference.r", "reference.p", "reference.y"]
-          genericLogTopic_log_pos_Variables: ["measured.x", "measured.y", "measured.z", "measured.r", "measured.p", "measured.y"]
-          genericLogTopic_log_cacheA_Variables: ["testA.a", "testA.b", "testA.c", "testA.d", "testA.e", "testA.f"]
-          genericLogTopic_log_cacheB_Variables: ["testB.a", "testB.b", "testB.c", "testB.d", "testB.e", "testB.f"]
-        </rosparam-->
-        <!-- for running RVIZ -->
         <rosparam>
-          genericLogTopics: ["log_ref", "log_pos"]
-          genericLogTopicFrequencies: [10, 10]
-          genericLogTopic_log_ref_Variables: ["reference.x", "reference.y", "reference.z", "reference.roll", "reference.pitch", "reference.yaw"]
-          genericLogTopic_log_pos_Variables: ["measured.x", "measured.y", "measured.z", "measured.roll", "measured.pitch", "measured.yaw"]
-        </rosparam>
-        <!-- For running optical flow -->
-        <!--rosparam>
-          genericLogTopics: ["log_flow", "log_tof", "log_filter", "kalman_states", "kalman_pred"]
-          genericLogTopicFrequencies: [10, 10, 10, 10, 10]
-          genericLogTopic_log_flow_Variables: ["motion.motion", "motion.deltaX", "motion.deltaY", "motion.shutter", "motion.maxRaw", "motion.minRaw"]
-          genericLogTopic_log_tof_Variables: ["tof.range"]
-          genericLogTopic_kalman_states_Variables: ["kalman_states.ox", "kalman_states.oy", "kalman_states.vx","kalman_states.vy"]
-          genericLogTopic_kalman_pred_Variables: ["kalman_pred.predNX", "kalman_pred.predNY","kalman_pred.measNX", "kalman_pred.measNY"]
-        </rosparam-->
-        <!-- For running LS -->
-        <!--rosparam>
-          genericLogTopics: ["log_static"]
+          genericLogTopics: ["log_power"]
           genericLogTopicFrequencies: [10]
-          genericLogTopic_log_static_Variables: ["static_estimator.x", "static_estimator.y", "static_estimator.z"]
-        </rosparam-->
+          genericLogTopic_log_power_Variables: ["powerTest.aa", "powerTest.bb", "powerTest.cc", "powerTest.dd", "powerTest.ee", "powerTest.ff"]
+        </rosparam>
       </node>
     </group>
   </group>
