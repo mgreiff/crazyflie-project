@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<launch> 
+  <!-- Launches the  driver and finds crazyflies if applicable -->
+  <!--arg name="uri" default="radio://0/107/2M" /-->
+  <!--arg name="uri" default="radio://0/35/2M" /-->
+  <!--arg name="uri" default="radio://0/70/2M" /-->
+  <arg name="uri" default="radio://0/35/2M" />
+  <!--arg name="uri" default="radio://0/107/2M/E7E7E7E7BC"/-->
+  <!--arg name="uri" default="radio://0/80/250K/E7E7E7E7E7"/-->
+  <arg name="roll_trim" default="0" />
+  <arg name="pitch_trim" default="0" />
+
+  <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
+  </include>
+
+  <group ns="crazyflie">
+    <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
+      <param name="uri" value="$(arg uri)" />
+      <param name="tf_prefix" value="crazyflie" />
+      <rosparam>
+        genericLogTopics: ["log_ref", "log_pos","log_errors","log_cacheB"]
+        genericLogTopicFrequencies: [10, 10, 10, 10]
+        genericLogTopic_log_ref_Variables: ["reference.x", "reference.y", "reference.z", "reference.roll", "reference.pitch", "reference.yaw"]
+        genericLogTopic_log_pos_Variables: ["measured.x", "measured.y", "measured.z", "measured.roll", "measured.pitch", "measured.yaw"]
+        genericLogTopic_log_errors_Variables: ["errors.x", "errors.y", "errors.z", "errors.dx", "errors.dy", "errors.dz"]
+        genericLogTopic_log_cacheB_Variables: ["testB.a", "testB.b", "testB.c", "testB.d", "testB.e", "testB.f"]
+      </rosparam>
+    </node>
+  </group>
+  <node
+    name="master"
+    pkg="crazyflie_trajectory"
+    type="master.py"
+    output="screen"
+  />
+</launch>

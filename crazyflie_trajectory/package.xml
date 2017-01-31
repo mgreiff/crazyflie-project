@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<package>
+  <name>crazyflie_trajectory</name>
+  <version>0.0.0</version>
+  <description>A dummy package for autonomous trajectory evaluation</description>
+  <maintainer email="marcusgreiff.93@hotmail.com">marcus</maintainer>
+  <license>TODO</license>
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>rospy</build_depend>
+  <build_depend>message_generation</build_depend>
+  <build_depend>crazyflie_trajectory/msg</build_depend>
+  <run_depend>crazyflie_trajectory/msg</run_depend>
+  <run_depend>rospy</run_depend>
+  <run_depend>message_runtime</run_depend>
+  <run_depend>scipy</run_depend>
+  <export>
+  </export>
+</package>

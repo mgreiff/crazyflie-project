@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<launch> 
+  <arg name="path" default="/home/mgreiff/catkin_ws/" />
+  <arg name="file"/>
+  <node pkg="rosbag" type="play" name="player" output="screen" args="--clock $(arg path)$(arg file)"/>
+  
+  <arg name="rqt_pos_topics" default="/crazyflie/log_ref/values[0]
+                                      /crazyflie/log_ref/values[1]
+                                      /crazyflie/log_ref/values[2]
+                                      /crazyflie/log_ref/values[3]
+                                      /crazyflie/log_ref/values[4]
+                                      /crazyflie/log_ref/values[5]
+                                      /crazyflie/log_pos/values[0]
+                                      /crazyflie/log_pos/values[1]
+                                      /crazyflie/log_pos/values[2]
+                                      /crazyflie/log_pos/values[3]
+                                      /crazyflie/log_pos/values[4]
+                                      /crazyflie/log_pos/values[5]"/>
+  <group ns = "visualization">
+    <node pkg="rqt_plot" name="pos_plot" type="rqt_plot" args="$(arg rqt_pos_topics)" />
+  </group>
+  
+  <node
+    name="converter"
+    args= "$(arg file)"
+    pkg="crazyflie_trajectory"
+    type="converter.py"
+    output="screen"
+    cwd="node"
+  />
+</launch>

@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<launch> 
+  <arg name="uri" default="radio://0/35/2M" />
+  <arg name="roll_trim" default="0" />
+  <arg name="pitch_trim" default="0" />
+  
+  <!-- Visualization settings -->
+
+  <node pkg="rqt_plot" name="pos_plot" type="rqt_plot" />
+
+  <include file="$(find crazyflie_driver)/launch/crazyflie_server.launch">
+  </include>
+
+  <group ns="crazyflie">
+    <node pkg="crazyflie_driver" type="crazyflie_add" name="crazyflie_add" output="screen">
+      <param name="uri" value="$(arg uri)" />
+      <param name="tf_prefix" value="crazyflie" />
+        <rosparam>
+          genericLogTopics: ["log_range", "log_pos","log_cacheA","log_cacheB"]
+          genericLogTopicFrequencies: [10, 10, 10, 10]
+          genericLogTopic_log_ref_Variables: ["reference.x", "reference.y", "reference.z", "reference.r", "reference.p", "reference.y"]
+          genericLogTopic_log_pos_Variables: ["measured.x", "measured.y", "measured.z", "measured.r", "measured.p", "measured.y"]
+          genericLogTopic_log_cacheA_Variables: ["testA.a", "testA.b", "testA.c", "testA.d", "testA.e", "testA.f"]
+          genericLogTopic_log_cacheB_Variables: ["testB.a", "testB.b", "testB.c", "testB.d", "testB.e", "testB.f"]
+        </rosparam>
+    </node>
+  </group>
+  <node
+    name="master"
+    pkg="crazyflie_trajectory"
+    type="master.py"
+    output="screen"
+  />
+</launch>
