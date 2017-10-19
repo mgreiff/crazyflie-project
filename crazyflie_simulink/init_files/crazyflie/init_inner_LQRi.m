@@ -3,6 +3,7 @@
 Ixx = I(1);
 Iyy = I(2);
 Izz = I(3);
+Dii = 1e-5;
 
 [Amat, Bmat] = getLinSys(0,0,0,0,0,0,m*g,0,0,0,m,Ixx,Iyy,Izz,Dii);
 
