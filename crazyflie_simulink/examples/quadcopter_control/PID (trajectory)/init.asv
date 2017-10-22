@@ -1,0 +1,34 @@
+run('init_inner_PD_d')
+PD_position_param.K = 0.1;
+PD_position_param.Td = 0.1;
+PD_position_param.Ti = 100;
+PD_position_param.N = 100;
+PD_position_param.h = 0.002;
+
+PosP = 0.2500;
+PosI = 0;
+PosD = 0.2;
+
+% No I part
+PosP = 0.20;
+PosI = 0;
+PosD = 0.24;
+
+max_ang_ref = 0.5;
+
+
+%% Run Simulation
+sim('inner_pid_discrete_test')
+
+%%  For plotting
+load('reference')
+load('response')
+
+%%% Position Plots
+figure(1)
+subplot(3,1,1)
+plot(reference.Time,reference.Data(:,1),response.Time,response.Data(:,1))
+xlabel('Time(s)')
+ylabel('X Position')
+legend
+
