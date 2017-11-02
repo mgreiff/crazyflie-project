@@ -1,4 +1,4 @@
-function [sys,x0,str,ts] = eval_traj_sfunc(t,x,u,flag,param)
+function [sys,x0,str,ts] = eval_traj_sfunc2(t,x,u,flag,param)
 
 switch flag,
     case 0
