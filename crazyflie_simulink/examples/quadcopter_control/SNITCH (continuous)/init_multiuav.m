@@ -8,7 +8,7 @@
 % trajectory2.h = inner_h;
 
 
-%% For Abhijit's Model
+%% Visualize MIQP Trajectories
 load('2D_collisionavoidance_trajs_abhijit.mat')
 drone1_traj = testwps{1};
 drone2_traj = testwps{2};
